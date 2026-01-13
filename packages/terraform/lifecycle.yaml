@@ -1,0 +1,108 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Noble Factor. All rights reserved.
+#
+# terraform - Package Lifecycle Manifest
+# HashiCorp Terraform Infrastructure as Code
+#
+# Reference: https://developer.hashicorp.com/terraform/install
+
+name: terraform
+version: "1.10.0"
+description: Infrastructure as Code tool for building, changing, and versioning infrastructure
+homepage: https://www.terraform.io/
+repository: https://github.com/hashicorp/terraform
+license: BUSL-1.1
+
+# Upstream release artifacts — for verification, direct download, bundling
+# Hashes from releases.hashicorp.com/terraform/1.10.0/terraform_1.10.0_SHA256SUMS
+sources:
+  - url: "https://releases.hashicorp.com/terraform/1.10.0/terraform_1.10.0_darwin_amd64.zip"
+    sha256: "263c2a63dd6e11b4f5d062262ff8cbf8fad56460af69e5493f22f495b35c4ab5"
+    platform: darwin
+    arch: amd64
+
+  - url: "https://releases.hashicorp.com/terraform/1.10.0/terraform_1.10.0_darwin_arm64.zip"
+    sha256: "1daedd25138836756fb3eb5cf1a85ab59d06f385a4e3b3bebd8151185bdea5cb"
+    platform: darwin
+    arch: arm64
+
+  - url: "https://releases.hashicorp.com/terraform/1.10.0/terraform_1.10.0_linux_amd64.zip"
+    sha256: "4b05f4848d365597cf7ac5b59334c62a16b3bb7b524586578ee45ba823b6758b"
+    platform: linux
+    arch: amd64
+
+  - url: "https://releases.hashicorp.com/terraform/1.10.0/terraform_1.10.0_linux_arm64.zip"
+    sha256: "e12fad357bcff9537e904a7821529206c2c8fb48f700b670c25d6deddbb65d05"
+    platform: linux
+    arch: arm64
+
+  - url: "https://releases.hashicorp.com/terraform/1.10.0/terraform_1.10.0_windows_amd64.zip"
+    sha256: "c9e381a9c26b077ce49645ccf58d0c7d79763d4ca8f0d092c50b700f1d09f139"
+    platform: windows
+    arch: amd64
+
+# Package manager availability — for ensure/batch operations
+packages:
+  brew: terraform
+  port: terraform
+  choco: terraform
+  winget: Hashicorp.Terraform
+  # Note: apt/dnf require HashiCorp's external repository
+
+authors:
+  - name: HashiCorp
+    url: https://www.hashicorp.com
+
+platforms:
+  - darwin
+  - linux
+  - windows
+
+# Features enable optional capabilities
+features:
+  completions:
+    description: Install shell completions for bash/zsh
+    default: true
+  tflint:
+    description: Install TFLint for static analysis
+    default: false
+  terraform-docs:
+    description: Install terraform-docs for documentation generation
+    default: false
+  tfsec:
+    description: Install tfsec for security scanning (deprecated, use trivy)
+    default: false
+
+# Settings configure behavior
+settings:
+  version:
+    description: Specific terraform version to install
+    type: string
+    default: ""  # Empty means latest
+
+# Dependencies
+dependencies: []
+
+# Conflicts (OpenTofu is a fork/alternative)
+conflicts: []
+
+# Phase scripts
+phases:
+  prepare: prepare.star
+  install: install.star
+  provision: provision.star
+  verify: verify.star
+
+# Verification command
+verification:
+  command: "terraform --version"
+  pattern: "Terraform v\\d+\\.\\d+\\.\\d+"
+
+# Tags for search
+tags:
+  - terraform
+  - hashicorp
+  - infrastructure
+  - iac
+  - cloud
+  - devops

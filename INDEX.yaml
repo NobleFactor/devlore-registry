@@ -1,0 +1,73 @@
+# devlore Registry Index
+# Generated: 2026-01-12
+#
+# This index is regenerated on every commit via CI.
+# Do not edit manually.
+
+version: 1
+generated: "2026-01-12T00:00:00Z"
+package_count: 9
+
+packages:
+  - name: astro
+    version: "5.1.3"
+    description: The web framework for content-driven websites
+    platforms: [darwin, linux, windows]
+    license: MIT
+    path: packages/astro/
+
+  - name: aws-cli
+    version: "2.22.0"
+    description: AWS Command Line Interface for managing AWS services
+    platforms: [darwin, linux, windows]
+    license: Apache-2.0
+    path: packages/aws-cli/
+
+  - name: azure-cli
+    version: "2.81.0"
+    description: Azure Command Line Interface for managing Azure resources
+    platforms: [darwin, linux, windows]
+    license: MIT
+    path: packages/azure-cli/
+
+  - name: docker
+    version: "29.1.4"
+    description: Docker CE, CLI, containerd, buildx, and compose plugin
+    platforms: [linux]
+    license: Apache-2.0
+    path: packages/docker/
+
+  - name: gcloud
+    version: "503.0.0"
+    description: Google Cloud CLI for managing GCP resources
+    platforms: [darwin, linux, windows]
+    license: Apache-2.0
+    path: packages/gcloud/
+
+  - name: kubectl
+    version: "1.32.0"
+    description: Kubernetes command-line tool for cluster management
+    platforms: [darwin, linux, windows]
+    license: Apache-2.0
+    path: packages/kubectl/
+
+  - name: pandoc
+    version: "3.6"
+    description: Universal document converter with PDF support
+    platforms: [darwin, linux, windows]
+    license: GPL-2.0-or-later
+    path: packages/pandoc/
+
+  - name: terraform
+    version: "1.10.0"
+    description: Infrastructure as Code tool for building, changing, and versioning infrastructure
+    platforms: [darwin, linux, windows]
+    license: BUSL-1.1
+    path: packages/terraform/
+
+  - name: xcode-clt
+    version: "16.0"
+    description: Xcode Command Line Tools - compilers and build tools for macOS
+    platforms: [darwin]
+    license: Apple EULA
+    path: packages/xcode-clt/

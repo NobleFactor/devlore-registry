@@ -1,0 +1,121 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Noble Factor. All rights reserved.
+#
+# gcloud - Package Lifecycle Manifest
+# Google Cloud CLI (gcloud)
+#
+# Reference: https://cloud.google.com/sdk/docs/install
+
+name: gcloud
+version: "503.0.0"
+description: Google Cloud CLI for managing GCP resources
+homepage: https://cloud.google.com/sdk
+repository: https://github.com/GoogleCloudPlatform/google-cloud-sdk
+license: Apache-2.0
+
+# Upstream release artifacts — for verification, direct download, bundling
+# Note: Google publishes "rapid" channel (always-latest) archives
+# Hashes computed 2026-01-12 from dl.google.com
+sources:
+  - url: "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-darwin-x86_64.tar.gz"
+    sha256: "d6ac470153616f77598895da121bbd0f5255f0a4080cf09a9d35fac6461e8715"
+    platform: darwin
+    arch: amd64
+
+  - url: "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-darwin-arm.tar.gz"
+    sha256: "584f40eeec5e222fe4f79abe0baa88ff92cace02b9862e77827d2f2b0dc39435"
+    platform: darwin
+    arch: arm64
+
+  - url: "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-x86_64.tar.gz"
+    sha256: "9a052fb99838c2bb328bcc0884d7a7deae91f1f6c66e9b0022342612ac27f346"
+    platform: linux
+    arch: amd64
+
+  - url: "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-arm.tar.gz"
+    sha256: "e540d6cb9dc0d115dccf65bdd78bcc79d1e24ae850b28cddce64ed53dee0060f"
+    platform: linux
+    arch: arm64
+
+  - url: "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-windows-x86_64.zip"
+    sha256: "28018c41a0ab5956c600f797b868cf0b3e557db0c96e0c0a048a844a4f4d7ded"
+    platform: windows
+    arch: amd64
+
+# Package manager availability — for ensure/batch operations
+packages:
+  brew: google-cloud-sdk     # Cask
+  choco: gcloudsdk
+  # Note: apt/dnf available via Google's repository scripts
+
+authors:
+  - name: Google Cloud
+    url: https://cloud.google.com
+
+platforms:
+  - darwin
+  - linux
+  - windows
+
+# Features enable optional capabilities
+features:
+  completions:
+    description: Install shell completions for bash/zsh/fish
+    default: true
+  kubectl:
+    description: Install kubectl component
+    default: false
+  gke-auth:
+    description: Install gke-gcloud-auth-plugin for GKE
+    default: false
+  app-engine:
+    description: Install App Engine components (Python, Java, Go, etc.)
+    default: false
+  bq:
+    description: Install BigQuery CLI
+    default: true
+  gsutil:
+    description: Install Cloud Storage CLI (gsutil)
+    default: true
+
+# Settings configure behavior
+settings:
+  project:
+    description: Default GCP project ID
+    type: string
+    default: ""
+  region:
+    description: Default compute region
+    type: string
+    default: ""
+  zone:
+    description: Default compute zone
+    type: string
+    default: ""
+
+# Dependencies
+dependencies:
+  - python3
+
+# Conflicts
+conflicts: []
+
+# Phase scripts
+phases:
+  prepare: prepare.star
+  install: install.star
+  provision: provision.star
+  verify: verify.star
+
+# Verification command
+verification:
+  command: "gcloud --version"
+  pattern: "Google Cloud SDK \\d+\\.\\d+\\.\\d+"
+
+# Tags for search
+tags:
+  - cloud
+  - gcp
+  - google
+  - cli
+  - devops

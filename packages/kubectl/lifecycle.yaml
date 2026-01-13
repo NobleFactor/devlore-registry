@@ -1,0 +1,110 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Noble Factor. All rights reserved.
+#
+# kubectl - Package Lifecycle Manifest
+# Kubernetes command-line tool
+#
+# Reference: https://kubernetes.io/docs/tasks/tools/
+
+name: kubectl
+version: "1.32.0"
+description: Kubernetes command-line tool for cluster management
+homepage: https://kubernetes.io/docs/reference/kubectl/
+repository: https://github.com/kubernetes/kubectl
+license: Apache-2.0
+
+# Upstream release artifacts — for verification, direct download, bundling
+# Hashes computed 2026-01-12 from dl.k8s.io/release/v1.32.0/
+sources:
+  - url: "https://dl.k8s.io/release/v1.32.0/bin/darwin/amd64/kubectl"
+    sha256: "516585916f499077fac8c2fdd2a382818683f831020277472e6bcf8d1a6f9be4"
+    platform: darwin
+    arch: amd64
+
+  - url: "https://dl.k8s.io/release/v1.32.0/bin/darwin/arm64/kubectl"
+    sha256: "5bfd5de53a054b4ef614c60748e28bf47441c7ed4db47ec3c19a3e2fa0eb5555"
+    platform: darwin
+    arch: arm64
+
+  - url: "https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl"
+    sha256: "646d58f6d98ee670a71d9cdffbf6625aeea2849d567f214bc43a35f8ccb7bf70"
+    platform: linux
+    arch: amd64
+
+  - url: "https://dl.k8s.io/release/v1.32.0/bin/linux/arm64/kubectl"
+    sha256: "ba4004f98f3d3a7b7d2954ff0a424caa2c2b06b78c17b1dccf2acc76a311a896"
+    platform: linux
+    arch: arm64
+
+  - url: "https://dl.k8s.io/release/v1.32.0/bin/windows/amd64/kubectl.exe"
+    sha256: "3601cb47c4d6a42b033a8f8fca68bc6f24baa99f5a1250fdb138d24a6c7cc749"
+    platform: windows
+    arch: amd64
+
+# Package manager availability — for ensure/batch operations
+packages:
+  brew: kubernetes-cli
+  port: kubectl
+  apt: kubectl           # via kubernetes apt repo
+  dnf: kubectl           # via kubernetes yum repo
+  pacman: kubectl
+  choco: kubernetes-cli
+  winget: Kubernetes.kubectl
+
+authors:
+  - name: Kubernetes Authors
+    url: https://kubernetes.io
+
+platforms:
+  - darwin
+  - linux
+  - windows
+
+# Features enable optional capabilities
+features:
+  completions:
+    description: Install shell completions for bash/zsh/fish
+    default: true
+  krew:
+    description: Install krew plugin manager
+    default: false
+  kubelogin:
+    description: Install Azure AD kubelogin plugin
+    default: false
+  aws-iam-authenticator:
+    description: Install AWS IAM authenticator for EKS
+    default: false
+
+# Settings configure behavior
+settings:
+  version:
+    description: Specific kubectl version to install (e.g., "1.31.0")
+    type: string
+    default: ""  # Empty means latest stable
+
+# Dependencies
+dependencies: []
+
+# Conflicts
+conflicts: []
+
+# Phase scripts
+phases:
+  prepare: prepare.star
+  install: install.star
+  provision: provision.star
+  verify: verify.star
+
+# Verification command
+verification:
+  command: "kubectl version --client"
+  pattern: "Client Version.*v\\d+\\.\\d+\\.\\d+"
+
+# Tags for search
+tags:
+  - kubernetes
+  - k8s
+  - cloud
+  - containers
+  - devops
+  - cli

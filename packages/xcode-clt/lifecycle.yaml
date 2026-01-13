@@ -1,0 +1,107 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Noble Factor. All rights reserved.
+#
+# xcode-clt - Xcode Command Line Tools Package Lifecycle Manifest
+#
+# The Xcode Command Line Tools provide compilers, linkers, and build tools
+# required for software development on macOS. This is the foundation for
+# Homebrew, building native extensions, and any C/C++/Objective-C development.
+#
+# TRIBAL KNOWLEDGE ENCODED HERE:
+# 1. xcode-select --install opens a GUI dialog - useless for automation
+# 2. The headless method requires a temporary marker file that tricks
+#    softwareupdate into listing the CLT package
+# 3. There's no "upgrade" command - you must uninstall and reinstall
+# 4. Version detection via pkgutil can fail after macOS upgrades even
+#    when the tools are functional
+# 5. Full Xcode.app includes CLT but at a different path
+# 6. CLT version must match macOS version to avoid build failures
+#
+# Reference: https://developer.apple.com/xcode/resources/
+# Reference: https://mac.install.guide/commandlinetools/
+
+name: xcode-clt
+version: "16.0"
+description: Xcode Command Line Tools - compilers and build tools for macOS
+homepage: https://developer.apple.com/xcode/
+license: Apple EULA
+
+# No direct download sources available
+# Apple distributes CLT only via:
+#   1. xcode-select --install (GUI dialog)
+#   2. softwareupdate --install (headless, requires trigger file trick)
+#   3. Apple Developer portal (requires authentication)
+# The install.star phase script implements the softwareupdate method.
+sources: []
+
+# No package manager provides xcode-clt
+# Homebrew depends on CLT but cannot install it
+# The CLT is a prerequisite for Homebrew, not a Homebrew package
+packages: {}
+
+authors:
+  - name: Apple Inc.
+    url: https://developer.apple.com
+
+# Darwin-only package
+platforms:
+  - darwin
+
+# Features enable optional capabilities
+features:
+  rosetta:
+    description: Install Rosetta 2 for x86_64 emulation (Apple Silicon only)
+    default: false
+
+  verify-full:
+    description: Run comprehensive verification including test compilation
+    default: true
+
+# Settings configure behavior
+settings:
+  min_macos_version:
+    description: Minimum macOS version required (auto-detected if not set)
+    type: string
+    default: ""
+    # Empty means auto-detect from platform.version
+
+  allow_xcode_fallback:
+    description: Allow using full Xcode.app if installed instead of standalone CLT
+    type: string
+    default: "true"
+    values: ["true", "false"]
+
+  force_reinstall:
+    description: Force reinstall even if already installed at correct version
+    type: string
+    default: "false"
+    values: ["true", "false"]
+
+# Dependencies - none for this foundational package
+dependencies: []
+
+# Conflicts with manual Xcode-only setups where user explicitly chose Xcode
+conflicts: []
+
+# Phase scripts
+phases:
+  prepare: prepare.star
+  install: install.star
+  provision: provision.star
+  verify: verify.star
+
+# Verification command
+verification:
+  command: "clang --version"
+  pattern: "Apple clang version \\d+"
+
+# Tags for search
+tags:
+  - compiler
+  - build-tools
+  - xcode
+  - clang
+  - llvm
+  - development
+  - foundation
+  - darwin

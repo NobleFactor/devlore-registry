@@ -1,0 +1,129 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 Noble Factor. All rights reserved.
+
+# lifecycle.yaml — Package Lifecycle Manifest for Docker
+#
+# This file defines the complete lifecycle for docker:
+#   - deploy: Fresh installation (prepare → install → provision → verify)
+#   - upgrade: Update existing installation
+#   - decommission: Clean removal
+#
+# Usage:
+#   lore deploy docker
+#   lore deploy docker --with rootless
+#   lore reconcile @docker.receipt
+
+name: docker
+description: Docker CE, CLI, containerd, buildx, and compose plugin
+version: "29.1.4"
+
+# Metadata
+homepage: https://docs.docker.com/engine/install/
+repository: https://github.com/moby/moby
+license: Apache-2.0
+maintainer: Noble Factor
+
+# Platform support
+# Note: darwin/windows use Docker Desktop (proprietary, different licensing)
+platforms:
+  - linux
+
+# Upstream release artifacts — for verification, direct download, bundling
+# Hashes computed 2026-01-12 from download.docker.com/linux/static/stable/
+sources:
+  - url: "https://download.docker.com/linux/static/stable/x86_64/docker-29.1.4.tgz"
+    sha256: "45ed5baed5171f0169b48266d9015107cee1a8639868a2481ec17a9b0c961c2e"
+    platform: linux
+    arch: amd64
+
+  - url: "https://download.docker.com/linux/static/stable/aarch64/docker-29.1.4.tgz"
+    sha256: "1d7e4428f455f3bf647b8ace12bb2ad65fa23e9f97e2051b38a4acdf408bb16f"
+    platform: linux
+    arch: arm64
+
+# What this package provides
+provides:
+  - docker
+  - docker-compose
+  - containerd
+
+# Packages that conflict (will be removed during prepare phase)
+conflicts:
+  - docker.io
+  - docker-doc
+  - docker-compose      # old standalone version
+  - docker-compose-v2
+  - podman-docker
+  - containerd          # system containerd, replaced by docker's
+  - runc
+
+# Packages to install (by package manager)
+packages:
+  apt:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    - docker-compose-plugin
+    - lshw               # for hardware detection in verify phase
+
+# Optional features (--with <feature>)
+features:
+  rootless:
+    description: Run Docker daemon without root privileges
+    packages:
+      apt:
+        - uidmap
+        - dbus-user-session
+    provision:
+      script: dockerd-rootless-setuptool.sh install
+
+# Settings (--with <setting>=<value>)
+settings:
+  storage-driver:
+    description: Storage driver for Docker
+    default: overlay2
+    values: [overlay2, btrfs, zfs, vfs]
+
+  log-driver:
+    description: Default logging driver
+    default: json-file
+    values: [json-file, syslog, journald, none]
+
+# Pipelines
+pipelines:
+  deploy:
+    phases:
+      prepare: prepare.star
+      install: install.star
+      provision: provision.star
+      verify: verify.star
+
+  upgrade:
+    phases:
+      prepare: prepare.star
+      install: install.star
+      verify: verify.star
+
+  decommission:
+    phases:
+      # TODO: implement decommission phases
+      prepare: null
+      remove: null
+      verify: null
+
+# Hardware-specific provisions
+hardware_provisions:
+  ODROID-C4:
+    description: Requires cgroup v1 compatibility mode
+    reference: https://sipfront.com/blog/2024/01/running-docker-on-odroid-c4/
+    boot_arg: systemd.unified_cgroup_hierarchy=0
+  ODROID-C5:
+    description: Requires cgroup v1 compatibility mode
+    boot_arg: systemd.unified_cgroup_hierarchy=0
+
+# Tribal knowledge
+notes: |
+  Docker CE installation requires removing conflicting system packages first.
+  On ODROID C4/C5 boards, cgroup v1 compatibility mode must be enabled in boot.ini.
+  User should be added to the docker group to avoid requiring sudo for every command.
