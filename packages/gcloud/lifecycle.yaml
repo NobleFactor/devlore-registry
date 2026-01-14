@@ -13,6 +13,15 @@ homepage: https://cloud.google.com/sdk
 repository: https://github.com/GoogleCloudPlatform/google-cloud-sdk
 license: Apache-2.0
 
+# AI search aliases for fuzzy matching and validation queries
+aliases:
+  - google cloud cli
+  - google cloud sdk
+  - gcp cli
+  - gcp
+  - gsutil
+  - bq
+
 # Upstream release artifacts — for verification, direct download, bundling
 # Note: Google publishes "rapid" channel (always-latest) archives
 # Hashes computed 2026-01-12 from dl.google.com

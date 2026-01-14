@@ -13,6 +13,14 @@ homepage: https://aws.amazon.com/cli/
 repository: https://github.com/aws/aws-cli
 license: Apache-2.0
 
+# AI search aliases for fuzzy matching and validation queries
+aliases:
+  - aws
+  - awscli
+  - amazon cli
+  - amazon web services cli
+  - aws command line
+
 # Upstream release artifacts — for verification, direct download, bundling
 # Note: AWS publishes "latest" installers (hashes change with each release)
 # Hashes computed 2026-01-12 from awscli.amazonaws.com

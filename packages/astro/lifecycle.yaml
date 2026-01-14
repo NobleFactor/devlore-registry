@@ -23,6 +23,14 @@ homepage: https://astro.build
 repository: https://github.com/withastro/astro
 license: MIT
 
+# AI search aliases for fuzzy matching and validation queries
+aliases:
+  - astro.build
+  - astrojs
+  - astro framework
+  - static site generator
+  - ssg
+
 # npm package — no direct binary sources
 # Integrity handled by npm registry (package-lock.json contains SRI hashes)
 # Install via: npm install -g astro@5.1.3 OR npx create-astro@latest

@@ -17,6 +17,16 @@ name: docker
 description: Docker CE, CLI, containerd, buildx, and compose plugin
 version: "29.1.4"
 
+# AI search aliases for fuzzy matching and validation queries
+aliases:
+  - docker ce
+  - docker engine
+  - docker cli
+  - containerd
+  - docker-compose
+  - docker compose
+  - container runtime
+
 # Metadata
 homepage: https://docs.docker.com/engine/install/
 repository: https://github.com/moby/moby

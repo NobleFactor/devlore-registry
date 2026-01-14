@@ -13,6 +13,13 @@ homepage: https://www.terraform.io/
 repository: https://github.com/hashicorp/terraform
 license: BUSL-1.1
 
+# AI search aliases for fuzzy matching and validation queries
+aliases:
+  - tf
+  - hashicorp terraform
+  - infrastructure as code
+  - iac
+
 # Upstream release artifacts — for verification, direct download, bundling
 # Hashes from releases.hashicorp.com/terraform/1.10.0/terraform_1.10.0_SHA256SUMS
 sources:

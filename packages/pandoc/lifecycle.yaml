@@ -17,6 +17,15 @@ homepage: https://pandoc.org
 repository: https://github.com/jgm/pandoc
 license: GPL-2.0-or-later
 
+# AI search aliases for fuzzy matching and validation queries
+aliases:
+  - document converter
+  - markdown to pdf
+  - markdown converter
+  - universal document converter
+  - md to docx
+  - latex to pdf
+
 # Upstream release artifacts — for verification, direct download, bundling
 # Hashes computed 2026-01-12 from github.com/jgm/pandoc/releases/tag/3.6
 sources:
