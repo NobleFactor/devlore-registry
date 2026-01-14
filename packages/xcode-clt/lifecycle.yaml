@@ -26,6 +26,17 @@ description: Xcode Command Line Tools - compilers and build tools for macOS
 homepage: https://developer.apple.com/xcode/
 license: Apple EULA
 
+# AI search aliases for fuzzy matching and validation queries
+aliases:
+  - xcode command line tools
+  - xcode cli
+  - apple developer tools
+  - command line tools for xcode
+  - clang
+  - macos sdk
+  - apple clang
+  - xcode-select
+
 # No direct download sources available
 # Apple distributes CLT only via:
 #   1. xcode-select --install (GUI dialog)

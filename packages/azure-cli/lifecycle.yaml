@@ -13,6 +13,14 @@ homepage: https://learn.microsoft.com/en-us/cli/azure/
 repository: https://github.com/Azure/azure-cli
 license: MIT
 
+# AI search aliases for fuzzy matching and validation queries
+aliases:
+  - az
+  - az cli
+  - azure
+  - microsoft azure cli
+  - azure command line
+
 # Upstream release artifacts — for verification, direct download, bundling
 # Hashes computed 2026-01-12
 sources:

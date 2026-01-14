@@ -38,7 +38,7 @@ flowchart TD
 ### 1.1 Search the Registry
 
 ```
-lore/design.d/registry/<product-name>/
+packages/<product-name>/
 ```
 
 Also search for variations:
@@ -174,7 +174,7 @@ Look for patterns indicating tribal knowledge:
 Create:
 
 ```
-lore/design.d/registry/<package-name>/
+packages/<package-name>/
 ├── lifecycle.yaml
 ├── prepare.star
 ├── install.star
@@ -309,7 +309,7 @@ Use these APIs in Starlark scripts:
 | `env.*` | `.get()`, `.set()`, `.expand()` |
 | `service.*` | `.enable()`, `.start()`, `.status()` |
 
-See `lore/design.d/lore_builtins.star` for complete API documentation.
+See [`lore_builtins.star`](https://github.com/NobleFactor/lore/blob/main/starlark/lore_builtins.star) for complete API documentation.
 
 ## Phase 4: Create README Documentation
 
@@ -430,7 +430,7 @@ Before presenting to user, verify:
 
 **AI Response**:
 
-1. Check `lore/design.d/registry/ripgrep/` — not found
+1. Check `packages/ripgrep/` — not found
 2. Search: "ripgrep install", "rg install homebrew apt", "ripgrep shell completions"
 3. Discover:
    - Package names: `ripgrep` (most), `rg` (some)

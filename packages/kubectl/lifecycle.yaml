@@ -13,6 +13,15 @@ homepage: https://kubernetes.io/docs/reference/kubectl/
 repository: https://github.com/kubernetes/kubectl
 license: Apache-2.0
 
+# AI search aliases for fuzzy matching and validation queries
+aliases:
+  - kubernetes cli
+  - kubernetes command line
+  - k8s cli
+  - k8s
+  - kube
+  - kube-ctl
+
 # Upstream release artifacts — for verification, direct download, bundling
 # Hashes computed 2026-01-12 from dl.k8s.io/release/v1.32.0/
 sources:

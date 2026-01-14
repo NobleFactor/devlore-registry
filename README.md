@@ -16,6 +16,7 @@ Each package encodes installation knowledge that would otherwise require hours o
 | [kubectl](packages/kubectl/) | all | Kubernetes command-line tool | Plugin ecosystem (krew), auth plugins per cloud |
 | [pandoc](packages/pandoc/) | all | Universal document converter | PDF engines, LaTeX package hell, tlmgr |
 | [terraform](packages/terraform/) | all | Infrastructure as Code | Version pinning, provider caching, tflint |
+| [xcode](packages/xcode/) | Darwin | Xcode IDE | Version pinning, simulator management, provisioning |
 | [xcode-clt](packages/xcode-clt/) | Darwin | Xcode Command Line Tools | Headless installation, license acceptance |
 
 ## Package Documentation Format
@@ -78,4 +79,4 @@ See [astro](packages/astro/) for a cross-platform example, [xcode-clt](packages/
 ## Related Documentation
 
 - [noblefactor](https://github.com/NobleFactor/noblefactor) — Main lore repository with design docs and ADRs
-- [ADR-018: Package Registry Layout](https://github.com/NobleFactor/noblefactor/blob/master/lore/design/adr/018-package-registry-layout.md) — Registry structure decisions
+- [ADR-018: Package Registry Layout](https://github.com/NobleFactor/noblefactor/blob/main/lore/design/adr/018-package-registry-layout.md) — Registry structure decisions
