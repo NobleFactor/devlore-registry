@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ParseOutput",
+  "description": "Structured output from document parsing for lore package creation",
+  "type": "object",
+  "required": ["package_name", "slots", "sources"],
+  "properties": {
+    "package_name": {
+      "type": "string",
+      "description": "Extracted package name (lowercase, hyphenated)",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "slots": {
+      "type": "array",
+      "description": "Extracted slot values from the document(s)",
+      "items": {
+        "$ref": "#/$defs/Slot"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "description": "Documents that were parsed",
+      "items": {
+        "$ref": "#/$defs/Source"
+      }
+    },
+    "ambiguities": {
+      "type": "array",
+      "description": "Unresolved ambiguities requiring clarification",
+      "items": {
+        "$ref": "#/$defs/Ambiguity"
+      }
+    },
+    "tribal_knowledge": {
+      "type": "array",
+      "description": "Warnings, gotchas, and non-obvious insights extracted",
+      "items": {
+        "$ref": "#/$defs/TribalKnowledge"
+      }
+    }
+  },
+  "$defs": {
+    "Slot": {
+      "type": "object",
+      "required": ["category", "name", "value", "confidence", "platform"],
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["identity", "platform", "installation", "dependency", "conflict", "configuration", "verification", "feature", "setting"]
+        },
+        "name": {
+          "type": "string",
+          "description": "Slot field name (e.g., 'version', 'install_command', 'verify_command')"
+        },
+        "value": {
+          "description": "The extracted value (string, array, or object depending on slot type)"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Confidence in extraction accuracy"
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["all", "darwin", "linux", "windows"],
+          "description": "Which platform this slot applies to"
+        },
+        "source_ref": {
+          "type": "string",
+          "description": "Document and section where this was found"
+        },
+        "annotation": {
+          "type": "string",
+          "description": "Additional context or warnings about this slot"
+        }
+      }
+    },
+    "Source": {
+      "type": "object",
+      "required": ["title", "trust_level"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Document title or URL"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Source URL if available"
+        },
+        "trust_level": {
+          "type": "string",
+          "enum": ["vendor", "organization", "community", "web"],
+          "description": "Trust level per ADR-012 hierarchy"
+        },
+        "sections_used": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Which sections were relevant"
+        }
+      }
+    },
+    "Ambiguity": {
+      "type": "object",
+      "required": ["slot_name", "description", "options"],
+      "properties": {
+        "slot_name": {
+          "type": "string",
+          "description": "Which slot is ambiguous"
+        },
+        "description": {
+          "type": "string",
+          "description": "What is unclear"
+        },
+        "options": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Possible interpretations"
+        },
+        "suggested_default": {
+          "type": "string",
+          "description": "Recommended resolution"
+        }
+      }
+    },
+    "TribalKnowledge": {
+      "type": "object",
+      "required": ["title", "description"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Short name for the insight"
+        },
+        "description": {
+          "type": "string",
+          "description": "What the insight is and why it matters"
+        },
+        "source_ref": {
+          "type": "string",
+          "description": "Where this was found"
+        },
+        "affects_phase": {
+          "type": "string",
+          "enum": ["prepare", "install", "provision", "verify"],
+          "description": "Which lifecycle phase this affects"
+        }
+      }
+    }
+  }
+}

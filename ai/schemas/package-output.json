@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PackageOutput",
+  "description": "Structured output for a generated lore package manifest",
+  "type": "object",
+  "required": ["package_name", "files"],
+  "properties": {
+    "package_name": {
+      "type": "string",
+      "description": "Package name (lowercase, hyphenated)",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "files": {
+      "type": "object",
+      "required": ["lifecycle", "prepare", "install", "provision", "verify", "readme"],
+      "properties": {
+        "lifecycle": {
+          "$ref": "#/$defs/FileContent",
+          "description": "lifecycle.yaml content"
+        },
+        "prepare": {
+          "$ref": "#/$defs/FileContent",
+          "description": "prepare.star content"
+        },
+        "install": {
+          "$ref": "#/$defs/FileContent",
+          "description": "install.star content"
+        },
+        "provision": {
+          "$ref": "#/$defs/FileContent",
+          "description": "provision.star content"
+        },
+        "verify": {
+          "$ref": "#/$defs/FileContent",
+          "description": "verify.star content"
+        },
+        "readme": {
+          "$ref": "#/$defs/FileContent",
+          "description": "README.md content"
+        }
+      }
+    },
+    "tribal_knowledge_summary": {
+      "type": "array",
+      "description": "Key insights encoded in the package",
+      "items": {
+        "type": "object",
+        "required": ["title", "file", "lines"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Name of the insight"
+          },
+          "file": {
+            "type": "string",
+            "description": "Which file implements it"
+          },
+          "lines": {
+            "type": "string",
+            "description": "Line range (e.g., '28-51')"
+          }
+        }
+      }
+    },
+    "sources_consulted": {
+      "type": "array",
+      "description": "URLs and documents used to create this package",
+      "items": {
+        "type": "object",
+        "required": ["title", "relevance"],
+        "properties": {
+          "title": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "relevance": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "FileContent": {
+      "type": "object",
+      "required": ["filename", "content"],
+      "properties": {
+        "filename": {
+          "type": "string",
+          "description": "Filename (e.g., 'lifecycle.yaml')"
+        },
+        "content": {
+          "type": "string",
+          "description": "Complete file content"
+        }
+      }
+    }
+  }
+}

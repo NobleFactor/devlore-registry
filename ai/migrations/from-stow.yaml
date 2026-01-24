@@ -1,0 +1,68 @@
+# Migration knowledge: GNU Stow → writ
+# Used by migrate-to-writ.txt prompt for AI-assisted migration planning
+
+source_system: stow
+description: "GNU Stow symlink farm manager"
+similarity_to_writ: high  # Stow is the closest model to writ
+
+concept_mapping:
+  - source: "Package (directory)"
+    target: "Project"
+    notes: "Named grouping of files"
+  - source: "Stow directory"
+    target: "Source root"
+    notes: "The repository containing dotfiles"
+  - source: "Target directory ($HOME)"
+    target: "Target root"
+    notes: "Where symlinks are created"
+  - source: "--adopt"
+    target: "--conflict=backup"
+    notes: "Handles existing files"
+  - source: "stow -D (unstow)"
+    target: "writ remove"
+    notes: "Removes deployed symlinks"
+
+preserved_behaviors:
+  - "Files mirror the target directory structure"
+  - "Plain files become symlinks"
+  - "Directory hierarchy is preserved"
+  - "Multiple packages/projects can coexist"
+
+new_capabilities:
+  - "Platform variants via segment directories"
+  - "Template rendering (.template extension)"
+  - "Secret decryption (.age/.sops extensions)"
+  - "Conflict resolution options (backup, overwrite, skip)"
+  - "State tracking (receipt + state file)"
+  - "Package management delegation to lore"
+
+migration_strategy:
+  consolidation: |
+    Stow encourages one package per application (bash, git, nvim).
+    Writ encourages one project per context (all, work, personal).
+    Merge multiple Stow packages that are always deployed together
+    into a single writ project (typically "all").
+  platform_handling: |
+    If user had separate packages for platforms (e.g., linux-git, mac-git),
+    convert to segment directories (all.Linux/, all.Darwin/).
+  ignore_files: |
+    Stow uses .stow-local-ignore. Writ doesn't need this because only
+    files within project directories are deployed. Non-deployed files
+    go outside project directories (e.g., docs/, scripts/).
+
+detection_signals:
+  - file: ".stow-local-ignore"
+    confidence: 0.9
+  - command_in_history: "stow -d"
+    confidence: 0.8
+  - directory_pattern: "~/dotfiles/bash/, ~/dotfiles/git/, ~/dotfiles/nvim/"
+    confidence: 0.7
+    notes: "Multiple sibling directories each containing dot-prefixed files"
+
+common_questions:
+  - question: "Do you deploy all packages on every machine, or are some context-specific?"
+    resolves: "project structure (all vs named projects)"
+  - question: "Do you have any platform-specific packages (e.g., linux-specific, mac-specific)?"
+    resolves: "segment directories"
+  - question: "Do you use .stow-local-ignore for any packages?"
+    resolves: "files to exclude from migration"

@@ -1,0 +1,108 @@
+# Migration knowledge: Bare git repo → writ
+# Used by migrate-to-writ.txt prompt for AI-assisted migration planning
+
+source_system: bare-git
+description: "DIY bare git repository with $HOME as worktree"
+similarity_to_writ: low  # Very different model
+
+concept_mapping:
+  - source: "Bare repo (~/.dotfiles)"
+    target: "Source root"
+    notes: "Separate directory (not bare)"
+  - source: "Worktree ($HOME)"
+    target: "Target root"
+    notes: "Deployment destination"
+  - source: "dotfiles add (git add)"
+    target: "(add file to source tree)"
+    notes: "Manual file placement"
+  - source: "dotfiles checkout"
+    target: "writ add"
+    notes: "Deploy files"
+  - source: ".gitignore (showUntrackedFiles=no)"
+    target: "(directory structure)"
+    notes: "Only project directories are deployed"
+  - source: "Branches per machine"
+    target: "Projects + segments"
+    notes: "Platform/context variants"
+
+key_model_difference: |
+  The bare git approach tracks files directly in $HOME with no symlinks.
+  The git config sets showUntrackedFiles=no to avoid showing all of $HOME.
+  Common aliases: "dotfiles" or "cfg".
+
+  writ uses symlinks. Source files live in a regular directory and writ
+  creates symlinks from $HOME pointing back to the source.
+
+  Key gains:
+  1. Symlinks mean source is always the single source of truth
+  2. No showUntrackedFiles hack needed
+  3. Platform handling without branches
+  4. Templates, encryption, state tracking
+
+preserved_behaviors: []  # Almost nothing carries over
+
+new_capabilities:
+  - "Symlinks instead of copies"
+  - "Platform handling without branch-per-machine"
+  - "Templates for generating config from variables"
+  - "Encrypted secrets decrypted at deploy time"
+  - "State tracking (know what's deployed, detect drift)"
+  - "Package management via lore delegation"
+
+migration_strategy:
+  branch_handling: |
+    If the user maintained branches for different machines/platforms:
+    1. Common files across all branches → "all" project
+    2. Files that differ by platform → segment directories
+    3. Files specific to work/personal → named projects
+
+    Merge strategy:
+    - Start from main/default branch for "all"
+    - Diff other branches to find platform-specific files
+    - Place those in appropriate segment directories
+
+  setup_scripts: |
+    If the bare git repo included setup.sh or install.sh:
+    - Package install commands → packages.manifest
+    - Non-package commands → evaluate if writ handles them natively
+
+  multiple_repos: |
+    If user maintained separate bare repos (e.g., public + private):
+    - Each repo becomes a separate project in one source root
+    - Private repo files may need .age encryption
+
+common_aliases: ["dotfiles", "cfg", "dot", "config"]
+
+detection_signals:
+  - file: "~/.dotfiles/HEAD"
+    confidence: 0.95
+    notes: "Bare git repo in common location"
+  - file: "~/.cfg/HEAD"
+    confidence: 0.9
+  - shell_alias: "dotfiles='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'"
+    confidence: 1.0
+  - git_config: "showUntrackedFiles = no"
+    confidence: 0.9
+  - command_in_history: "git --git-dir=.*dotfiles"
+    confidence: 0.85
+
+common_questions:
+  - question: "What's the name of your alias (dotfiles, cfg, dot, etc.) and where's the bare repo?"
+    resolves: "Source repo location"
+  - question: "Do you maintain branches for different machines? Which branches?"
+    resolves: "Project and segment structure"
+  - question: "Do you have a setup.sh or install.sh? What does it do?"
+    resolves: "packages.manifest creation"
+  - question: "Do you have separate bare repos for public and private dotfiles?"
+    resolves: "Project structure (one vs multiple)"
+  - question: "List your tracked files: `dotfiles ls-tree --name-only -r HEAD`"
+    resolves: "Complete file inventory for migration"
+
+step_overview:
+  - "List all tracked files from the bare repo"
+  - "Create writ source structure with appropriate projects"
+  - "Copy files into source tree (preserving directory structure)"
+  - "Organize platform-specific files into segments"
+  - "Remove bare git tracking from $HOME"
+  - "Initialize source as regular git repo"
+  - "Configure writ and deploy"

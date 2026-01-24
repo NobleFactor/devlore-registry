@@ -1,0 +1,139 @@
+# Migration knowledge: chezmoi → writ
+# Used by migrate-to-writ.txt prompt for AI-assisted migration planning
+
+source_system: chezmoi
+description: "Dotfile manager with templates, encryption, and scripts"
+similarity_to_writ: medium  # Shared template engine, different file model
+
+concept_mapping:
+  - source: "Source state (~/.local/share/chezmoi)"
+    target: "Source root"
+    notes: "The dotfiles repository"
+  - source: "dot_ prefix"
+    target: "Literal . prefix"
+    notes: "chezmoi encodes dots; writ uses actual dots"
+  - source: "private_ prefix"
+    target: ".age/.sops extension"
+    notes: "Different approach to permissions/secrets"
+  - source: "executable_ prefix"
+    target: "(file mode preserved)"
+    notes: "Writ preserves source mode through symlinks"
+  - source: ".tmpl suffix"
+    target: ".template suffix"
+    notes: "Both use Go text/template"
+  - source: "encrypted_ prefix + .age"
+    target: ".age extension"
+    notes: "Same encryption, simpler naming"
+  - source: "run_once_, run_onchange_"
+    target: "packages.manifest (lore delegation)"
+    notes: "Scripts become declarative package lists"
+  - source: ".chezmoiexternal.toml"
+    target: "packages.manifest (lore)"
+    notes: "External resources handled by lore"
+  - source: "chezmoi data"
+    target: "writ.vars in config"
+    notes: "Template data source"
+  - source: ".chezmoiignore"
+    target: "(directory structure)"
+    notes: "Non-deployed files go outside projects"
+
+preserved_behaviors:
+  - "Go text/template syntax (mostly compatible)"
+  - "age encryption for secrets"
+  - "Git-based source repository"
+  - "Declarative: source defines desired state"
+
+template_variable_mapping:
+  - source: ".chezmoi.os"
+    target: ".OS"
+    example: "darwin"
+  - source: ".chezmoi.arch"
+    target: ".ARCH"
+    example: "arm64"
+  - source: ".chezmoi.hostname"
+    target: ".Hostname"
+    example: "macbook-pro"
+  - source: ".chezmoi.username"
+    target: ".Username"
+    example: "david"
+  - source: ".chezmoi.homeDir"
+    target: ".Home"
+    example: "/Users/david"
+  - source: ".chezmoi.config.data.*"
+    target: ".<key>"
+    example: "User-defined vars"
+  - source: "env \"KEY\""
+    target: "Env \"KEY\""
+    example: "Environment lookup function"
+
+file_naming_rules:
+  - pattern: "dot_"
+    action: "Replace with literal '.'"
+    example: "dot_bashrc → .bashrc"
+  - pattern: "private_"
+    action: "Remove prefix (permissions via .age or source mode)"
+    example: "private_ssh/ → .ssh/"
+  - pattern: "executable_"
+    action: "Remove prefix (mode preserved through symlink)"
+    example: "executable_script → script"
+  - pattern: ".tmpl"
+    action: "Replace with .template"
+    example: "config.tmpl → config.template"
+  - pattern: "encrypted_*.age"
+    action: "Remove encrypted_ prefix, keep .age"
+    example: "encrypted_id.age → id.age"
+  - pattern: "run_once_*"
+    action: "Extract packages → packages.manifest"
+  - pattern: "run_onchange_*"
+    action: "Extract packages → packages.manifest"
+
+platform_handling: |
+  chezmoi uses template conditionals for platform differences:
+    {{ if eq .chezmoi.os "darwin" }}...{{ end }}
+  writ uses segment directories instead:
+    all.Darwin/file (macOS version)
+    all.Linux/file (Linux version)
+
+  Migration options:
+  1. Split template into segment-specific files (cleaner, no conditionals)
+  2. Keep single template with {{ if eq .OS "darwin" }} (less files, same logic)
+
+special_features:
+  modify_scripts:
+    has_equivalent: false
+    migration_note: |
+      chezmoi's modify_ prefix runs a script that receives existing content
+      on stdin and outputs modified content. Writ has no equivalent.
+      Convert to .template files that generate the complete content.
+
+  chezmoiroot:
+    migration_note: |
+      If .chezmoiroot was used to nest source state in a subdirectory,
+      point writ's repo config at that subdirectory directly.
+
+  externals:
+    migration_note: |
+      .chezmoiexternal.toml entries (downloading external repos/archives)
+      map to lore package definitions. Add to packages.manifest.
+
+detection_signals:
+  - file: ".chezmoiversion"
+    confidence: 1.0
+  - directory: "~/.local/share/chezmoi"
+    confidence: 0.95
+  - file: ".chezmoiignore"
+    confidence: 0.95
+  - file_pattern: "dot_*"
+    confidence: 0.9
+  - command_in_history: "chezmoi"
+    confidence: 0.85
+
+common_questions:
+  - question: "Do you use chezmoi templates (.tmpl files)? If so, what template variables do you define?"
+    resolves: "template conversion, writ.vars config"
+  - question: "Do you have encrypted files? What encryption method (age or gpg)?"
+    resolves: "encryption conversion strategy"
+  - question: "Do you have run_once or run_onchange scripts? What packages do they install?"
+    resolves: "packages.manifest creation"
+  - question: "Do your templates have platform conditionals ({{ if eq .chezmoi.os ... }})?"
+    resolves: "segment directory creation vs keeping template conditionals"
