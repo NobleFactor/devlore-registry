@@ -1,0 +1,188 @@
+# Edge cases and tricky patterns for AI parsing and generation
+#
+# These examples cover scenarios that commonly trip up LLMs
+
+edge_cases:
+  - name: "Package name differs across platforms"
+    description: |
+      The same software uses different package names on different platforms.
+      The AI must not assume one name works everywhere.
+    example:
+      document: |
+        Install fd (fast find alternative):
+        - macOS: `brew install fd`
+        - Ubuntu: `sudo apt install fd-find`
+        - The binary is `fdfind` on Ubuntu due to name conflict with fdclone
+    correct_extraction:
+      - { name: package_name, value: "fd", platform: darwin }
+      - { name: package_name, value: "fd-find", platform: linux }
+      - { name: binary_name, value: "fd", platform: darwin }
+      - { name: binary_name, value: "fdfind", platform: linux }
+    common_mistake: "Using 'fd' as the package name on all platforms"
+
+  - name: "Cask vs formula on macOS"
+    description: |
+      Homebrew has formulae (CLI tools) and casks (GUI apps).
+      The AI must distinguish `brew install` from `brew install --cask`.
+    example:
+      document: |
+        ## Visual Studio Code
+        ```
+        brew install --cask visual-studio-code
+        ```
+    correct_extraction:
+      - { name: install_command, value: "brew install --cask visual-studio-code", platform: darwin }
+      - { name: install_type, value: "cask", platform: darwin }
+    common_mistake: "Dropping the --cask flag, treating it as a formula"
+
+  - name: "Version in package name"
+    description: |
+      Some packages include version in the name (postgresql@16, python@3.12).
+      The version is part of the package identifier, not just metadata.
+    example:
+      document: |
+        brew install postgresql@16
+        brew install python@3.12
+    correct_extraction:
+      - { name: install_command, value: "brew install postgresql@16", platform: darwin }
+      - { name: version, value: "16", confidence: 0.9, annotation: "Version pinned via @16 suffix" }
+    common_mistake: "Extracting 'postgresql' without the @16 version suffix"
+
+  - name: "Repository setup as a dependency"
+    description: |
+      Adding a third-party repo is a prerequisite, not part of installation.
+      This goes in prepare.star, not install.star.
+    example:
+      document: |
+        First add the Kubernetes apt repository:
+        ```
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+        sudo apt update
+        ```
+        Then install:
+        ```
+        sudo apt install kubectl
+        ```
+    correct_phase_assignment:
+      prepare: "Add repository and GPG key"
+      install: "apt install kubectl"
+    common_mistake: "Putting repo setup in install.star instead of prepare.star"
+
+  - name: "Verification that requires network"
+    description: |
+      Some verification commands need network access (docker pull, npm test).
+      Prefer offline verification when possible.
+    example:
+      document: |
+        Verify Docker works:
+        ```
+        docker run hello-world
+        ```
+    correct_extraction:
+      - { name: verify_command, value: "docker version", annotation: "Prefer offline check over docker run hello-world" }
+    preferred_alternative: "docker version (offline, checks daemon is running)"
+    common_mistake: "Using 'docker run hello-world' which requires network and registry access"
+
+  - name: "Hidden sudo requirements"
+    description: |
+      Some docs show commands without sudo, but they require root.
+      The AI should note when elevation is needed.
+    example:
+      document: |
+        ```
+        apt install nginx
+        systemctl enable nginx
+        ```
+    correct_extraction:
+      - { name: install_command, value: "apt install nginx", annotation: "Requires sudo/root" }
+      - { name: post_install, value: "systemctl enable nginx", annotation: "Requires sudo/root" }
+    common_mistake: "Not flagging that these commands need sudo"
+
+  - name: "Multiple installation methods (user must choose)"
+    description: |
+      When a document presents multiple ways to install, don't combine them.
+      Extract each method separately and flag the choice.
+    example:
+      document: |
+        ## Install Terraform
+
+        ### Option 1: Package manager
+        ```
+        brew install terraform
+        ```
+
+        ### Option 2: Binary download
+        ```
+        wget https://releases.hashicorp.com/terraform/1.10.0/terraform_1.10.0_darwin_arm64.zip
+        unzip terraform_1.10.0_darwin_arm64.zip
+        mv terraform /usr/local/bin/
+        ```
+    correct_extraction:
+      ambiguities:
+        - slot_name: install_method
+          description: "Two installation methods documented"
+          options: ["Package manager (brew)", "Binary download"]
+          suggested_default: "Package manager (brew)"
+    common_mistake: "Combining both methods into one install script"
+
+  - name: "Shell-specific configuration"
+    description: |
+      Post-install PATH or completion setup differs by shell.
+      The AI must handle bash, zsh, and fish separately.
+    example:
+      document: |
+        Add to your shell config:
+
+        **bash** (~/.bashrc):
+        ```
+        eval "$(starship init bash)"
+        ```
+
+        **zsh** (~/.zshrc):
+        ```
+        eval "$(starship init zsh)"
+        ```
+
+        **fish** (~/.config/fish/config.fish):
+        ```
+        starship init fish | source
+        ```
+    correct_extraction:
+      - { name: shell_init, value: 'eval "$(starship init bash)"', annotation: "bash: ~/.bashrc" }
+      - { name: shell_init, value: 'eval "$(starship init zsh)"', annotation: "zsh: ~/.zshrc" }
+      - { name: shell_init, value: "starship init fish | source", annotation: "fish: ~/.config/fish/config.fish" }
+    common_mistake: "Only extracting one shell's configuration"
+
+  - name: "Implicit platform from context"
+    description: |
+      Sometimes the platform isn't stated explicitly but is implied by the
+      package manager or path used.
+    example:
+      document: |
+        Install with winget:
+        ```
+        winget install Git.Git
+        ```
+    correct_extraction:
+      - { name: install_command, value: "winget install Git.Git", platform: windows }
+    reasoning: "winget implies Windows platform even though 'windows' isn't stated"
+    common_mistake: "Setting platform to 'all' because the doc doesn't explicitly say Windows"
+
+  - name: "Deprecated instructions in old docs"
+    description: |
+      Documents may contain outdated instructions. If the AI detects
+      deprecation signals, it should flag them.
+    example:
+      document: |
+        Install Docker:
+        ```
+        curl -sSL https://get.docker.com | sh
+        ```
+        **Note (2023): The convenience script is not recommended for production.**
+    correct_extraction:
+      - name: install_command
+        value: "curl -sSL https://get.docker.com | sh"
+        confidence: 0.3
+        annotation: "Deprecated: convenience script not recommended for production (noted 2023)"
+    common_mistake: "Extracting the deprecated command at full confidence"

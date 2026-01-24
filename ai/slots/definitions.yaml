@@ -1,0 +1,243 @@
+# Slot Definitions for lore package authoring
+#
+# Slots are structured fields extracted from documents during `lore onboard`.
+# Each slot has a type, description, and validation rules.
+#
+# Categories map to sections of a lore package manifest.
+
+version: 1
+
+categories:
+  identity:
+    description: "Core package identification"
+    slots:
+      package_name:
+        type: string
+        required: true
+        pattern: "^[a-z][a-z0-9-]*$"
+        description: "Package identifier (lowercase, hyphenated)"
+        examples: ["ripgrep", "aws-cli", "docker", "xcode-clt"]
+
+      version:
+        type: string
+        required: true
+        pattern: "^[0-9]"
+        description: "Current stable version number"
+        examples: ["14.1.0", "2.22.0", "27.4.0"]
+
+      description:
+        type: string
+        required: true
+        max_length: 120
+        description: "One-line package description"
+        examples: ["Fast regex search tool", "AWS Command Line Interface"]
+
+      homepage:
+        type: url
+        required: true
+        description: "Official project homepage or documentation URL"
+
+      repository:
+        type: url
+        required: false
+        description: "Source code repository URL"
+
+      license:
+        type: string
+        required: true
+        description: "SPDX license identifier"
+        enum: ["MIT", "Apache-2.0", "GPL-2.0-or-later", "GPL-3.0-or-later",
+               "BSD-2-Clause", "BSD-3-Clause", "ISC", "MPL-2.0", "BUSL-1.1",
+               "AGPL-3.0-or-later", "Unlicense", "proprietary"]
+
+      authors:
+        type: array
+        required: false
+        description: "Package maintainers or organizations"
+        item_schema:
+          name: { type: string, required: true }
+          url: { type: url, required: false }
+
+  platform:
+    description: "Supported platforms and architectures"
+    slots:
+      platforms:
+        type: array
+        required: true
+        description: "Supported operating systems"
+        enum_items: ["darwin", "linux", "windows"]
+
+      architectures:
+        type: array
+        required: false
+        description: "Supported CPU architectures (if constrained)"
+        enum_items: ["amd64", "arm64"]
+
+      min_os_version:
+        type: object
+        required: false
+        description: "Minimum OS version per platform"
+        example: { darwin: "12.0", linux: "20.04" }
+
+  installation:
+    description: "How to acquire and install the software"
+    slots:
+      install_command:
+        type: string
+        required: true
+        per_platform: true
+        description: "Primary installation command"
+        examples: ["brew install ripgrep", "apt install ripgrep"]
+
+      install_packages:
+        type: array
+        required: false
+        per_platform: true
+        description: "Multiple packages to install together"
+        examples: [["docker-ce", "docker-ce-cli", "containerd.io"]]
+
+      install_url:
+        type: url
+        required: false
+        per_platform: true
+        description: "Direct download URL (when not using package manager)"
+
+      install_type:
+        type: string
+        required: false
+        description: "Type of installation"
+        enum: ["package", "cask", "binary", "archive", "script", "installer"]
+
+      package_manager:
+        type: string
+        required: false
+        per_platform: true
+        description: "Which package manager to use"
+        enum: ["brew", "apt", "dnf", "pacman", "winget", "choco", "scoop"]
+
+  dependency:
+    description: "Prerequisites that must be installed first"
+    slots:
+      dependencies:
+        type: array
+        required: false
+        description: "Packages that must be present before installation"
+        examples: [["ca-certificates", "curl", "gnupg"]]
+
+      build_dependencies:
+        type: array
+        required: false
+        description: "Packages needed only for building from source"
+
+  conflict:
+    description: "Packages that must be removed before installation"
+    slots:
+      conflicting_packages:
+        type: array
+        required: false
+        description: "Packages that conflict and must be removed"
+        examples: [["docker.io", "docker-engine"]]
+
+      conflict_reason:
+        type: string
+        required: false
+        description: "Why the conflict exists"
+
+  configuration:
+    description: "Post-install setup and configuration"
+    slots:
+      post_install:
+        type: string
+        required: false
+        per_platform: true
+        description: "Commands to run after installation"
+        examples: ["usermod -aG docker $USER"]
+
+      shell_init:
+        type: string
+        required: false
+        per_shell: true
+        description: "Shell initialization commands"
+        shells: ["bash", "zsh", "fish"]
+
+      config_files:
+        type: array
+        required: false
+        description: "Configuration files to create or modify"
+        item_schema:
+          path: { type: string, required: true }
+          content: { type: string, required: false }
+          mode: { type: string, required: false, pattern: "^0[0-7]{3}$" }
+
+      environment_variables:
+        type: object
+        required: false
+        description: "Environment variables to set"
+        example: { DOCKER_HOST: "unix:///var/run/docker.sock" }
+
+      license_acceptance:
+        type: boolean
+        required: false
+        description: "Whether the tool requires license/EULA acceptance"
+
+  verification:
+    description: "How to confirm the installation works"
+    slots:
+      verify_command:
+        type: string
+        required: true
+        description: "Command to verify installation"
+        examples: ["rg --version", "docker version"]
+
+      verify_pattern:
+        type: string
+        required: false
+        description: "Regex pattern the verify output must match"
+        examples: ["ripgrep \\d+\\.\\d+\\.\\d+"]
+
+      verify_exit_code:
+        type: integer
+        required: false
+        description: "Expected exit code (default: 0)"
+        default: 0
+
+      verify_requires_network:
+        type: boolean
+        required: false
+        description: "Whether verification needs network access"
+        default: false
+
+  feature:
+    description: "Optional components or modes"
+    slots:
+      features:
+        type: object
+        required: false
+        description: "Named features with description and default"
+        item_schema:
+          description: { type: string, required: true }
+          default: { type: boolean, required: true }
+
+  setting:
+    description: "Configurable values"
+    slots:
+      settings:
+        type: object
+        required: false
+        description: "Named settings with type, default, and allowed values"
+        item_schema:
+          description: { type: string, required: true }
+          type: { type: string, required: true, enum: ["string", "integer", "boolean", "path"] }
+          default: { required: false }
+          values: { type: array, required: false }
+
+  tags:
+    description: "Categorization"
+    slots:
+      tags:
+        type: array
+        required: false
+        description: "Category and keyword tags"
+        suggested_values: ["cli", "database", "container", "editor", "cloud",
+                          "language", "build-tool", "shell", "security",
+                          "monitoring", "networking", "rust", "go", "python"]

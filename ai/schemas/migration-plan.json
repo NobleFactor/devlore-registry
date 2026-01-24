@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MigrationPlan",
+  "description": "Structured migration plan from another dotfile manager to writ",
+  "type": "object",
+  "required": ["source_system", "projects", "steps"],
+  "properties": {
+    "source_system": {
+      "type": "string",
+      "enum": ["stow", "chezmoi", "yadm", "tuckr", "bare-git", "custom"],
+      "description": "The dotfile management system being migrated from"
+    },
+    "source_location": {
+      "type": "string",
+      "description": "Path to existing dotfile repository"
+    },
+    "target_location": {
+      "type": "string",
+      "description": "Path for the new writ source root"
+    },
+    "projects": {
+      "type": "array",
+      "description": "Writ projects to create from the existing setup",
+      "items": {
+        "$ref": "#/$defs/Project"
+      }
+    },
+    "segments": {
+      "type": "array",
+      "description": "Platform/context segments identified",
+      "items": {
+        "$ref": "#/$defs/Segment"
+      }
+    },
+    "template_conversions": {
+      "type": "array",
+      "description": "Templates that need syntax conversion",
+      "items": {
+        "$ref": "#/$defs/TemplateConversion"
+      }
+    },
+    "encryption_conversions": {
+      "type": "array",
+      "description": "Encrypted files that need re-encryption",
+      "items": {
+        "$ref": "#/$defs/EncryptionConversion"
+      }
+    },
+    "script_conversions": {
+      "type": "array",
+      "description": "Scripts to convert to packages.manifest entries",
+      "items": {
+        "$ref": "#/$defs/ScriptConversion"
+      }
+    },
+    "steps": {
+      "type": "array",
+      "description": "Ordered migration steps",
+      "items": {
+        "$ref": "#/$defs/Step"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Potential issues or lossy conversions to flag",
+      "items": {
+        "type": "object",
+        "required": ["message", "severity"],
+        "properties": {
+          "message": { "type": "string" },
+          "severity": {
+            "type": "string",
+            "enum": ["info", "warning", "breaking"]
+          },
+          "mitigation": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Project": {
+      "type": "object",
+      "required": ["name", "description", "source_groups"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Writ project name"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this project contains"
+        },
+        "source_groups": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Original groups/packages being merged into this project"
+        },
+        "always_deploy": {
+          "type": "boolean",
+          "description": "Whether this project is deployed on all machines"
+        }
+      }
+    },
+    "Segment": {
+      "type": "object",
+      "required": ["directory", "condition"],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "description": "Segment directory name (e.g., 'all.Darwin')"
+        },
+        "condition": {
+          "type": "string",
+          "description": "What platform/context this matches"
+        },
+        "source_equivalent": {
+          "type": "string",
+          "description": "How this was represented in the source system"
+        }
+      }
+    },
+    "TemplateConversion": {
+      "type": "object",
+      "required": ["source_path", "target_path", "source_engine"],
+      "properties": {
+        "source_path": {
+          "type": "string",
+          "description": "Original template file path"
+        },
+        "target_path": {
+          "type": "string",
+          "description": "New path with .template extension"
+        },
+        "source_engine": {
+          "type": "string",
+          "enum": ["jinja2", "go-template", "envsubst", "custom"],
+          "description": "Original template engine"
+        },
+        "syntax_changes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Specific syntax conversions needed"
+        }
+      }
+    },
+    "EncryptionConversion": {
+      "type": "object",
+      "required": ["source_path", "target_path", "source_method"],
+      "properties": {
+        "source_path": { "type": "string" },
+        "target_path": { "type": "string" },
+        "source_method": {
+          "type": "string",
+          "enum": ["gpg", "git-crypt", "age", "sops"],
+          "description": "Original encryption method"
+        },
+        "target_method": {
+          "type": "string",
+          "enum": ["age", "sops"],
+          "description": "New encryption method"
+        }
+      }
+    },
+    "ScriptConversion": {
+      "type": "object",
+      "required": ["source_path", "packages_extracted"],
+      "properties": {
+        "source_path": {
+          "type": "string",
+          "description": "Original script path (bootstrap, Hooks.toml, run_once_*)"
+        },
+        "packages_extracted": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Package names extracted for packages.manifest"
+        },
+        "non_package_commands": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Commands that aren't package installs (may need manual handling)"
+        }
+      }
+    },
+    "Step": {
+      "type": "object",
+      "required": ["number", "title", "commands"],
+      "properties": {
+        "number": {
+          "type": "integer",
+          "description": "Step order"
+        },
+        "title": {
+          "type": "string",
+          "description": "What this step does"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed explanation"
+        },
+        "commands": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Shell commands to execute"
+        },
+        "reversible": {
+          "type": "boolean",
+          "description": "Whether this step can be undone"
+        },
+        "destructive": {
+          "type": "boolean",
+          "description": "Whether this step removes files (requires confirmation)"
+        }
+      }
+    }
+  }
+}

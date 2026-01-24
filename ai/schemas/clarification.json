@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Clarification",
+  "description": "Structured questions for resolving package specification ambiguity",
+  "type": "object",
+  "required": ["questions"],
+  "properties": {
+    "questions": {
+      "type": "array",
+      "description": "Ordered list of questions (most blocking first)",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/Question"
+      }
+    },
+    "context": {
+      "type": "string",
+      "description": "Brief explanation of why these questions are needed"
+    }
+  },
+  "$defs": {
+    "Question": {
+      "type": "object",
+      "required": ["id", "text", "resolves_slots", "priority"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique question identifier (e.g., 'q1', 'q2')"
+        },
+        "text": {
+          "type": "string",
+          "description": "The question to ask the user"
+        },
+        "why": {
+          "type": "string",
+          "description": "Why this information matters for the package"
+        },
+        "resolves_slots": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Which slot names this answer will fill"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "How blocking this question is"
+        },
+        "suggested_default": {
+          "type": "string",
+          "description": "Recommended answer if user has no preference"
+        },
+        "options": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Predefined answer choices (if applicable)"
+        },
+        "answer_type": {
+          "type": "string",
+          "enum": ["choice", "text", "boolean", "version"],
+          "description": "Expected answer format"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,228 @@
+# Few-shot examples for writ migration planning
+#
+# Each example shows: source system description → migration plan output
+
+examples:
+  - name: "Simple GNU Stow setup"
+    input: |
+      I use GNU Stow with ~/dotfiles as the stow directory.
+      I have packages: bash, git, nvim, ssh.
+      I stow everything on all machines.
+      No templates, no encryption, no platform differences.
+    output:
+      source_system: stow
+      source_location: ~/dotfiles
+      target_location: ~/dotfiles-writ
+      projects:
+        - name: all
+          description: "All dotfiles (merged from bash, git, nvim, ssh)"
+          source_groups: [bash, git, nvim, ssh]
+          always_deploy: true
+      segments: []
+      template_conversions: []
+      encryption_conversions: []
+      script_conversions: []
+      steps:
+        - number: 1
+          title: "Create writ source directory"
+          commands: ["mkdir -p ~/dotfiles-writ/all"]
+          reversible: true
+          destructive: false
+        - number: 2
+          title: "Copy files from stow packages"
+          commands:
+            - "cp -r ~/dotfiles/bash/* ~/dotfiles-writ/all/"
+            - "cp -r ~/dotfiles/git/* ~/dotfiles-writ/all/"
+            - "cp -r ~/dotfiles/nvim/* ~/dotfiles-writ/all/"
+            - "cp -r ~/dotfiles/ssh/* ~/dotfiles-writ/all/"
+          reversible: true
+          destructive: false
+        - number: 3
+          title: "Unstow existing symlinks"
+          commands: ["cd ~/dotfiles && stow -D bash git nvim ssh"]
+          reversible: true
+          destructive: false
+        - number: 4
+          title: "Initialize git repo"
+          commands:
+            - "cd ~/dotfiles-writ && git init"
+            - "git add . && git commit -m 'Initial writ structure'"
+          reversible: true
+          destructive: false
+        - number: 5
+          title: "Deploy with writ"
+          commands:
+            - "writ config set repo ~/dotfiles-writ"
+            - "writ add --dry-run all"
+            - "writ add all"
+          reversible: true
+          destructive: false
+      warnings: []
+
+  - name: "chezmoi with templates and encryption"
+    input: |
+      I use chezmoi. My source is ~/.local/share/chezmoi.
+      I have templates (.tmpl files) for git config and SSH config.
+      I use age encryption for SSH keys.
+      I have run_once scripts that install brew packages.
+      I use it on both macOS and Linux.
+      Template data: name="David", email="david@example.com"
+    output:
+      source_system: chezmoi
+      source_location: ~/.local/share/chezmoi
+      target_location: ~/dotfiles
+      projects:
+        - name: all
+          description: "Common configuration files"
+          source_groups: [base]
+          always_deploy: true
+        - name: personal
+          description: "Personal SSH keys and credentials"
+          source_groups: [private]
+          always_deploy: false
+      segments:
+        - directory: all.Darwin
+          condition: "macOS"
+          source_equivalent: "{{ if eq .chezmoi.os \"darwin\" }} blocks in templates"
+        - directory: all.Linux
+          condition: "Linux"
+          source_equivalent: "{{ if eq .chezmoi.os \"linux\" }} blocks in templates"
+      template_conversions:
+        - source_path: dot_config/git/config.tmpl
+          target_path: all/.config/git/config.template
+          source_engine: go-template
+          syntax_changes:
+            - ".chezmoi.os → .OS"
+            - ".chezmoi.hostname → .Hostname"
+            - "Template data variables stay the same (.name, .email)"
+        - source_path: dot_ssh/config.tmpl
+          target_path: personal/.ssh/config.template
+          source_engine: go-template
+          syntax_changes:
+            - ".chezmoi.homeDir → .Home"
+      encryption_conversions:
+        - source_path: dot_ssh/encrypted_id_ed25519.age
+          target_path: personal/.ssh/id_ed25519.age
+          source_method: age
+          target_method: age
+      script_conversions:
+        - source_path: run_once_install-packages.sh
+          packages_extracted: [ripgrep, fd, bat, neovim, tmux]
+          non_package_commands: []
+      steps:
+        - number: 1
+          title: "Create writ source structure"
+          commands:
+            - "mkdir -p ~/dotfiles/{all,all.Darwin,all.Linux,personal}"
+          reversible: true
+          destructive: false
+        - number: 2
+          title: "Copy and rename plain files"
+          description: "Strip dot_ prefix, copy to appropriate project"
+          commands:
+            - "cp ~/.local/share/chezmoi/dot_bashrc ~/dotfiles/all/.bashrc"
+          reversible: true
+          destructive: false
+        - number: 3
+          title: "Convert templates"
+          description: "Rename .tmpl to .template, update variable references"
+          commands:
+            - "cp dot_config/git/config.tmpl ~/dotfiles/all/.config/git/config.template"
+            - "# Edit: replace .chezmoi.os with .OS, .chezmoi.hostname with .Hostname"
+          reversible: true
+          destructive: false
+        - number: 4
+          title: "Move encrypted files"
+          commands:
+            - "cp dot_ssh/encrypted_id_ed25519.age ~/dotfiles/personal/.ssh/id_ed25519.age"
+          reversible: true
+          destructive: false
+        - number: 5
+          title: "Create packages.manifest from run_once scripts"
+          commands:
+            - "echo -e 'ripgrep\\nfd\\nbat\\nneovim\\ntmux' > ~/dotfiles/all/.config/packages.manifest"
+          reversible: true
+          destructive: false
+        - number: 6
+          title: "Split platform-specific template sections"
+          description: "Extract Darwin/Linux blocks into segment directories"
+          commands: ["# Manual: split conditional blocks into all.Darwin/ and all.Linux/"]
+          reversible: true
+          destructive: false
+        - number: 7
+          title: "Configure writ template data"
+          commands:
+            - "# Add to ~/.config/devlore/config.yaml:"
+            - "# writ:"
+            - "#   vars:"
+            - "#     name: David"
+            - "#     email: david@example.com"
+          reversible: true
+          destructive: false
+        - number: 8
+          title: "Remove chezmoi and deploy"
+          commands:
+            - "chezmoi purge"
+            - "writ config set repo ~/dotfiles"
+            - "writ add --dry-run all personal"
+            - "writ add all personal"
+          reversible: false
+          destructive: true
+      warnings:
+        - message: "chezmoi's modify_ scripts have no writ equivalent. Use .template files that generate complete content instead."
+          severity: info
+          mitigation: "Convert modify_ scripts to .template files"
+        - message: "run_once_/run_onchange_ semantics differ from lore delegation. Lore runs idempotently, not conditionally."
+          severity: info
+          mitigation: "Lore handles idempotency internally"
+
+  - name: "yadm with alt files and branches"
+    input: |
+      I use yadm. I have alt files for macOS and Linux.
+      I have .bashrc##os.Darwin and .bashrc##os.Linux.
+      I use yadm's Jinja2 templates for SSH config.
+      I encrypt files with GPG (.yadm/encrypt list).
+      My bootstrap script installs packages.
+    output:
+      source_system: yadm
+      projects:
+        - name: all
+          description: "Base configuration (non-alt files)"
+          source_groups: [base]
+          always_deploy: true
+        - name: personal
+          description: "SSH keys and encrypted credentials"
+          source_groups: [encrypted]
+          always_deploy: false
+      segments:
+        - directory: all.Darwin
+          condition: "macOS"
+          source_equivalent: "##os.Darwin alt file suffix"
+        - directory: all.Linux
+          condition: "Linux"
+          source_equivalent: "##os.Linux alt file suffix"
+      template_conversions:
+        - source_path: .ssh/config.yadm-template
+          target_path: personal/.ssh/config.template
+          source_engine: jinja2
+          syntax_changes:
+            - "{{ YADM_OS }} → {{ .OS }}"
+            - "{{ YADM_HOSTNAME }} → {{ .Hostname }}"
+            - "{{ YADM_USER }} → {{ .Username }}"
+            - "{{ env.HOME }} → {{ .Home }}"
+            - "{% if YADM_OS == \"Darwin\" %} → {{ if eq .OS \"darwin\" }}"
+            - "{% for item in list %} → {{ range .list }}"
+            - "{% endfor %} → {{ end }}"
+            - "{% endif %} → {{ end }}"
+      encryption_conversions:
+        - source_path: .ssh/id_ed25519
+          target_path: personal/.ssh/id_ed25519.age
+          source_method: gpg
+          target_method: age
+      warnings:
+        - message: "Jinja2 → Go template conversion requires manual review. Complex filters and macros have no direct equivalent."
+          severity: warning
+          mitigation: "Review each template after conversion. Simplify complex Jinja2 logic."
+        - message: "GPG → age re-encryption requires decrypting with GPG first, then re-encrypting with age."
+          severity: info
+          mitigation: "gpg -d secret | age -R recipients.txt -o secret.age"

@@ -1,0 +1,135 @@
+# Migration knowledge: yadm → writ
+# Used by migrate-to-writ.txt prompt for AI-assisted migration planning
+
+source_system: yadm
+description: "Yet Another Dotfiles Manager (bare git repo with alt files)"
+similarity_to_writ: low  # Very different model (bare git vs symlinks)
+
+concept_mapping:
+  - source: "Repo (~/.local/share/yadm/repo.git)"
+    target: "Source root"
+    notes: "Bare git → separate directory"
+  - source: "Worktree ($HOME)"
+    target: "Target root"
+    notes: "Files in $HOME → symlinks to source"
+  - source: "Alt files (##os.Darwin)"
+    target: "Segment directories"
+    notes: "Per-file suffix → directory-level segments"
+  - source: ".yadm/encrypt"
+    target: ".age/.sops extension"
+    notes: "GPG list-based → per-file age extension"
+  - source: "Jinja2/envtpl templates"
+    target: "Go text/template (.template)"
+    notes: "Different template engine entirely"
+  - source: "yadm bootstrap"
+    target: "packages.manifest (lore delegation)"
+    notes: "Shell script → declarative package list"
+  - source: "yadm alt"
+    target: "Segment matching"
+    notes: "Alternative file selection"
+  - source: "yadm class"
+    target: "Project"
+    notes: "Machine classification → project selection"
+
+key_model_difference: |
+  yadm uses a bare git repo with $HOME as worktree. Files live directly
+  in $HOME and are tracked by git. There are no symlinks.
+
+  writ uses a separate source directory with symlinks into $HOME. Source
+  files live in ~/dotfiles/ and writ creates symlinks from $HOME.
+
+  This means migration requires:
+  1. Moving files from $HOME into a source directory
+  2. Letting writ create symlinks back
+
+alt_file_mapping:
+  - source: "##os.Linux"
+    target: "<project>.Linux/"
+  - source: "##os.Darwin"
+    target: "<project>.Darwin/"
+  - source: "##arch.aarch64"
+    target: "<project>.arm64/"
+  - source: "##class.Work"
+    target: "work/ (separate project)"
+  - source: "##hostname.mybox"
+    target: "No direct equivalent (use project)"
+  - source: "##os.Linux,arch.aarch64"
+    target: "<project>.Linux.arm64/"
+
+template_syntax_mapping:
+  - source: "{{ YADM_OS }}"
+    target: "{{ .OS }}"
+  - source: "{{ YADM_ARCH }}"
+    target: "{{ .ARCH }}"
+  - source: "{{ YADM_HOSTNAME }}"
+    target: "{{ .Hostname }}"
+  - source: "{{ YADM_USER }}"
+    target: "{{ .Username }}"
+  - source: "{{ env.HOME }}"
+    target: "{{ .Home }}"
+  - source: "{% if YADM_OS == \"Darwin\" %}"
+    target: "{{ if eq .OS \"darwin\" }}"
+  - source: "{% for item in list %}"
+    target: "{{ range .list }}"
+  - source: "{{ env.VARIABLE }}"
+    target: "{{ Env \"VARIABLE\" }}"
+  - source: "{% endif %}"
+    target: "{{ end }}"
+  - source: "{% endfor %}"
+    target: "{{ end }}"
+
+encryption_migration: |
+  yadm uses GPG with a file list (.yadm/encrypt).
+  writ uses per-file age extensions.
+
+  Migration steps:
+  1. Decrypt each file: gpg -d encrypted_file > decrypted_file
+  2. Re-encrypt with age: age -R ~/.config/age/recipients.txt -o file.age file
+  3. Place .age file in source tree
+
+  If using git-crypt instead:
+  1. git-crypt unlock
+  2. age -R recipients.txt -o secret.age secret
+
+preserved_behaviors: []  # Very little carries over directly
+
+new_capabilities:
+  - "Symlinks instead of copies (source is single source of truth)"
+  - "No showUntrackedFiles=no hack needed"
+  - "Segment directories instead of ## suffixes (cleaner, greppable)"
+  - "Go templates instead of Jinja2 (more portable)"
+  - "age encryption instead of GPG (simpler key management)"
+  - "State tracking and drift detection"
+  - "Package management via lore delegation"
+
+warnings:
+  - message: "Jinja2 → Go template is a lossy conversion. Complex filters, macros, and inheritance have no equivalent."
+    severity: warning
+  - message: "yadm hooks (post_checkout, post_merge) have no direct writ equivalent."
+    severity: info
+  - message: "The hostname condition (##hostname.X) has no direct segment equivalent. Use a project instead."
+    severity: info
+
+detection_signals:
+  - directory: "~/.local/share/yadm"
+    confidence: 1.0
+  - file: ".yadm/encrypt"
+    confidence: 0.95
+  - command_in_history: "yadm"
+    confidence: 0.9
+  - file_pattern: "*##os.*"
+    confidence: 0.85
+  - file_pattern: "*.yadm-template"
+    confidence: 0.9
+
+common_questions:
+  - question: "Do you use yadm alt files? Which conditions (os, class, hostname, arch)?"
+    resolves: "segment and project structure"
+  - question: "Do you use yadm templates (.yadm-template)? What template variables?"
+    resolves: "template conversion complexity"
+  - question: "Do you encrypt files? (Check .yadm/encrypt)"
+    resolves: "encryption conversion"
+  - question: "Do you use yadm classes? What machines do you classify?"
+    resolves: "project structure"
+  - question: "Do you have a bootstrap script? What does it install?"
+    resolves: "packages.manifest creation"

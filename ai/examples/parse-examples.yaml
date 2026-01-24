@@ -1,0 +1,213 @@
+# Few-shot examples for document parsing (slot filling)
+#
+# Each example shows: input document excerpt → expected parse output
+
+examples:
+  - name: "Simple brew package from README"
+    input: |
+      ## Installation
+
+      ### macOS
+      ```
+      brew install ripgrep
+      ```
+
+      ### Ubuntu/Debian
+      ```
+      sudo apt install ripgrep
+      ```
+
+      ### Verify
+      ```
+      rg --version
+      ```
+    output:
+      package_name: ripgrep
+      slots:
+        - category: identity
+          name: package_name
+          value: ripgrep
+          confidence: 1.0
+          platform: all
+
+        - category: installation
+          name: install_command
+          value: "brew install ripgrep"
+          confidence: 1.0
+          platform: darwin
+
+        - category: installation
+          name: install_command
+          value: "apt install ripgrep"
+          confidence: 1.0
+          platform: linux
+
+        - category: verification
+          name: verify_command
+          value: "rg --version"
+          confidence: 1.0
+          platform: all
+
+  - name: "Package with tribal knowledge"
+    input: |
+      ## Docker CE on Ubuntu
+
+      **Important**: Remove any old Docker packages first:
+      ```
+      sudo apt remove docker docker-engine docker.io containerd runc
+      ```
+
+      Then add the Docker repository:
+      ```
+      sudo apt update
+      sudo apt install ca-certificates curl gnupg
+      sudo install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      ```
+
+      Install Docker CE:
+      ```
+      sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      ```
+
+      Add your user to the docker group to avoid sudo:
+      ```
+      sudo usermod -aG docker $USER
+      newgrp docker
+      ```
+
+      Verify:
+      ```
+      docker run hello-world
+      ```
+    output:
+      package_name: docker
+      slots:
+        - category: conflict
+          name: conflicting_packages
+          value: ["docker", "docker-engine", "docker.io", "containerd", "runc"]
+          confidence: 1.0
+          platform: linux
+
+        - category: dependency
+          name: dependencies
+          value: ["ca-certificates", "curl", "gnupg"]
+          confidence: 0.9
+          platform: linux
+
+        - category: installation
+          name: install_command
+          value: "apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
+          confidence: 1.0
+          platform: linux
+
+        - category: configuration
+          name: post_install
+          value: "usermod -aG docker $USER"
+          confidence: 1.0
+          platform: linux
+
+        - category: verification
+          name: verify_command
+          value: "docker run hello-world"
+          confidence: 1.0
+          platform: linux
+
+      tribal_knowledge:
+        - title: "Must remove legacy Docker packages"
+          description: "Old docker.io/docker-engine packages conflict with Docker CE. Must be removed first or installation will fail silently."
+          affects_phase: prepare
+
+        - title: "Docker group for rootless usage"
+          description: "Without adding user to docker group, every docker command requires sudo. newgrp activates without logout."
+          affects_phase: provision
+
+  - name: "Package with version ambiguity"
+    input: |
+      # PostgreSQL
+
+      Available versions: 14, 15, 16 (current), 17 (beta)
+
+      ## Install on macOS
+      ```
+      brew install postgresql@16
+      ```
+
+      ## Install on Ubuntu
+      Add the PostgreSQL Apt Repository for the latest version:
+      ```
+      sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+      wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+      sudo apt update
+      sudo apt install postgresql
+      ```
+    output:
+      package_name: postgresql
+      slots:
+        - category: identity
+          name: version
+          value: "16"
+          confidence: 0.7
+          platform: all
+          annotation: "Multiple versions available. 16 is marked 'current' but user may want 17."
+
+        - category: installation
+          name: install_command
+          value: "brew install postgresql@16"
+          confidence: 0.9
+          platform: darwin
+
+        - category: installation
+          name: install_command
+          value: "apt install postgresql"
+          confidence: 0.8
+          platform: linux
+          annotation: "Uses pgdg repo which gives latest, but user may want version-pinned"
+
+      ambiguities:
+        - slot_name: version
+          description: "Multiple versions available (14, 15, 16, 17). Document marks 16 as 'current'."
+          options: ["14 (older LTS)", "15", "16 (current)", "17 (beta)"]
+          suggested_default: "16"
+
+  - name: "Organizational override example"
+    input: |
+      ## Internal: AWS CLI Setup at BigCorp
+
+      **DO NOT use the public installer.** Use our internal mirror:
+      ```
+      curl "https://artifacts.bigcorp.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+      ```
+
+      Configure with our SSO:
+      ```
+      aws configure sso --profile bigcorp
+      # SSO URL: https://sso.bigcorp.com/start
+      # Region: us-west-2
+      ```
+    output:
+      package_name: aws-cli
+      slots:
+        - category: installation
+          name: install_url
+          value: "https://artifacts.bigcorp.com/aws-cli/awscli-bundle.zip"
+          confidence: 1.0
+          platform: all
+          annotation: "Organization override: must use internal mirror, not public installer"
+
+        - category: configuration
+          name: sso_url
+          value: "https://sso.bigcorp.com/start"
+          confidence: 1.0
+          platform: all
+
+        - category: setting
+          name: region
+          value: "us-west-2"
+          confidence: 1.0
+          platform: all
+
+      tribal_knowledge:
+        - title: "Internal mirror required"
+          description: "Organization policy prohibits public AWS installer. Must use artifacts.bigcorp.com mirror."
+          affects_phase: install

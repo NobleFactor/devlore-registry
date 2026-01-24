@@ -1,0 +1,182 @@
+# Few-shot examples for package generation
+#
+# Each example shows: parsed slots → generated package files
+
+examples:
+  - name: "Simple CLI tool (ripgrep)"
+    input_slots:
+      - { category: identity, name: package_name, value: ripgrep }
+      - { category: identity, name: version, value: "14.1.0" }
+      - { category: identity, name: description, value: "Fast regex search tool" }
+      - { category: identity, name: homepage, value: "https://github.com/BurntSushi/ripgrep" }
+      - { category: identity, name: license, value: "MIT" }
+      - { category: platform, name: platforms, value: [darwin, linux, windows] }
+      - { category: installation, name: install_command, value: "brew install ripgrep", platform: darwin }
+      - { category: installation, name: install_command, value: "apt install ripgrep", platform: linux }
+      - { category: installation, name: install_command, value: "winget install BurntSushi.ripgrep.MSVC", platform: windows }
+      - { category: verification, name: verify_command, value: "rg --version" }
+      - { category: verification, name: verify_pattern, value: "ripgrep \\d+\\.\\d+\\.\\d+" }
+      - { category: feature, name: shell_completions, value: { description: "Install shell completions", default: true } }
+
+    output_lifecycle: |
+      name: ripgrep
+      version: "14.1.0"
+      description: Fast regex search tool
+      homepage: https://github.com/BurntSushi/ripgrep
+      repository: https://github.com/BurntSushi/ripgrep
+      license: MIT
+
+      authors:
+        - name: Andrew Gallant
+          url: https://github.com/BurntSushi
+
+      platforms:
+        - darwin
+        - linux
+        - windows
+
+      features:
+        shell-completions:
+          description: Install shell completions for bash, zsh, fish
+          default: true
+
+      settings: {}
+
+      dependencies: []
+      conflicts: []
+
+      phases:
+        prepare: prepare.star
+        install: install.star
+        provision: provision.star
+        verify: verify.star
+
+      verification:
+        command: "rg --version"
+        pattern: "ripgrep \\d+\\.\\d+\\.\\d+"
+
+      tags:
+        - cli
+        - search
+        - rust
+
+    output_install: |
+      # ripgrep/install.star - Install phase for ripgrep
+
+      def install():
+          """Install ripgrep."""
+          if platform.os == "darwin":
+              _install_darwin()
+          elif platform.os == "linux":
+              _install_linux()
+          elif platform.os == "windows":
+              _install_windows()
+          return {"install": True}
+
+      def _install_darwin():
+          """Install on macOS via Homebrew."""
+          package.install("ripgrep", manager="brew")
+
+      def _install_linux():
+          """Install on Linux via apt."""
+          package.install("ripgrep", manager="apt")
+
+      def _install_windows():
+          """Install on Windows via winget."""
+          package.install("BurntSushi.ripgrep.MSVC", manager="winget")
+
+      def rollback():
+          """Remove ripgrep."""
+          if platform.os == "darwin":
+              package.remove("ripgrep", manager="brew")
+          elif platform.os == "linux":
+              package.remove("ripgrep", manager="apt")
+          elif platform.os == "windows":
+              package.remove("BurntSushi.ripgrep.MSVC", manager="winget")
+
+  - name: "Complex package with tribal knowledge (Docker)"
+    input_slots:
+      - { category: identity, name: package_name, value: docker }
+      - { category: identity, name: version, value: "27.4.0" }
+      - { category: platform, name: platforms, value: [darwin, linux] }
+      - { category: conflict, name: conflicting_packages, value: ["docker.io", "docker-engine", "containerd", "runc"], platform: linux }
+      - { category: installation, name: install_command, value: "brew install --cask docker", platform: darwin }
+      - { category: installation, name: install_packages, value: ["docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin"], platform: linux }
+      - { category: configuration, name: post_install, value: "usermod -aG docker $USER", platform: linux }
+      - { category: verification, name: verify_command, value: "docker version" }
+      - { category: feature, name: compose, value: { description: "Docker Compose plugin", default: true } }
+      - { category: feature, name: buildx, value: { description: "Docker Buildx for multi-platform builds", default: true } }
+
+    output_prepare: |
+      # docker/prepare.star - Prepare phase for Docker
+      #
+      # TRIBAL KNOWLEDGE:
+      # Legacy Docker packages (docker.io, docker-engine) conflict with Docker CE.
+      # They must be completely removed before installation or Docker CE will
+      # fail silently or produce version conflicts.
+
+      LEGACY_PACKAGES = ["docker.io", "docker-engine", "docker", "containerd", "runc"]
+
+      def prepare():
+          """Check preconditions and remove conflicting packages."""
+          if platform.os == "darwin":
+              _prepare_darwin()
+          elif platform.os == "linux":
+              _prepare_linux()
+          return {"prepare": True}
+
+      def _prepare_darwin():
+          """Check macOS preconditions."""
+          # Docker Desktop requires macOS 12+ on Apple Silicon
+          if platform.arch == "arm64":
+              if not platform.version_gte("12.0"):
+                  fail("Docker Desktop requires macOS 12+ on Apple Silicon")
+
+      def _prepare_linux():
+          """Remove legacy Docker packages on Linux."""
+          for pkg in LEGACY_PACKAGES:
+              if package.installed(pkg):
+                  package.remove(pkg, manager="apt")
+
+      def rollback():
+          """No rollback needed for prepare."""
+          pass
+
+    output_provision: |
+      # docker/provision.star - Provision phase for Docker
+      #
+      # TRIBAL KNOWLEDGE:
+      # Without adding the user to the 'docker' group, every docker command
+      # requires sudo. This is the #1 complaint from new Docker users.
+      # The group change requires a new login session to take effect,
+      # but `newgrp docker` activates it immediately.
+
+      def provision():
+          """Configure Docker for use."""
+          if platform.os == "darwin":
+              _provision_darwin()
+          elif platform.os == "linux":
+              _provision_linux()
+          return {"provision": True}
+
+      def _provision_darwin():
+          """macOS: Docker Desktop handles its own provisioning."""
+          pass
+
+      def _provision_linux():
+          """Linux: Add user to docker group for rootless usage."""
+          shell.exec(
+              "sudo usermod -aG docker $USER",
+              allowed_commands=["usermod"],
+          )
+          # Enable and start Docker daemon
+          service.enable("docker")
+          service.start("docker")
+
+      def rollback():
+          """Remove docker group membership."""
+          if platform.os == "linux":
+              shell.exec(
+                  "sudo gpasswd -d $USER docker",
+                  allowed_commands=["gpasswd"],
+              )

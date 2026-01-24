@@ -1,0 +1,109 @@
+# Migration knowledge: Tuckr → writ
+# Used by migrate-to-writ.txt prompt for AI-assisted migration planning
+
+source_system: tuckr
+description: "Dotfile manager with groups and hooks"
+similarity_to_writ: high  # Similar concepts, directory-based
+
+concept_mapping:
+  - source: "Group"
+    target: "Project"
+    notes: "Named collection of dotfiles"
+  - source: "Dotfiles directory"
+    target: "Source root"
+    notes: "Repository containing sources"
+  - source: "Target ($HOME)"
+    target: "Target root"
+    notes: "Deployment destination"
+  - source: "Hooks.toml"
+    target: "packages.manifest (lore delegation)"
+    notes: "Pre/post hooks → declarative package lists"
+  - source: "tuckr add <group>"
+    target: "writ add <project>"
+    notes: "Deploy a group/project"
+  - source: "tuckr rm <group>"
+    target: "writ remove <project>"
+    notes: "Remove deployed files"
+  - source: "tuckr status"
+    target: "writ status"
+    notes: "Show deployment state"
+  - source: "Encrypted files (gpg)"
+    target: ".age/.sops extension"
+    notes: "Different encryption backend"
+
+preserved_behaviors:
+  - "Directory structure mirrors target"
+  - "Groups/projects are directory names"
+  - "Selective deployment (choose which groups/projects)"
+  - "Plain files become symlinks"
+
+new_capabilities:
+  - "Platform variants via segment suffixes"
+  - "Template rendering (.template extension)"
+  - "Secret decryption (.age/.sops)"
+  - "Conflict resolution options (backup, overwrite, skip)"
+  - "State tracking (receipt + state file)"
+  - "Package management delegation to lore"
+
+migration_strategy:
+  consolidation: |
+    Tuckr encourages one group per application (bash, git, nvim).
+    Writ encourages one project per context (all, work, personal).
+
+    Merge multiple Tuckr groups that are always deployed together into
+    fewer writ projects. The tradeoff: less granularity, but segments
+    handle the platform dimension that Tuckr groups can't.
+
+    Decision framework:
+    - Groups deployed everywhere → merge into "all" project
+    - Groups deployed on specific machines → named projects (work, personal)
+    - Groups for specific platforms → segment suffixes on the project
+
+  hooks_conversion: |
+    Tuckr's Hooks.toml runs shell commands before/after group operations.
+    If hooks install packages, convert to packages.manifest.
+    If hooks run other commands, evaluate if they're needed in writ
+    (many are covered by writ's built-in template/decrypt processing).
+
+  wildcard_pattern: |
+    If user always runs `tuckr add *`, their projects might just be "all".
+    If they selectively add groups, map to distinct writ projects.
+
+hooks_toml_conversion:
+  example_before: |
+    [nvim.pre]
+    cmd = "brew install neovim"
+
+    [git.pre]
+    cmd = "brew install git"
+
+    [bash.post]
+    cmd = "source ~/.bashrc"
+  example_after: |
+    # all/.config/packages.manifest
+    neovim
+    git
+  notes: |
+    - Pre-hooks that install packages → packages.manifest
+    - Post-hooks that source files → usually unnecessary (symlinks are immediate)
+    - Pre-hooks that check conditions → usually unnecessary (writ handles conflicts)
+
+detection_signals:
+  - file: "Hooks.toml"
+    confidence: 0.95
+    notes: "Tuckr-specific file"
+  - command_in_history: "tuckr"
+    confidence: 0.9
+  - directory_pattern: "~/dotfiles/{bash,git,nvim,ssh}/"
+    confidence: 0.6
+    notes: "Same as Stow — need to check for Hooks.toml to disambiguate"
+
+common_questions:
+  - question: "Do you always deploy all groups (`tuckr add *`) or selectively?"
+    resolves: "Whether to merge all into one project or keep separate"
+  - question: "Do you have platform-specific groups (e.g., bash-linux, bash-macos)?"
+    resolves: "Segment directory creation"
+  - question: "What does your Hooks.toml do? (Primarily package installs?)"
+    resolves: "packages.manifest creation"
+  - question: "Do you have encrypted files managed with GPG?"
+    resolves: "Encryption conversion to age"
