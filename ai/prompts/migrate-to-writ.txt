@@ -83,11 +83,46 @@ For each migration, produce:
 
 Before generating a plan, determine:
 - Which source system they're using
+- **What layer is this repository?**
+  - Base: Organization-wide defaults (adopted by teams, lowest precedence)
+  - Team: Team-specific configs that override base
+  - Personal: Individual configs that override team and base (highest precedence)
+  - This determines the `repo_layer` in the migration plan
+  - Note: Any layer can contain `System/` and `Home/` directories for system-level vs user-level configs
 - Whether they have platform-specific configurations
 - Whether they have encrypted files or secrets
 - Whether they have templates
 - Whether they have install/bootstrap scripts
 - How many machines they deploy to (affects project structure)
+
+## Secret Detection
+
+Identify files that appear to contain sensitive data but are NOT encrypted:
+
+1. **Path-based signals** — Files in directories named:
+   - `secrets/`, `.secrets/`, `private/`, `.private/`
+   - `gnupg/`, `.gnupg/`, `ssh/`, `.ssh/`
+   - Any path containing "credentials", "tokens", "keys"
+
+2. **Filename signals** — Files named:
+   - `*.key`, `*.pem`, `*.p12`, `*.pfx`
+   - `*_token`, `*_secret`, `*_credentials`
+   - `id_rsa`, `id_ed25519`, `id_ecdsa` (without .pub)
+   - `.netrc`, `.npmrc`, `.pypirc`, `.gem/credentials`
+   - `credentials.json`, `service-account.json`
+   - `.env`, `.env.*` (environment files with secrets)
+
+3. **Content signals** — Files containing:
+   - `-----BEGIN.*PRIVATE KEY-----`
+   - `PRIVATE KEY`, `api_key`, `secret_key`, `access_token`
+   - Base64-encoded blobs that look like secrets
+
+For each unencrypted secret found, include it in `unencrypted_secrets` with:
+- The file path
+- Why it appears to be a secret (which signal matched)
+- Recommended action (encrypt with .age or .sops extension)
+
+This is a **critical security check**. Users migrating to writ should encrypt secrets before committing.
 
 ## Output Format
 

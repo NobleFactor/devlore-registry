@@ -3,12 +3,17 @@
   "title": "MigrationPlan",
   "description": "Structured migration plan from another dotfile manager to writ",
   "type": "object",
-  "required": ["source_system", "projects", "steps"],
+  "required": ["source_system", "repo_layer", "projects", "steps"],
   "properties": {
     "source_system": {
       "type": "string",
       "enum": ["stow", "chezmoi", "yadm", "tuckr", "bare-git", "custom"],
       "description": "The dotfile management system being migrated from"
+    },
+    "repo_layer": {
+      "type": "string",
+      "enum": ["base", "team", "personal"],
+      "description": "Repository layer with precedence: base (org-wide defaults) → team (team overrides) → personal (individual overrides)"
     },
     "source_location": {
       "type": "string",
@@ -44,6 +49,13 @@
       "description": "Encrypted files that need re-encryption",
       "items": {
         "$ref": "#/$defs/EncryptionConversion"
+      }
+    },
+    "unencrypted_secrets": {
+      "type": "array",
+      "description": "Files that appear to contain secrets but are NOT encrypted (security warning)",
+      "items": {
+        "$ref": "#/$defs/UnencryptedSecret"
       }
     },
     "script_conversions": {
@@ -158,6 +170,30 @@
           "type": "string",
           "enum": ["age", "sops"],
           "description": "New encryption method"
+        }
+      }
+    },
+    "UnencryptedSecret": {
+      "type": "object",
+      "required": ["path", "reason", "recommendation"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path to the unencrypted file"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why this file appears to contain secrets (matched signal)"
+        },
+        "recommendation": {
+          "type": "string",
+          "description": "Suggested action (e.g., 'Encrypt with .age extension')"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "default": "high",
+          "description": "How sensitive this secret appears to be"
         }
       }
     },
