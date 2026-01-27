@@ -76,6 +76,12 @@ See [AUTHORING.md](AUTHORING.md) for complete instructions.
 
 See [astro](packages/astro/) for a cross-platform example, [xcode-clt](packages/xcode-clt/) for a platform-specific example.
 
+## Contributing & License
+
+Packages in this registry are licensed under the [MIT License](LICENSE).
+
+**By contributing, you agree to the [Contributor License Agreement](CONTRIBUTING.md)**, which grants Noble Factor a perpetual, irrevocable license to your contributions. Contributions cannot be withdrawn once accepted—this ensures users who depend on packages can continue to do so.
+
 ## Related Documentation
 
 - [noblefactor](https://github.com/NobleFactor/noblefactor) — Main lore repository with design docs and ADRs
