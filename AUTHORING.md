@@ -258,7 +258,133 @@ packages/docker/
 
 The distro qualifier (`.Debian`, `.Fedora`) is optional — only use when installation differs between distributions.
 
-### 3.2 lifecycle.yaml Template
+### 3.2 Script Chaining (General → Specific)
+
+When a phase is executed, **all matching scripts run in order from most general to most specific**. This enables composable, layered scripts.
+
+**Execution order for `Linux.Debian`:**
+
+```
+Common/Deploy/install.star      → runs first (base setup)
+    ↓
+Unix/Deploy/install.star        → runs second (Unix-specific)
+    ↓
+Linux/Deploy/install.star       → runs third (Linux-specific)
+    ↓
+Linux.Debian/Deploy/install.star → runs last (Debian-specific)
+```
+
+**Execution order for `Darwin`:**
+
+```
+Common/Deploy/install.star → Unix/Deploy/install.star → Darwin/Deploy/install.star
+```
+
+**Execution order for `Windows`:**
+
+```
+Common/Deploy/install.star → Windows/Deploy/install.star
+```
+
+Only scripts that exist are executed. If you only have `Common/Deploy/install.star`, that's the only script that runs.
+
+#### When to Use Chaining
+
+| Use Case | Approach |
+|----------|----------|
+| **Same logic, different package names** | Put logic in `Common/`, use `system.has()` to select package name |
+| **Base setup + platform additions** | Common setup in `Common/`, platform-specific additions in `Darwin/`, `Linux/`, etc. |
+| **Completely different approaches** | Skip `Common/`, put full logic in each platform directory |
+
+#### Chaining Risks and Safe Patterns
+
+**Risk 1: Duplicate operations**
+
+If `Common/Deploy/install.star` calls `plan.install("curl")` and `Darwin/Deploy/install.star` also calls `plan.install("curl")`, the operation is queued twice.
+
+**Safe pattern:** Put shared installations in `Common/` only. Platform scripts add platform-specific packages:
+
+```python
+# Common/Deploy/install.star
+def install(system, package, plan):
+    plan.install("curl")  # Needed everywhere
+    plan.install("jq")    # Needed everywhere
+
+# Darwin/Deploy/install.star
+def install(system, package, plan):
+    # Don't repeat curl/jq — Common already handles them
+    plan.install("coreutils")  # macOS-specific addition
+```
+
+**Risk 2: Conflicting operations**
+
+If `Common/` removes a package that `Darwin/` tries to configure, the chain fails.
+
+**Safe pattern:** Use `Common/` for truly universal operations. Put conditional logic in the most general script that needs it:
+
+```python
+# Common/Deploy/prepare.star
+def prepare(system, package, plan):
+    # Remove conflicts on all platforms
+    if system.installed("docker.io"):
+        plan.remove("docker.io")
+
+    # Platform-specific conflict only on Linux
+    if system.platform() == "Linux" and system.installed("podman-docker"):
+        plan.remove("podman-docker")
+```
+
+**Risk 3: Order-dependent state**
+
+Later scripts may assume earlier scripts have run. If a script is missing in the chain, assumptions break.
+
+**Safe pattern:** Each script should be defensive — check state before acting:
+
+```python
+# Linux.Debian/Deploy/provision.star
+def provision(system, package, plan):
+    # Don't assume Common/provision.star ran
+    if not system.path_exists("/etc/docker"):
+        plan.run("mkdir -p /etc/docker")
+
+    plan.write_file("/etc/docker/daemon.json", '{"storage-driver": "overlay2"}')
+```
+
+**Risk 4: Feature flags across scripts**
+
+If a feature is checked in multiple scripts, ensure consistent behavior.
+
+**Safe pattern:** Check features at the most specific level where they matter:
+
+```python
+# Common/Deploy/install.star
+def install(system, package, plan):
+    plan.install("docker-ce")
+    # Don't check rootless here — it's platform-specific
+
+# Linux/Deploy/provision.star
+def provision(system, package, plan):
+    if package.feature("rootless"):
+        plan.install("uidmap")
+        plan.run("dockerd-rootless-setuptool.sh install")
+```
+
+#### When NOT to Chain
+
+For packages where platforms require completely different approaches, skip `Common/` entirely:
+
+```
+packages/docker/
+├── lifecycle.yaml
+├── Darwin/Deploy/       # Docker Desktop (Homebrew cask)
+├── Linux.Debian/Deploy/ # Docker CE (apt repo setup)
+├── Linux.Fedora/Deploy/ # Docker CE (dnf repo setup)
+└── Windows/Deploy/      # Docker Desktop (winget)
+```
+
+Each platform script is self-contained. No chaining occurs because there's no `Common/` directory.
+
+### 3.3 lifecycle.yaml Template
 
 Phase scripts are discovered from the directory structure — do NOT include a `phases:` section.
 
@@ -315,7 +441,7 @@ tags:
   - <keyword>
 ```
 
-### 3.3 Phase Script Templates
+### 3.4 Phase Script Templates
 
 Phase scripts receive three inputs and build an execution graph. **Scripts express intent, not commands** — never shell out to package managers directly.
 
@@ -363,7 +489,7 @@ plan.run("brew install docker")        # ❌ Never do this
 
 Platform selection happens via directory structure (`Darwin/Deploy/install.star` vs `Linux.Debian/Deploy/install.star`), not conditionals in scripts.
 
-### 3.4 Phase Responsibilities
+### 3.5 Phase Responsibilities
 
 | Phase | Responsibility | Key `plan` Operations |
 |-------|----------------|----------------------|
@@ -372,7 +498,7 @@ Platform selection happens via directory structure (`Darwin/Deploy/install.star`
 | **provision** | Configure for use | `plan.write_file()`, `plan.add_user_to_group()`, `plan.enable_service()` |
 | **verify** | Confirm working | `plan.verify()`, `plan.run()` (smoke tests only) |
 
-### 3.5 Binding Methods
+### 3.6 Binding Methods
 
 Phase functions receive three inputs with distinct methods:
 
