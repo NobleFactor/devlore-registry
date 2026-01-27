@@ -63,8 +63,8 @@ migration_strategy:
 
   setup_scripts: |
     If the bare git repo included setup.sh or install.sh:
-    - Package install commands → packages.manifest
-    - Non-package commands → evaluate if writ handles them natively
+    - Software install commands → packages-manifest.yaml
+    - Configuration commands → evaluate if writ handles them natively
 
   multiple_repos: |
     If user maintained separate bare repos (e.g., public + private):

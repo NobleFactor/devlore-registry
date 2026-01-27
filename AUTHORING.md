@@ -171,19 +171,96 @@ Look for patterns indicating tribal knowledge:
 
 ### 3.1 Directory Structure
 
-Create:
+Phase scripts are organized by platform and pipeline. See [RFC Section 9.3](https://github.com/NobleFactor/noblefactor/blob/main/devlore/design/02-devlore-rfc.md) for the formal grammar.
+
+```abnf
+; Package Directory Structure (ABNF)
+package           = "lifecycle.yaml" 1*platform-dir
+platform-dir      = platform "/" 1*pipeline-dir
+platform          = general-platform / linux-platform
+general-platform  = ("Common" / "Darwin" / "Unix" / "Windows") *("." qualifier)
+linux-platform    = "Linux" ["." distro-family] *("." qualifier)
+distro-family     = "Debian" / "Fedora"
+qualifier         = arch / custom
+arch              = "amd64" / "arm64"
+custom            = 1*ALPHA
+pipeline-dir      = pipeline "/" 1*phase-script
+pipeline          = "Deploy" / "Upgrade" / "Decommission"
+phase-script      = phase ".star"
+deploy-phase      = "prepare" / "install" / "provision" / "verify"
+decom-phase       = "unprovision" / "uninstall" / "cleanup"
+```
+
+**Platform hierarchy (most general to most specific):**
+
+| Platform | Matches |
+|----------|---------|
+| `Common` | All platforms |
+| `Unix` | Darwin, Linux, BSD, etc. |
+| `Darwin`, `Linux`, `Windows` | Specific OS families |
+| `Linux.Debian`, `Linux.Fedora` | Linux distro families |
+
+**Distro families:**
+
+| Family | Includes | Detection |
+|--------|----------|-----------|
+| `Debian` | Debian, Ubuntu, Linux Mint, Pop!_OS, Raspbian | `ID_LIKE=debian` |
+| `Fedora` | Fedora, RHEL, CentOS, Rocky, AlmaLinux, Oracle Linux, Amazon Linux, Azure Linux | `ID_LIKE=fedora` or explicit mapping |
+
+**Family detection:** Uses `/etc/os-release` fields `ID` and `ID_LIKE`. Some distros require explicit mapping:
+- Amazon Linux: Has `ID_LIKE=fedora` ✓
+- Azure Linux: Missing `ID_LIKE` — requires explicit mapping ([issue #2296](https://github.com/microsoft/azurelinux/issues/2296))
+
+**Qualifiers:** Add `.<arch>` or `.<custom>` suffixes for further specificity (e.g., `Darwin.arm64`, `Linux.Debian.arm64`).
+
+**Example: cross-platform package**
 
 ```
-packages/<package-name>/
+packages/kubectl/
 ├── lifecycle.yaml
-├── prepare.star
-├── install.star
-├── provision.star
-├── verify.star
-└── README.md
+├── README.md
+└── Common/
+    ├── Deploy/
+    │   ├── prepare.star
+    │   ├── install.star
+    │   ├── provision.star
+    │   └── verify.star
+    └── Decommission/
+        ├── unprovision.star
+        └── uninstall.star
 ```
+
+**Example: platform-specific package**
+
+```
+packages/docker/
+├── lifecycle.yaml
+├── README.md
+├── Darwin/
+│   └── Deploy/
+│       ├── prepare.star
+│       ├── install.star
+│       ├── provision.star
+│       └── verify.star
+├── Linux.Debian/
+│   └── Deploy/
+│       ├── prepare.star
+│       ├── install.star
+│       ├── provision.star
+│       └── verify.star
+└── Linux.Fedora/
+    └── Deploy/
+        ├── prepare.star
+        ├── install.star
+        ├── provision.star
+        └── verify.star
+```
+
+The distro qualifier (`.Debian`, `.Fedora`) is optional — only use when installation differs between distributions.
 
 ### 3.2 lifecycle.yaml Template
+
+Phase scripts are discovered from the directory structure — do NOT include a `phases:` section.
 
 ```yaml
 # SPDX-License-Identifier: MIT
@@ -200,15 +277,16 @@ description: <one-line description>
 homepage: <official-homepage>
 repository: <source-repo-if-applicable>
 license: <SPDX-license-identifier>
+maintainer: Noble Factor
 
-authors:
-  - name: <maintainer-or-org>
-    url: <maintainer-url>
+aliases:
+  - <alternative name for search>
+  - <another alternative>
 
 platforms:
-  - darwin    # Include only supported platforms
-  - linux
-  - windows
+  - Darwin    # Include only supported platforms
+  - Linux
+  - Windows
 
 features:
   <feature-name>:
@@ -222,16 +300,11 @@ settings:
     default: "<default-value>"
     values: ["option1", "option2"]  # If enumerated
 
-dependencies: []
+provides:
+  - <command this package provides>
 
 conflicts:
   - <conflicting-package>  # Packages that must be removed first
-
-phases:
-  prepare: prepare.star
-  install: install.star
-  provision: provision.star
-  verify: verify.star
 
 verification:
   command: "<tool> --version"
@@ -244,72 +317,110 @@ tags:
 
 ### 3.3 Phase Script Templates
 
-Each phase script follows this pattern:
+Phase scripts receive three inputs and build an execution graph. **Scripts express intent, not commands** — never shell out to package managers directly.
 
 ```python
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Noble Factor. All rights reserved.
 #
-# <package>/<phase>.star - <Phase> phase for <package>
+# <package>/<platform>/Deploy/<phase>.star
 #
 # TRIBAL KNOWLEDGE:
 # <Document the hard-won insights this phase implements>
 
-def <phase>():
-    """<Phase description>."""
+def <phase>(system, package, plan):
+    """<Phase description>.
 
-    # Platform-specific logic
-    if platform.os == "darwin":
-        _<phase>_darwin()
-    elif platform.os == "linux":
-        _<phase>_linux()
-    elif platform.os == "windows":
-        _<phase>_windows()
+    Args:
+        system: Query target environment (read-only, immediate)
+        package: Package metadata and features (read-only, immediate)
+        plan: Build execution graph (write, deferred execution)
+    """
 
-    return {"<phase>": True}
+    # Query system state (immediate)
+    if system.installed("conflicting-package"):
+        plan.remove("conflicting-package")
 
-def _<phase>_darwin():
-    """<Phase> on macOS."""
-    # Implementation
+    # Check package features (from lifecycle.yaml, enabled via --with)
+    if package.feature("optional-component"):
+        plan.install("optional-component-package")
 
-def _<phase>_linux():
-    """<Phase> on Linux."""
-    # Implementation
-
-def _<phase>_windows():
-    """<Phase> on Windows."""
-    # Implementation
-
-def rollback():
-    """Rollback <phase> changes on failure."""
-    # Cleanup logic
+    # Build execution graph (deferred)
+    plan.install("main-package")
 ```
+
+**CORRECT — Express intent:**
+```python
+plan.install("docker-ce")
+plan.remove("docker.io")
+```
+
+**WRONG — Never shell out to package managers:**
+```python
+plan.run("apt install docker-ce")      # ❌ Never do this
+plan.run("brew install docker")        # ❌ Never do this
+```
+
+Platform selection happens via directory structure (`Darwin/Deploy/install.star` vs `Linux.Debian/Deploy/install.star`), not conditionals in scripts.
 
 ### 3.4 Phase Responsibilities
 
-| Phase | Responsibility | Key Operations |
-|-------|----------------|----------------|
-| **prepare** | Validate preconditions | Check platform, detect existing installs, remove conflicts |
-| **install** | Acquire software | Package manager install, binary download, archive extraction |
-| **provision** | Configure for use | License acceptance, PATH setup, completions, config files |
-| **verify** | Confirm working | Version check, functional test, smoke test |
+| Phase | Responsibility | Key `plan` Operations |
+|-------|----------------|----------------------|
+| **prepare** | Validate preconditions, remove conflicts | `plan.remove()`, `plan.download()` (GPG keys), `plan.write_file()` (repo config) |
+| **install** | Acquire software | `plan.install()`, `plan.download()`, `plan.extract()` |
+| **provision** | Configure for use | `plan.write_file()`, `plan.add_user_to_group()`, `plan.enable_service()` |
+| **verify** | Confirm working | `plan.verify()`, `plan.run()` (smoke tests only) |
 
-### 3.5 Available Host Bindings
+### 3.5 Binding Methods
 
-Use these APIs in Starlark scripts:
+Phase functions receive three inputs with distinct methods:
 
-| Namespace | Key Functions |
-|-----------|---------------|
-| `platform.*` | `.os`, `.arch`, `.distro`, `.version` |
-| `package.*` | `.install()`, `.remove()`, `.installed()`, `.version()` |
-| `fs.*` | `.exists()`, `.read()`, `.write()`, `.mkdir()`, `.remove()`, `.which()` |
-| `shell.*` | `.exec(command, allowed_commands=[...])` |
-| `http.*` | `.download()`, `.get()`, `.fetch_json()` |
-| `archive.*` | `.extract()`, `.list()` |
-| `env.*` | `.get()`, `.set()`, `.expand()` |
-| `service.*` | `.enable()`, `.start()`, `.status()` |
+**`system` — Query environment (read-only, immediate)**
 
-See [`lore_builtins.star`](https://github.com/NobleFactor/lore/blob/main/starlark/lore_builtins.star) for complete API documentation.
+| Method | Description |
+|--------|-------------|
+| `system.has(pm)` | Check if package manager is available |
+| `system.installed(pkg)` | Check if package is installed |
+| `system.version(pkg)` | Get installed package version |
+| `system.path(p)` | Resolve path (expands `~`, env vars) |
+| `system.path_exists(p)` | Check if path exists |
+| `system.which(cmd)` | Find command in PATH |
+| `system.platform()` | Current platform (Darwin, Linux, Windows) |
+| `system.distro()` | Linux distribution ID (ubuntu, fedora, amzn, etc.) |
+| `system.arch()` | Architecture (amd64, arm64) |
+
+**`package` — Package metadata (read-only, immediate)**
+
+| Method | Description |
+|--------|-------------|
+| `package.name` | Package name |
+| `package.version` | Package version |
+| `package.feature(name)` | Check if feature is enabled (via `--with`) |
+| `package.setting(name, default)` | Get setting value |
+
+**`plan` — Build execution graph (deferred)**
+
+| Method | Description |
+|--------|-------------|
+| `plan.install(pkg)` | Install package |
+| `plan.remove(pkg)` | Remove package |
+| `plan.download(url, dest)` | Download file (returns promise) |
+| `plan.extract(archive, dest)` | Extract archive |
+| `plan.write_file(path, content)` | Write file |
+| `plan.configure(name, **kwargs)` | Configure component |
+| `plan.verify(name, check)` | Add verification check |
+| `plan.run(cmd)` | Run command (use sparingly) |
+| `plan.add_user_to_group(user, group)` | Add user to group |
+| `plan.enable_service(name)` | Enable system service |
+| `plan.start_service(name)` | Start system service |
+
+**Promise-based data flow:** Methods like `plan.download()` return promises. Pass promises to dependent operations to create graph edges:
+
+```python
+tarball = plan.download(url="https://example.com/app.tar.gz")
+plan.extract(tarball, dest="/usr/local")  # depends on tarball
+```
 
 ## Phase 4: Create README Documentation
 
@@ -360,15 +471,19 @@ lore decommission <package>
 |---------|---------|-------------|
 | `<name>` | `<default>` | <description> |
 
-## Files
+## Directory Structure
 
-| File | Purpose |
-|------|---------|
-| `lifecycle.yaml` | Package metadata, features, settings |
-| `prepare.star` | <What prepare does for this package> |
-| `install.star` | <What install does for this package> |
-| `provision.star` | <What provision does for this package> |
-| `verify.star` | <What verify does for this package> |
+\`\`\`
+<package>/
+├── lifecycle.yaml          # Package metadata, features, settings
+├── README.md               # This file
+└── <platform>/             # Common/, Unix/, Darwin/, Linux.Debian/, etc.
+    └── Deploy/
+        ├── prepare.star    # <What prepare does>
+        ├── install.star    # <What install does>
+        ├── provision.star  # <What provision does>
+        └── verify.star     # <What verify does>
+\`\`\`
 
 ## Sources
 
@@ -416,9 +531,11 @@ Please review the created files. Would you like me to make any changes?
 
 Before presenting to user, verify:
 
-- [ ] `lifecycle.yaml` has valid YAML syntax
-- [ ] All four phase scripts exist and have `def <phase>():` and `def rollback():`
-- [ ] Platform checks match declared `platforms:` in lifecycle.yaml
+- [ ] `lifecycle.yaml` has valid YAML syntax and validates against schema
+- [ ] `lifecycle.yaml` does NOT contain a `phases:` section (discovered from dirs)
+- [ ] Platform directories match declared `platforms:` in lifecycle.yaml
+- [ ] Phase scripts use three-input signature: `def <phase>(system, package, plan):`
+- [ ] Phase scripts express intent (`plan.install()`) not commands (`plan.run("apt install")`)
 - [ ] Verification command actually tests the tool works
 - [ ] README documents all features and settings from lifecycle.yaml
 - [ ] Tribal knowledge section has file references
@@ -436,5 +553,8 @@ Before presenting to user, verify:
    - Package names: `ripgrep` (most), `rg` (some)
    - Completions require shell-specific setup
    - Ubuntu PPA has newer versions than apt
-4. Create lifecycle.yaml, four phase scripts, README
+4. Create:
+   - `lifecycle.yaml` — metadata, features, platforms
+   - `Common/Deploy/` — phase scripts (cross-platform via package managers)
+   - `README.md` — tribal knowledge documentation
 5. Present summary with tribal knowledge about completions and Ubuntu PPA

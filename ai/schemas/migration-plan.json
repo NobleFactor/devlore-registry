@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "MigrationPlan",
-  "description": "Structured migration plan from another dotfile manager to writ",
+  "description": "Structured migration plan from a dotfile manager to writ",
   "type": "object",
   "required": ["source_system", "repo_layer", "projects", "steps"],
   "properties": {

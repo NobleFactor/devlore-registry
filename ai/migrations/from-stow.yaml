@@ -26,7 +26,7 @@ preserved_behaviors:
   - "Files mirror the target directory structure"
   - "Plain files become symlinks"
   - "Directory hierarchy is preserved"
-  - "Multiple packages/projects can coexist"
+  - "Multiple projects can coexist"
 
 new_capabilities:
   - "Platform variants via segment directories"
