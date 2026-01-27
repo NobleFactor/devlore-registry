@@ -1,144 +1,198 @@
-# Docker Package Lifecycle Example
+# Docker — lore Package
 
-This directory contains a fully worked example of a lore package-lifecycle-manifest using Starlark phase scripts.
+Docker container runtime across all platforms:
+- **Linux:** Docker CE (Community Edition) — daemon, CLI, containerd, buildx, and compose plugin
+- **macOS/Windows:** Docker Desktop — proprietary graphical application with integrated VM
 
 ## Usage
 
 ```bash
-# Deploy docker
+# Deploy Docker
 lore deploy docker
 
-# Deploy with features
+# Deploy with rootless mode (Linux only)
 lore deploy docker --with rootless
 
-# Reconcile: compare receipt vs actual system state
-lore reconcile @docker.receipt
+# Upgrade to latest version
+lore upgrade docker
+
+# Remove Docker (preserves data)
+lore decommission docker
+
+# Remove Docker and all data (images, containers, volumes)
+lore decommission docker --with purge-data
 ```
 
-## Files
+## Platform Notes
 
-| File | Purpose |
-|------|---------|
-| `lifecycle.yaml` | Package lifecycle manifest: conflicts, packages, hardware provisions, pipelines |
-| `prepare.star` | Phase 1: Remove conflicts, update package lists |
-| `install.star` | Phase 2: Install docker packages via apt |
-| `provision.star` | Phase 3: Hardware config, add user to docker group |
-| `verify.star` | Phase 4: Confirm installation, generate pipeline-receipt |
+### Linux.Debian (Ubuntu, Debian)
 
-## Deploy Pipeline Flow
+Uses official Docker CE apt repository. Key considerations:
+- Removes conflicting packages (`docker.io`, `podman-docker`, etc.)
+- Requires adding user to `docker` group for non-root access
+- ODROID-C4/C5 require cgroup v1 boot argument
 
-```mermaid
-flowchart TB
-    subgraph input
-        manifest[package-manifest]
-    end
+### Linux.Fedora (Fedora, RHEL, CentOS, Rocky, AlmaLinux)
 
-    subgraph deploy[Deploy Pipeline]
-        prepare[prepare.star]
-        install[install.star]
-        provision[provision.star]
-        verify[verify.star]
-        prepare --> install --> provision --> verify
-    end
+Uses official Docker CE dnf repository. Same package set as Debian, different package manager and conflict list (`podman`, `buildah`, etc.).
 
-    subgraph output
-        receipt[pipeline-receipt]
-    end
+### Darwin (macOS)
 
-    manifest --> deploy
-    verify --> receipt
+Docker Desktop installed via DMG. Key considerations:
+- Apple Silicon (arm64) and Intel (amd64) use different installers
+- On Apple Silicon, installs Rosetta 2 for x86 container compatibility
+- Data stored in `~/Library/Containers/` and `~/Library/Group Containers/`
 
-    subgraph reconcile[Reconcile Pipeline]
-        compare[Compare receipt vs actual]
-        delta[Report delta/drift]
-        compare --> delta
-    end
+### Windows
 
-    receipt -.-> reconcile
+Docker Desktop installed via exe installer. Key considerations:
+- Requires WSL 2 (Windows Subsystem for Linux) — enabled automatically
+- User added to `docker-users` group for non-admin access
+- Data stored in WSL 2 distros (`docker-desktop`, `docker-desktop-data`)
+
+## Tribal Knowledge
+
+### 1. Conflicting Packages (Linux)
+
+Distribution-provided Docker packages conflict with Docker CE:
+
+| Distribution | Conflicts |
+|-------------|-----------|
+| Debian/Ubuntu | `docker.io`, `docker-compose`, `podman-docker`, `containerd`, `runc` |
+| Fedora/RHEL | `podman`, `podman-docker`, `buildah`, `containers-common` |
+
+The prepare phase removes these automatically.
+
+### 2. ODROID-C4/C5 Require cgroup v1 Mode (Linux.Debian)
+
+Docker containers fail to start on ODROID-C4/C5 due to cgroup v2 incompatibility. Add boot argument:
+```
+systemd.unified_cgroup_hierarchy=0
+```
+to `/media/boot/boot.ini`. The verify phase detects ODROID hardware and warns if needed.
+
+**Reference:** https://sipfront.com/blog/2024/01/running-docker-on-odroid-c4/
+
+### 3. Rosetta 2 for x86 Containers (Darwin)
+
+Apple Silicon Macs need Rosetta 2 to run x86_64 Linux containers. The prepare phase installs it automatically.
+
+### 4. WSL 2 Backend (Windows)
+
+Docker Desktop on Windows uses WSL 2 by default. The prepare phase enables the required Windows features and installs the WSL 2 kernel update.
+
+## Features
+
+| Feature | Default | Description |
+|---------|---------|-------------|
+| `rootless` | false | Run Docker daemon without root privileges (Linux only) |
+| `purge-data` | false | Remove all data (images, containers, volumes) during decommission |
+
+## Settings
+
+| Setting | Default | Values | Description |
+|---------|---------|--------|-------------|
+| `storage-driver` | overlay2 | overlay2, btrfs, zfs, vfs | Docker storage driver (Linux) |
+| `log-driver` | json-file | json-file, syslog, journald, none | Default logging driver |
+
+## Directory Structure
+
+```
+docker/
+├── lifecycle.yaml
+├── README.md
+├── Linux.Debian/
+│   ├── Deploy/
+│   │   ├── prepare.star
+│   │   ├── install.star
+│   │   ├── provision.star
+│   │   └── verify.star
+│   ├── Upgrade/
+│   │   ├── prepare.star
+│   │   ├── install.star
+│   │   └── verify.star
+│   └── Decommission/
+│       ├── unprovision.star
+│       ├── uninstall.star
+│       └── cleanup.star
+├── Linux.Fedora/
+│   ├── Deploy/
+│   │   ├── prepare.star
+│   │   ├── install.star
+│   │   ├── provision.star
+│   │   └── verify.star
+│   ├── Upgrade/
+│   │   ├── prepare.star
+│   │   ├── install.star
+│   │   └── verify.star
+│   └── Decommission/
+│       ├── unprovision.star
+│       ├── uninstall.star
+│       └── cleanup.star
+├── Darwin/
+│   ├── Deploy/
+│   │   ├── prepare.star
+│   │   ├── install.star
+│   │   ├── provision.star
+│   │   └── verify.star
+│   ├── Upgrade/
+│   │   └── install.star
+│   │   └── verify.star
+│   └── Decommission/
+│       ├── unprovision.star
+│       ├── uninstall.star
+│       └── cleanup.star
+└── Windows/
+    ├── Deploy/
+    │   ├── prepare.star
+    │   ├── install.star
+    │   ├── provision.star
+    │   └── verify.star
+    ├── Upgrade/
+    │   ├── prepare.star
+    │   ├── install.star
+    │   └── verify.star
+    └── Decommission/
+        ├── unprovision.star
+        ├── uninstall.star
+        └── cleanup.star
 ```
 
-## Phase Details
+## Phase Script API
 
-```mermaid
-flowchart TB
-    subgraph prepare.star
-        P1[Check platform - Linux only]
-        P2[Remove conflicts: docker.io, podman-docker, containerd, runc]
-        P3[apt-get autoremove]
-        P4[apt-get update]
-        P1 --> P2 --> P3 --> P4
-    end
-
-    subgraph install.star
-        I1[apt-get install docker-ce docker-ce-cli containerd.io]
-        I2[Install docker-buildx-plugin docker-compose-plugin]
-        I1 --> I2
-    end
-
-    subgraph provision.star
-        V1[Detect hardware - lshw -json]
-        V2[ODROID-C4/C5: Check boot.ini for cgroup fix]
-        V3[Add user to docker group]
-        V1 --> V2 --> V3
-    end
-
-    subgraph verify.star
-        Y1[Check docker command exists]
-        Y2[Check daemon running - docker info]
-        Y3[Run hello-world container]
-        Y4[Generate pipeline-receipt]
-        Y1 --> Y2 --> Y3 --> Y4
-    end
-
-    prepare.star --> install.star --> provision.star --> verify.star
-```
-
-## Phase Contract
+Phase scripts receive three inputs:
 
 ```python
-def main(lifecycle, state, features, settings):
+def install(system, package, plan):
     """
     Args:
-        lifecycle: Package lifecycle manifest from YAML (dict)
-        state:     Output from previous phase (dict)
-        features:  List of enabled features (e.g., ["rootless"])
-        settings:  Dict of settings (e.g., {"storage-driver": "overlay2"})
-
-    Returns:
-        dict: State passed to next phase (becomes part of pipeline-receipt)
-
-    Logging API:
-        note(msg)           - Informational, continues execution
-        warn(msg)           - Warning, continues execution
-        error(msg)          - Fails phase, triggers rollback
-        success(msg, state) - Exits phase successfully (early exit)
+        system:  Query target environment (read-only, immediate)
+        package: Package metadata and features (read-only, immediate)
+        plan:    Build execution graph (write, deferred execution)
     """
+    if system.installed("conflicting-pkg"):
+        plan.remove("conflicting-pkg")
+
+    plan.install("docker-ce")
+
+    if package.feature("rootless"):
+        plan.install("uidmap")
 ```
 
-## Platform Object
-
-Available in all phases as `platform`:
+**Scripts express intent, not commands.** Never shell out to package managers:
 
 ```python
-platform.os      # "darwin", "linux", "windows" (GOOS)
-platform.arch    # "amd64", "arm64" (GOARCH)
-platform.distro  # "macos", "ubuntu", "debian", "fedora", etc.
+# CORRECT
+plan.install("docker-ce")
+
+# WRONG
+plan.run("apt install docker-ce")
 ```
 
-## Data Artifacts
+## Sources
 
-| Artifact | Description |
-|----------|-------------|
-| `docker --with rootless` | package-spec: single package with features |
-| `@workstation.manifest` | package-manifest: list of package-specs |
-| `workstation.receipt` | pipeline-receipt: post-deploy state, enables reconcile |
-| `docker/lifecycle.yaml` | package-lifecycle-manifest: defines deploy/upgrade/decommission |
-
-## Tribal Knowledge Captured
-
-This package captures knowledge that would otherwise be tribal:
-
-1. **Conflicting packages** - docker.io, podman-docker, containerd, runc must be removed first
-2. **ODROID cgroup fix** - C4/C5 boards need `systemd.unified_cgroup_hierarchy=0` in boot.ini
-3. **User group membership** - Add user to docker group to avoid sudo requirement
-4. **Post-install verification** - Run hello-world to confirm working installation
+- [Docker Engine Install — Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+- [Docker Engine Install — RHEL](https://docs.docker.com/engine/install/rhel/)
+- [Docker Desktop — macOS](https://docs.docker.com/desktop/install/mac-install/)
+- [Docker Desktop — Windows](https://docs.docker.com/desktop/install/windows-install/)
+- [ODROID-C4 Docker Fix](https://sipfront.com/blog/2024/01/running-docker-on-odroid-c4/)
