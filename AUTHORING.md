@@ -300,20 +300,20 @@ Only scripts that exist are executed. If you only have `Common/Deploy/install.st
 
 **Risk 1: Duplicate operations**
 
-If `Common/Deploy/install.star` calls `plan.install("curl")` and `Darwin/Deploy/install.star` also calls `plan.install("curl")`, the operation is queued twice.
+If `Common/Deploy/install.star` calls `plan.package.install("curl")` and `Darwin/Deploy/install.star` also calls `plan.package.install("curl")`, the operation is queued twice.
 
 **Safe pattern:** Put shared installations in `Common/` only. Platform scripts add platform-specific packages:
 
 ```python
 # Common/Deploy/install.star
-def install(system, package, plan):
-    plan.install("curl")  # Needed everywhere
-    plan.install("jq")    # Needed everywhere
+def install(package, system, plan):
+    plan.package.install("curl")  # Needed everywhere
+    plan.package.install("jq")    # Needed everywhere
 
 # Darwin/Deploy/install.star
-def install(system, package, plan):
+def install(package, system, plan):
     # Don't repeat curl/jq — Common already handles them
-    plan.install("coreutils")  # macOS-specific addition
+    plan.package.install("coreutils")  # macOS-specific addition
 ```
 
 **Risk 2: Conflicting operations**
@@ -324,14 +324,14 @@ If `Common/` removes a package that `Darwin/` tries to configure, the chain fail
 
 ```python
 # Common/Deploy/prepare.star
-def prepare(system, package, plan):
+def prepare(package, system, plan):
     # Remove conflicts on all platforms
-    if system.installed("docker.io"):
-        plan.remove("docker.io")
+    if system.package.installed("docker.io"):
+        plan.package.remove("docker.io")
 
     # Platform-specific conflict only on Linux
-    if system.platform() == "Linux" and system.installed("podman-docker"):
-        plan.remove("podman-docker")
+    if system.platform.os == "linux" and system.package.installed("podman-docker"):
+        plan.package.remove("podman-docker")
 ```
 
 **Risk 3: Order-dependent state**
@@ -342,12 +342,15 @@ Later scripts may assume earlier scripts have run. If a script is missing in the
 
 ```python
 # Linux.Debian/Deploy/provision.star
-def provision(system, package, plan):
-    # Don't assume Common/provision.star ran
-    if not system.path_exists("/etc/docker"):
-        plan.run("mkdir -p /etc/docker")
+def provision(package, system, plan):
+    # Create config directory if needed
+    plan.file.mkdir("/etc/docker")
 
-    plan.write_file("/etc/docker/daemon.json", '{"storage-driver": "overlay2"}')
+    # Deploy configuration
+    plan.file.configure(
+        source="daemon.json.tmpl",
+        target="/etc/docker/daemon.json"
+    )
 ```
 
 **Risk 4: Feature flags across scripts**
@@ -358,15 +361,15 @@ If a feature is checked in multiple scripts, ensure consistent behavior.
 
 ```python
 # Common/Deploy/install.star
-def install(system, package, plan):
-    plan.install("docker-ce")
+def install(package, system, plan):
+    plan.package.install("docker-ce")
     # Don't check rootless here — it's platform-specific
 
 # Linux/Deploy/provision.star
-def provision(system, package, plan):
-    if package.feature("rootless"):
-        plan.install("uidmap")
-        plan.run("dockerd-rootless-setuptool.sh install")
+def provision(package, system, plan):
+    if package.has_feature("rootless"):
+        plan.package.install("uidmap")
+        plan.shell("dockerd-rootless-setuptool.sh install")
 ```
 
 #### When NOT to Chain
@@ -454,37 +457,37 @@ Phase scripts receive three inputs and build an execution graph. **Scripts expre
 # TRIBAL KNOWLEDGE:
 # <Document the hard-won insights this phase implements>
 
-def <phase>(system, package, plan):
+def <phase>(package, system, plan):
     """<Phase description>.
 
     Args:
-        system: Query target environment (read-only, immediate)
         package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
         plan: Build execution graph (write, deferred execution)
     """
 
     # Query system state (immediate)
-    if system.installed("conflicting-package"):
-        plan.remove("conflicting-package")
+    if system.package.installed("conflicting-package"):
+        plan.package.remove("conflicting-package")
 
     # Check package features (from lifecycle.yaml, enabled via --with)
-    if package.feature("optional-component"):
-        plan.install("optional-component-package")
+    if package.has_feature("optional-component"):
+        plan.package.install("optional-component-package")
 
     # Build execution graph (deferred)
-    plan.install("main-package")
+    plan.package.install("main-package")
 ```
 
 **CORRECT — Express intent:**
 ```python
-plan.install("docker-ce")
-plan.remove("docker.io")
+plan.package.install("docker-ce")
+plan.package.remove("docker.io")
 ```
 
 **WRONG — Never shell out to package managers:**
 ```python
-plan.run("apt install docker-ce")      # ❌ Never do this
-plan.run("brew install docker")        # ❌ Never do this
+plan.shell("apt install docker-ce")    # ❌ Never do this
+plan.shell("brew install docker")      # ❌ Never do this
 ```
 
 Platform selection happens via directory structure (`Darwin/Deploy/install.star` vs `Linux.Debian/Deploy/install.star`), not conditionals in scripts.
@@ -493,10 +496,10 @@ Platform selection happens via directory structure (`Darwin/Deploy/install.star`
 
 | Phase | Responsibility | Key `plan` Operations |
 |-------|----------------|----------------------|
-| **prepare** | Validate preconditions, remove conflicts | `plan.remove()`, `plan.download()` (GPG keys), `plan.write_file()` (repo config) |
-| **install** | Acquire software | `plan.install()`, `plan.download()`, `plan.extract()` |
-| **provision** | Configure for use | `plan.write_file()`, `plan.add_user_to_group()`, `plan.enable_service()` |
-| **verify** | Confirm working | `plan.verify()`, `plan.run()` (smoke tests only) |
+| **prepare** | Validate preconditions, remove conflicts | `plan.package.remove()`, `plan.file.copy()` (GPG keys, repo config) |
+| **install** | Acquire software | `plan.package.install()`, `plan.package.upgrade()` |
+| **provision** | Configure for use | `plan.file.configure()`, `plan.file.mkdir()`, `plan.service()` |
+| **verify** | Confirm working | `plan.shell()` (smoke tests only, use sparingly) |
 
 ### 3.6 Binding Methods
 
@@ -506,15 +509,14 @@ Phase functions receive three inputs with distinct methods:
 
 | Method | Description |
 |--------|-------------|
-| `system.has(pm)` | Check if package manager is available |
-| `system.installed(pkg)` | Check if package is installed |
-| `system.version(pkg)` | Get installed package version |
-| `system.path(p)` | Resolve path (expands `~`, env vars) |
-| `system.path_exists(p)` | Check if path exists |
-| `system.which(cmd)` | Find command in PATH |
-| `system.platform()` | Current platform (Darwin, Linux, Windows) |
-| `system.distro()` | Linux distribution ID (ubuntu, fedora, amzn, etc.) |
-| `system.arch()` | Architecture (amd64, arm64) |
+| `system.package.installed(pkg)` | Check if package is installed |
+| `system.package.version(pkg)` | Get installed package version |
+| `system.service.exists(name)` | Check if service exists |
+| `system.service.running(name)` | Check if service is running |
+| `system.service.enabled(name)` | Check if service is enabled at boot |
+| `system.platform.os` | Current OS (darwin, linux, windows) |
+| `system.platform.distro` | Linux distribution ID (ubuntu, fedora, etc.) |
+| `system.platform.arch` | Architecture (amd64, arm64) |
 
 **`package` — Package metadata (read-only, immediate)**
 
@@ -522,30 +524,82 @@ Phase functions receive three inputs with distinct methods:
 |--------|-------------|
 | `package.name` | Package name |
 | `package.version` | Package version |
-| `package.feature(name)` | Check if feature is enabled (via `--with`) |
-| `package.setting(name, default)` | Get setting value |
+| `package.has_feature(name)` | Check if feature is enabled (via `--with`) |
+| `package.setting(key)` | Get setting value |
+| `package.features` | List of enabled features |
+| `package.settings` | Dict of all settings |
+| `package.source_root` | Package source directory in registry cache |
+| `package.target_root` | Deployment target directory (usually `$HOME`) |
+| `package.dry_run` | True if this is a preview (no actual changes) |
 
 **`plan` — Build execution graph (deferred)**
 
+Operations are organized into namespaces:
+
+**Package operations** — `plan.package.*`
+
+Cross-platform package management. Uses the system's native package manager (brew/port on macOS, apt/dnf on Linux, winget on Windows).
+
 | Method | Description |
 |--------|-------------|
-| `plan.install(pkg)` | Install package |
-| `plan.remove(pkg)` | Remove package |
-| `plan.download(url, dest)` | Download file (returns promise) |
-| `plan.extract(archive, dest)` | Extract archive |
-| `plan.write_file(path, content)` | Write file |
-| `plan.configure(name, **kwargs)` | Configure component |
-| `plan.verify(name, check)` | Add verification check |
-| `plan.run(cmd)` | Run command (use sparingly) |
-| `plan.add_user_to_group(user, group)` | Add user to group |
-| `plan.enable_service(name)` | Enable system service |
-| `plan.start_service(name)` | Start system service |
+| `plan.package.install(*packages)` | Install one or more packages |
+| `plan.package.upgrade(*packages)` | Upgrade one or more packages |
+| `plan.package.remove(*packages)` | Remove one or more packages |
+| `plan.package.update()` | Update package manager index |
 
-**Promise-based data flow:** Methods like `plan.download()` return promises. Pass promises to dependent operations to create graph edges:
+**macOS package manager selection:** On macOS, the package manager is auto-detected (MacPorts preferred over Homebrew). Force a specific manager with prefixes:
 
 ```python
-tarball = plan.download(url="https://example.com/app.tar.gz")
-plan.extract(tarball, dest="/usr/local")  # depends on tarball
+plan.package.install("brew:wget")   # Force Homebrew
+plan.package.install("port:tree")   # Force MacPorts
+```
+
+**File operations** — `plan.file.*`
+
+| Method | Description |
+|--------|-------------|
+| `plan.file.configure(source, target)` | Process template and copy to target |
+| `plan.file.copy(source, target)` | Copy file without template processing |
+| `plan.file.symlink(source, target)` | Create symbolic link |
+| `plan.file.mkdir(target)` | Create directory (and parents) |
+
+**Service operations** — `plan.service()`
+
+| Method | Description |
+|--------|-------------|
+| `plan.service(name, action)` | Manage service. Actions: `"start"`, `"stop"`, `"restart"`, `"enable"`, `"disable"` |
+
+**Shell operations** — `plan.shell()`
+
+| Method | Description |
+|--------|-------------|
+| `plan.shell(command)` | Execute shell command (use sparingly) |
+
+**Dependency ordering** — `plan.depends_on()`
+
+| Method | Description |
+|--------|-------------|
+| `plan.depends_on(from_node, to_node)` | Create dependency edge. `from_node` executes after `to_node` completes. |
+
+**Node return values:** All `plan.*` methods return a node object that can be passed to `plan.depends_on()`:
+
+```python
+def install(package, system, plan):
+    # Update package index before installing
+    update = plan.package.update()
+    install = plan.package.install("nginx", "certbot")
+    plan.depends_on(install, update)
+
+    # Configure after install
+    config = plan.file.configure(
+        source="nginx.conf.tmpl",
+        target="~/.config/nginx/nginx.conf"
+    )
+    plan.depends_on(config, install)
+
+    # Restart service after config
+    restart = plan.service(name="nginx", action="restart")
+    plan.depends_on(restart, config)
 ```
 
 ## Phase 4: Create README Documentation
@@ -660,8 +714,8 @@ Before presenting to user, verify:
 - [ ] `lifecycle.yaml` has valid YAML syntax and validates against schema
 - [ ] `lifecycle.yaml` does NOT contain a `phases:` section (discovered from dirs)
 - [ ] Platform directories match declared `platforms:` in lifecycle.yaml
-- [ ] Phase scripts use three-input signature: `def <phase>(system, package, plan):`
-- [ ] Phase scripts express intent (`plan.install()`) not commands (`plan.run("apt install")`)
+- [ ] Phase scripts use three-input signature: `def <phase>(package, system, plan):`
+- [ ] Phase scripts express intent (`plan.package.install()`) not commands (`plan.shell("apt install")`)
 - [ ] Verification command actually tests the tool works
 - [ ] README documents all features and settings from lifecycle.yaml
 - [ ] Tribal knowledge section has file references

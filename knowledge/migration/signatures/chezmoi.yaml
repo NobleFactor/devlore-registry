@@ -1,0 +1,61 @@
+# chezmoi dotfile manager signature
+# https://www.chezmoi.io/
+
+name: chezmoi
+description: |
+  chezmoi uses special naming conventions for dotfiles management.
+  Directories prefixed with dot_ represent hidden directories.
+  Files can have attributes encoded in names (private_, executable_, etc.).
+
+markers:
+  - type: file
+    path: ".chezmoi.toml.tmpl"
+    confidence: 1.0
+    description: "chezmoi configuration template"
+
+  - type: file
+    path: ".chezmoiroot"
+    confidence: 1.0
+    description: "chezmoi root marker"
+
+  - type: directory_pattern
+    pattern: "dot_*"
+    confidence: 0.95
+    description: "chezmoi dot-prefixed directories"
+
+  - type: file_pattern
+    pattern: "*.tmpl"
+    confidence: 0.8
+    description: "chezmoi template files"
+
+  - type: file_pattern
+    pattern: "private_*"
+    confidence: 0.9
+    description: "chezmoi private (mode 0600) files"
+
+  - type: file_pattern
+    pattern: "executable_*"
+    confidence: 0.9
+    description: "chezmoi executable files"
+
+segment_transform:
+  description: "chezmoi encodes metadata in filenames; writ uses directory structure"
+  transforms:
+    - from: "dot_{name}"
+      to: ".{name}"
+      description: "Remove dot_ prefix, add leading dot"
+    - from: "private_{name}"
+      to: "{name}"
+      metadata:
+        mode: "0600"
+      description: "Remove private_ prefix, set permissions"
+    - from: "executable_{name}"
+      to: "{name}"
+      metadata:
+        mode: "0755"
+      description: "Remove executable_ prefix, set permissions"
+
+encryption:
+  notes: |
+    chezmoi supports age encryption natively. Encrypted files have .age extension.
+    Migration should preserve encryption or convert to SOPS.

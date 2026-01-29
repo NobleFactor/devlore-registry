@@ -9,16 +9,24 @@
 # The installer handles all component setup including CLI tools.
 # Reference: https://docs.docker.com/desktop/install/windows-install/
 
-def install(system, package, plan):
-    """Install Docker Desktop on Windows."""
+def install(package, system, plan):
+    """Install Docker Desktop on Windows.
 
-    plan.download(
-        url="https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe",
-        dest="%TEMP%\\DockerDesktopInstaller.exe",
-    )
+    Args:
+        package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
+        plan: Build execution graph (write, deferred execution)
+    """
 
-    plan.run(
+    # TODO: plan.download() not yet implemented
+    # plan.download(
+    #     url="https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe",
+    #     dest="%TEMP%\\DockerDesktopInstaller.exe",
+    # )
+
+    plan.shell(
         "%TEMP%\\DockerDesktopInstaller.exe install --quiet --accept-license"
     )
 
-    plan.remove_file("%TEMP%\\DockerDesktopInstaller.exe")
+    # TODO: plan.file.remove() not yet implemented
+    # plan.file.remove("%TEMP%\\DockerDesktopInstaller.exe")

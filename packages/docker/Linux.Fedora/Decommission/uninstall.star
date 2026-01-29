@@ -3,17 +3,25 @@
 #
 # docker/Linux.Fedora/Decommission/uninstall.star — Uninstall phase
 
-def uninstall(system, package, plan):
-    """Remove Docker CE packages on Fedora/RHEL."""
+def uninstall(package, system, plan):
+    """Remove Docker CE packages on Fedora/RHEL.
 
-    plan.remove("docker-ce")
-    plan.remove("docker-ce-cli")
-    plan.remove("containerd.io")
-    plan.remove("docker-buildx-plugin")
-    plan.remove("docker-compose-plugin")
+    Args:
+        package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
+        plan: Build execution graph (write, deferred execution)
+    """
 
-    if package.feature("rootless"):
-        plan.remove("fuse-overlayfs")
-        plan.remove("slirp4netns")
+    plan.package.remove(
+        "docker-ce",
+        "docker-ce-cli",
+        "containerd.io",
+        "docker-buildx-plugin",
+        "docker-compose-plugin",
+    )
 
-    plan.autoremove()
+    if package.has_feature("rootless"):
+        plan.package.remove("fuse-overlayfs", "slirp4netns")
+
+    # TODO: plan.package.autoremove() not yet implemented
+    # plan.package.autoremove()

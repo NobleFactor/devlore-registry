@@ -7,39 +7,43 @@
 # Same as Debian - add user to docker group, enable service.
 # Reference: https://docs.docker.com/engine/install/linux-postinstall/
 
-def provision(system, package, plan):
+def provision(package, system, plan):
     """Configure Docker for use on Fedora/RHEL.
 
     Args:
-        system: Query target environment (read-only, immediate)
         package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
         plan: Build execution graph (write, deferred execution)
     """
 
+    # TODO: plan.user.add_to_group() not yet implemented
     # Add current user to docker group
-    user = system.env("USER")
-    if user and user != "root":
-        plan.add_user_to_group(user, "docker")
+    # user = system.env("USER")
+    # if user and user != "root":
+    #     plan.user.add_to_group(user, "docker")
 
     # Enable and start Docker service
-    plan.enable_service("docker")
-    plan.start_service("docker")
+    plan.service(name="docker", action="enable")
+    plan.service(name="docker", action="start")
 
     # Rootless mode setup
-    if package.feature("rootless"):
-        plan.run("dockerd-rootless-setuptool.sh install")
+    if package.has_feature("rootless"):
+        plan.shell("dockerd-rootless-setuptool.sh install")
 
     # Configure daemon settings if custom values provided
-    storage_driver = package.setting("storage-driver", "overlay2")
-    log_driver = package.setting("log-driver", "json-file")
+    storage_driver = package.setting("storage-driver")
+    log_driver = package.setting("log-driver")
 
-    if storage_driver != "overlay2" or log_driver != "json-file":
-        daemon_config = '{\n'
-        daemon_config += '  "storage-driver": "%s",\n' % storage_driver
-        daemon_config += '  "log-driver": "%s"\n' % log_driver
-        daemon_config += '}\n'
-
-        plan.write_file(
-            path="/etc/docker/daemon.json",
-            content=daemon_config,
-        )
+    if storage_driver or log_driver:
+        # TODO: plan.file.write() not yet implemented
+        # daemon_config = '{\n'
+        # if storage_driver:
+        #     daemon_config += '  "storage-driver": "%s",\n' % storage_driver
+        # if log_driver:
+        #     daemon_config += '  "log-driver": "%s"\n' % log_driver
+        # daemon_config += '}\n'
+        # plan.file.write(
+        #     path="/etc/docker/daemon.json",
+        #     content=daemon_config,
+        # )
+        pass

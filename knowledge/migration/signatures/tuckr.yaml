@@ -1,0 +1,40 @@
+# Tuckr dotfile manager signature
+# https://github.com/RaphGL/Tuckr
+
+name: tuckr
+description: |
+  Tuckr organizes dotfiles in a Configs/ directory with segment subdirectories.
+  Segments use platform suffixes separated by dashes (e.g., all-Darwin, all-Linux).
+  Optional Hooks.toml defines pre/post-deployment scripts.
+
+markers:
+  - type: file
+    path: "**/Hooks.toml"
+    confidence: 1.0
+    description: "Tuckr hook configuration file"
+
+  - type: directory_pattern
+    pattern: "Configs/*-{Darwin,Linux,Windows,Unix}"
+    confidence: 0.9
+    description: "Segment directories with platform suffixes"
+
+  - type: directory_pattern
+    pattern: "Configs/all-*"
+    confidence: 0.85
+    description: "Common 'all' segment with platform suffix"
+
+segment_transform:
+  description: "Tuckr uses dash separators, writ uses dot separators"
+  from: "{name}-{platform}"
+  to: "{name}.{platform}"
+  examples:
+    - from: "all-Darwin"
+      to: "all.Darwin"
+    - from: "noblefactor-Linux"
+      to: "noblefactor.Linux"
+
+encryption:
+  notes: |
+    Tuckr itself doesn't handle encryption. Users typically combine Tuckr
+    with git-crypt or manual GPG encryption. Check .gitattributes for
+    git-crypt patterns.

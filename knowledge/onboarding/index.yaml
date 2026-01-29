@@ -1,0 +1,12 @@
+# Auto-generated file list by: go run ./cmd/gen-index
+# Metadata (purpose, source_system, description) is preserved and should be edited manually.
+
+domain: onboarding
+prompts:
+    - name: init-environment.txt
+      purpose: environment-init
+      description: System prompt for AI-assisted environment initialization
+schemas:
+    - name: init-plan.json
+      purpose: init-plan
+      description: JSON schema for environment initialization plan

@@ -8,17 +8,25 @@
 # CLI symlinks are placed in /usr/local/bin.
 # Reference: https://docs.docker.com/desktop/uninstall/
 
-def uninstall(system, package, plan):
-    """Remove Docker Desktop from macOS."""
+def uninstall(package, system, plan):
+    """Remove Docker Desktop from macOS.
 
+    Args:
+        package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
+        plan: Build execution graph (write, deferred execution)
+    """
+
+    # TODO: plan.file.rmdir() and plan.file.remove() not yet implemented
     # Remove the application
-    plan.remove_dir("/Applications/Docker.app")
+    # plan.file.rmdir("/Applications/Docker.app")
 
     # Remove CLI symlinks
-    plan.remove_file("/usr/local/bin/docker")
-    plan.remove_file("/usr/local/bin/docker-compose")
-    plan.remove_file("/usr/local/bin/docker-credential-desktop")
-    plan.remove_file("/usr/local/bin/docker-credential-ecr-login")
-    plan.remove_file("/usr/local/bin/docker-credential-osxkeychain")
-    plan.remove_file("/usr/local/bin/kubectl.docker")
-    plan.remove_file("/usr/local/bin/hub-tool")
+    # plan.file.remove("/usr/local/bin/docker")
+    # plan.file.remove("/usr/local/bin/docker-compose")
+    # plan.file.remove("/usr/local/bin/docker-credential-desktop")
+    # plan.file.remove("/usr/local/bin/docker-credential-ecr-login")
+    # plan.file.remove("/usr/local/bin/docker-credential-osxkeychain")
+    # plan.file.remove("/usr/local/bin/kubectl.docker")
+    # plan.file.remove("/usr/local/bin/hub-tool")
+    pass

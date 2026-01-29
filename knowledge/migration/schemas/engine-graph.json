@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devlore.noblefactor.com/schemas/engine-graph.json",
+  "title": "Engine Graph",
+  "description": "Execution graph compatible with devlore-cli engine.Graph structure",
+  "type": "object",
+  "required": ["nodes"],
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "description": "Operations to execute",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "description": "Ordering constraints between nodes",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "Human-readable summary of the migration plan"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "LLM confidence in the analysis (0.0-1.0)"
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "operations"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this node"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["validate", "rename", "mkdir", "remove", "generate", "link", "copy", "expand", "decrypt"]
+          },
+          "description": "Pipeline of operations to execute"
+        },
+        "source": {
+          "type": "string",
+          "description": "Source path (for file operations)"
+        },
+        "target": {
+          "type": "string",
+          "description": "Target path (for file operations)"
+        },
+        "project": {
+          "type": "string",
+          "description": "Grouping key for this operation"
+        },
+        "mode": {
+          "type": "integer",
+          "description": "Target file permissions (octal, e.g., 420 for 0644)"
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Operation-specific metadata",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": ["from", "to", "relation"],
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "Source node ID"
+        },
+        "to": {
+          "type": "string",
+          "description": "Target node ID"
+        },
+        "relation": {
+          "type": "string",
+          "enum": ["depends_on", "delegates", "orders"],
+          "description": "Type of relationship between nodes"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+# Auto-generated file list by: go run ./cmd/gen-index
+# Metadata (purpose, source_system, description) is preserved and should be edited manually.
+
+domain: migration
+prompts:
+    - name: migrate-to-writ.txt
+      purpose: writ-migration
+      description: System prompt for AI-assisted migration planning
+schemas:
+    - name: engine-graph.json
+      purpose: execution-graph
+      description: JSON schema for migration execution graph
+    - name: migration-plan.json
+      purpose: migration-plan
+      description: JSON schema for AI migration analysis response
+examples:
+    - name: migration-examples.yaml
+      purpose: migration-few-shot
+      description: Few-shot examples for migration analysis
+transforms:
+    - name: from-bare-git.yaml
+      source_system: bare-git
+      description: Transform rules for bare git dotfile repos
+    - name: from-chezmoi.yaml
+      source_system: chezmoi
+      description: Transform rules for chezmoi repos
+    - name: from-stow.yaml
+      source_system: stow
+      description: Transform rules for GNU Stow repos
+    - name: from-tuckr.yaml
+      source_system: tuckr
+      description: Transform rules for Tuckr repos
+    - name: from-yadm.yaml
+      source_system: yadm
+      description: Transform rules for yadm repos
+signatures:
+    - name: chezmoi.yaml
+      system: chezmoi
+      description: Detection markers for chezmoi dotfile manager
+    - name: git-crypt.yaml
+      system: git-crypt
+      description: Detection markers for git-crypt encryption
+    - name: stow.yaml
+      system: stow
+      description: Detection markers for GNU Stow
+    - name: tuckr.yaml
+      system: tuckr
+      description: Detection markers for Tuckr

@@ -3,15 +3,22 @@
 #
 # docker/Linux.Fedora/Upgrade/install.star — Install phase for upgrade
 
-def install(system, package, plan):
-    """Upgrade Docker CE packages on Fedora/RHEL."""
+def install(package, system, plan):
+    """Upgrade Docker CE packages on Fedora/RHEL.
 
-    plan.upgrade("docker-ce")
-    plan.upgrade("docker-ce-cli")
-    plan.upgrade("containerd.io")
-    plan.upgrade("docker-buildx-plugin")
-    plan.upgrade("docker-compose-plugin")
+    Args:
+        package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
+        plan: Build execution graph (write, deferred execution)
+    """
 
-    if package.feature("rootless"):
-        plan.upgrade("fuse-overlayfs")
-        plan.upgrade("slirp4netns")
+    plan.package.upgrade(
+        "docker-ce",
+        "docker-ce-cli",
+        "containerd.io",
+        "docker-buildx-plugin",
+        "docker-compose-plugin",
+    )
+
+    if package.has_feature("rootless"):
+        plan.package.upgrade("fuse-overlayfs", "slirp4netns")
