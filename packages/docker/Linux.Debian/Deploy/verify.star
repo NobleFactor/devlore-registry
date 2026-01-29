@@ -12,12 +12,12 @@
 # 3. User may need to logout/login for docker group membership to work.
 #    If running as non-root without group membership, verification uses sudo.
 
-def verify(system, package, plan):
+def verify(package, system, plan):
     """Verify Docker installation is functional.
 
     Args:
-        system: Query target environment (read-only, immediate)
         package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
         plan: Build execution graph (write, deferred execution)
     """
 

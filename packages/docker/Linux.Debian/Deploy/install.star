@@ -14,26 +14,27 @@
 #
 # Reference: https://docs.docker.com/engine/install/ubuntu/
 
-def install(system, package, plan):
+def install(package, system, plan):
     """Install Docker CE packages.
 
     Args:
-        system: Query target environment (read-only, immediate)
         package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
         plan: Build execution graph (write, deferred execution)
     """
 
     # Core Docker packages
-    plan.install("docker-ce")
-    plan.install("docker-ce-cli")
-    plan.install("containerd.io")
-    plan.install("docker-buildx-plugin")
-    plan.install("docker-compose-plugin")
+    plan.package.install(
+        "docker-ce",
+        "docker-ce-cli",
+        "containerd.io",
+        "docker-buildx-plugin",
+        "docker-compose-plugin",
+    )
 
     # Hardware detection utility (needed for ODROID verification)
-    plan.install("lshw")
+    plan.package.install("lshw")
 
     # Rootless mode requires additional packages
-    if package.feature("rootless"):
-        plan.install("uidmap")
-        plan.install("dbus-user-session")
+    if package.has_feature("rootless"):
+        plan.package.install("uidmap", "dbus-user-session")

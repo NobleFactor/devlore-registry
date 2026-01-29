@@ -9,40 +9,44 @@
 # Different DMGs for Apple Silicon (arm64) vs Intel (amd64).
 # Reference: https://docs.docker.com/desktop/setup/install/mac-install/
 
-def install(system, package, plan):
+def install(package, system, plan):
     """Install Docker Desktop on macOS.
 
     Args:
-        system: Query target environment (read-only, immediate)
         package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
         plan: Build execution graph (write, deferred execution)
     """
 
+    # TODO: system.arch() needs implementation
     # Select correct DMG for architecture
-    arch = system.arch()
-    if arch == "arm64":
-        dmg_url = "https://desktop.docker.com/mac/main/arm64/Docker.dmg"
-    else:
-        dmg_url = "https://desktop.docker.com/mac/main/amd64/Docker.dmg"
+    # arch = system.arch()
+    # if arch == "arm64":
+    #     dmg_url = "https://desktop.docker.com/mac/main/arm64/Docker.dmg"
+    # else:
+    #     dmg_url = "https://desktop.docker.com/mac/main/amd64/Docker.dmg"
 
+    # TODO: plan.download() not yet implemented
     # Download Docker Desktop DMG
-    dmg_path = plan.download(
-        url=dmg_url,
-        dest="/tmp/Docker.dmg",
-    )
+    # plan.download(
+    #     url=dmg_url,
+    #     dest="/tmp/Docker.dmg",
+    # )
 
     # Mount the DMG
-    plan.run("hdiutil attach /tmp/Docker.dmg -nobrowse -quiet")
+    plan.shell("hdiutil attach /tmp/Docker.dmg -nobrowse -quiet")
 
+    # TODO: system.env() needs implementation
     # Run the installer with license acceptance
     # --user flag performs privileged setup during install
-    user = system.env("USER")
-    plan.run(
-        "/Volumes/Docker/Docker.app/Contents/MacOS/install --accept-license --user=%s" % user
-    )
+    # user = system.env("USER")
+    # plan.shell(
+    #     "/Volumes/Docker/Docker.app/Contents/MacOS/install --accept-license --user=%s" % user
+    # )
 
     # Detach the DMG
-    plan.run("hdiutil detach /Volumes/Docker -quiet")
+    plan.shell("hdiutil detach /Volumes/Docker -quiet")
 
+    # TODO: plan.file.remove() not yet implemented
     # Clean up downloaded DMG
-    plan.remove_file("/tmp/Docker.dmg")
+    # plan.file.remove("/tmp/Docker.dmg")

@@ -5,12 +5,12 @@
 #
 # Same verification as Debian.
 
-def verify(system, package, plan):
+def verify(package, system, plan):
     """Verify Docker installation on Fedora/RHEL.
 
     Args:
-        system: Query target environment (read-only, immediate)
         package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
         plan: Build execution graph (write, deferred execution)
     """
 

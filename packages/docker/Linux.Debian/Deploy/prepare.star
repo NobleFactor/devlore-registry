@@ -8,12 +8,12 @@
 # The official Docker apt repository must be configured before install.
 # Reference: https://docs.docker.com/engine/install/ubuntu/
 
-def prepare(system, package, plan):
+def prepare(package, system, plan):
     """Prepare the system for Docker CE installation.
 
     Args:
-        system: Query target environment (read-only, immediate)
         package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
         plan: Build execution graph (write, deferred execution)
     """
 
@@ -30,32 +30,31 @@ def prepare(system, package, plan):
     ]
 
     for pkg in conflicts:
-        if system.installed(pkg):
-            plan.remove(pkg)
+        if system.package.installed(pkg):
+            plan.package.remove(pkg)
 
     # Set up Docker's official apt repository
     # 1. Install prerequisites for HTTPS apt repos
-    plan.install("ca-certificates")
-    plan.install("curl")
+    plan.package.install("ca-certificates", "curl")
 
     # 2. Download and install Docker's GPG key
-    gpg_key = plan.download(
-        url="https://download.docker.com/linux/ubuntu/gpg",
-        dest="/etc/apt/keyrings/docker.asc",
-    )
-    plan.chmod(gpg_key, "a+r")
+    # TODO: plan.download() not yet implemented
+    # gpg_key = plan.download(
+    #     url="https://download.docker.com/linux/ubuntu/gpg",
+    #     dest="/etc/apt/keyrings/docker.asc",
+    # )
+    # plan.chmod(gpg_key, "a+r")
 
     # 3. Add the Docker apt repository
-    # Uses system.arch() to get the correct architecture (amd64, arm64)
-    arch = system.arch()
-    codename = system.codename()  # e.g., "jammy", "noble"
-
-    repo_line = "deb [arch=%s signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu %s stable" % (arch, codename)
-
-    plan.write_file(
-        path="/etc/apt/sources.list.d/docker.list",
-        content=repo_line + "\n",
-    )
+    # TODO: plan.file.write() not yet implemented
+    # Uses system.platform.arch to get the correct architecture (amd64, arm64)
+    # arch = system.platform.arch
+    # codename = system.platform.codename  # e.g., "jammy", "noble"
+    # repo_line = "deb [arch=%s signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu %s stable" % (arch, codename)
+    # plan.file.write(
+    #     path="/etc/apt/sources.list.d/docker.list",
+    #     content=repo_line + "\n",
+    # )
 
     # 4. Update package lists to pick up the new repository
-    plan.update_package_lists()
+    plan.package.update()

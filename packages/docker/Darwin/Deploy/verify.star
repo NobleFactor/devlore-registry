@@ -3,12 +3,12 @@
 #
 # docker/Darwin/Deploy/verify.star — Verify phase
 
-def verify(system, package, plan):
+def verify(package, system, plan):
     """Verify Docker Desktop installation on macOS.
 
     Args:
-        system: Query target environment (read-only, immediate)
         package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
         plan: Build execution graph (write, deferred execution)
     """
 

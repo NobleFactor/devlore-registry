@@ -3,10 +3,18 @@
 #
 # docker/Linux.Fedora/Upgrade/prepare.star — Prepare phase for upgrade
 
-def prepare(system, package, plan):
-    """Prepare for Docker CE upgrade on Fedora/RHEL."""
+def prepare(package, system, plan):
+    """Prepare for Docker CE upgrade on Fedora/RHEL.
 
-    if not system.installed("docker-ce"):
-        plan.fail("Docker CE is not installed - use 'lore deploy docker' instead")
+    Args:
+        package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
+        plan: Build execution graph (write, deferred execution)
+    """
 
-    plan.update_package_lists()
+    if not system.package.installed("docker-ce"):
+        # TODO: plan.fail() not yet implemented
+        # plan.fail("Docker CE is not installed - use 'lore deploy docker' instead")
+        pass
+
+    plan.package.update()

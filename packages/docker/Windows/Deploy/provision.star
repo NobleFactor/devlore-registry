@@ -9,16 +9,23 @@
 # - Creates docker-users group for non-admin access
 # - Starts Docker Desktop service on login
 
-def provision(system, package, plan):
-    """Configure Docker Desktop after installation."""
+def provision(package, system, plan):
+    """Configure Docker Desktop after installation.
 
+    Args:
+        package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
+        plan: Build execution graph (write, deferred execution)
+    """
+
+    # TODO: system.env() needs implementation
     # Add current user to docker-users group for non-admin access
-    user = system.env("USERNAME")
-    plan.run(
-        "net localgroup docker-users %s /add 2>nul || echo Already a member" % user
-    )
+    # user = system.env("USERNAME")
+    # plan.shell(
+    #     "net localgroup docker-users %s /add 2>nul || echo Already a member" % user
+    # )
 
     # Start Docker Desktop
-    plan.run(
+    plan.shell(
         "start \"\" \"%ProgramFiles%\\Docker\\Docker\\Docker Desktop.exe\""
     )

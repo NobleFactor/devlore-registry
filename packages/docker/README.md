@@ -163,30 +163,30 @@ docker/
 Phase scripts receive three inputs:
 
 ```python
-def install(system, package, plan):
+def install(package, system, plan):
     """
     Args:
-        system:  Query target environment (read-only, immediate)
         package: Package metadata and features (read-only, immediate)
+        system:  Query target environment (read-only, immediate)
         plan:    Build execution graph (write, deferred execution)
     """
-    if system.installed("conflicting-pkg"):
-        plan.remove("conflicting-pkg")
+    if system.package.installed("conflicting-pkg"):
+        plan.package.remove("conflicting-pkg")
 
-    plan.install("docker-ce")
+    plan.package.install("docker-ce")
 
-    if package.feature("rootless"):
-        plan.install("uidmap")
+    if package.has_feature("rootless"):
+        plan.package.install("uidmap")
 ```
 
 **Scripts express intent, not commands.** Never shell out to package managers:
 
 ```python
 # CORRECT
-plan.install("docker-ce")
+plan.package.install("docker-ce")
 
 # WRONG
-plan.run("apt install docker-ce")
+plan.shell("apt install docker-ce")
 ```
 
 ## Sources

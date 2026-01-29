@@ -3,14 +3,20 @@
 #
 # docker/Darwin/Upgrade/verify.star — Verify phase for upgrade
 
-def verify(system, package, plan):
-    """Verify Docker Desktop upgrade on macOS."""
+def verify(package, system, plan):
+    """Verify Docker Desktop upgrade on macOS.
+
+    Args:
+        package: Package metadata and features (read-only, immediate)
+        system: Query target environment (read-only, immediate)
+        plan: Build execution graph (write, deferred execution)
+    """
 
     # Start Docker Desktop
-    plan.run("open -a Docker")
+    plan.shell("open -a Docker")
 
     # Wait for daemon to be ready
-    plan.run("while ! docker info >/dev/null 2>&1; do sleep 1; done")
+    plan.shell("while ! docker info >/dev/null 2>&1; do sleep 1; done")
 
     plan.verify("docker-daemon", check="docker info")
     plan.verify("docker-version", check="docker --version")
