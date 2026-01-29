@@ -1,0 +1,43 @@
+# GNU Stow dotfile manager signature
+# https://www.gnu.org/software/stow/
+
+name: stow
+description: |
+  GNU Stow organizes dotfiles in package directories at the repository root.
+  Each package directory mirrors the home directory structure.
+  .stow-local-ignore configures files to exclude from symlinking.
+
+markers:
+  - type: file
+    path: ".stow-local-ignore"
+    confidence: 1.0
+    description: "Stow ignore configuration"
+
+  - type: file
+    path: ".stowrc"
+    confidence: 0.95
+    description: "Stow configuration file"
+
+  - type: structure
+    description: "Package directories with home-relative paths"
+    example: |
+      bash/
+        .bashrc
+        .bash_profile
+      vim/
+        .vimrc
+        .vim/
+    confidence: 0.7
+
+segment_transform:
+  description: "Stow packages map to writ projects under Home/Configs/"
+  from: "{package}/"
+  to: "Home/Configs/{package}/"
+  notes: |
+    Stow packages are flat (no platform awareness). Migration may require
+    manual separation of platform-specific files into separate segments.
+
+encryption:
+  notes: |
+    Stow doesn't handle encryption. Secrets are typically stored separately
+    or encrypted with external tools (GPG, git-crypt).

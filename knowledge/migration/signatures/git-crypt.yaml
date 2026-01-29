@@ -1,0 +1,42 @@
+# git-crypt encryption signature
+# https://github.com/AGWA/git-crypt
+
+name: git-crypt
+description: |
+  git-crypt provides transparent encryption for git repositories.
+  Encrypted files are configured via .gitattributes with filter=git-crypt.
+  Files appear encrypted in the repository but are decrypted on checkout
+  when the repository is unlocked.
+
+markers:
+  - type: directory
+    path: ".git-crypt/"
+    confidence: 1.0
+    description: "git-crypt key directory"
+
+  - type: file_contains
+    path: ".gitattributes"
+    pattern: "filter=git-crypt"
+    confidence: 1.0
+    description: "git-crypt filter in .gitattributes"
+
+  - type: file_magic
+    bytes: [0x00, 0x47, 0x49, 0x54, 0x43, 0x52, 0x59, 0x50, 0x54]
+    description: "\\x00GITCRYPT magic bytes (locked files)"
+    confidence: 1.0
+
+pattern_extraction:
+  source: ".gitattributes"
+  regex: "^([^ ]+)\\s+filter=git-crypt"
+  description: "Extract file patterns configured for git-crypt encryption"
+
+migration_notes: |
+  When migrating from git-crypt to SOPS:
+  1. Extract encryption patterns from .gitattributes
+  2. Generate equivalent .sops.yaml path_regex entries
+  3. Re-encrypt files with SOPS (age or GPG backend)
+  4. Remove git-crypt configuration
+
+  Example .gitattributes to .sops.yaml conversion:
+    .gitattributes: "secrets/**/* filter=git-crypt"
+    .sops.yaml: path_regex: "secrets/.*"
