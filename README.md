@@ -1,8 +1,51 @@
 # devlore Registry
 
-Official package registry for [lore](https://github.com/NobleFactor/noblefactor) — lifecycle manifests encoding tribal knowledge.
+Official registry for [lore](https://github.com/NobleFactor/noblefactor) — lifecycle manifests and knowledge base for LLM-assisted operations.
 
-Each package encodes installation knowledge that would otherwise require hours of debugging, Stack Overflow searches, and trial-and-error. The goal: install once, document forever.
+## Structure
+
+```
+devlore-registry/
+├── knowledge/              # Knowledge base for LLM grounding
+│   ├── migration/          # writ migrate: detect tools, transform to writ
+│   │   ├── signatures/     # Tool detection markers
+│   │   ├── transforms/     # Tool-to-writ recipes
+│   │   ├── prompts/
+│   │   ├── schemas/
+│   │   └── examples/
+│   ├── onboarding/         # lore init: what packages do I need?
+│   │   ├── prompts/
+│   │   └── schemas/
+│   ├── manifest-authoring/ # packages-manifest.yaml generation
+│   │   ├── prompts/
+│   │   └── schemas/
+│   ├── package-authoring/  # lore package development
+│   │   ├── prompts/
+│   │   ├── schemas/
+│   │   └── examples/
+│   └── shared/             # Cross-domain assets
+│       ├── prompts/        # Clarification, common patterns
+│       ├── schemas/
+│       ├── slots/          # Slot definitions for templates
+│       └── examples/
+└── packages/               # Lore packages (lifecycle manifests)
+```
+
+### knowledge/
+
+Knowledge base organized by domain. Each domain contains prompts, schemas, and examples specific to that workflow. The `shared/` directory contains assets used across multiple domains.
+
+| Domain | Purpose |
+|--------|---------|
+| `migration/` | Detect existing dotfile managers, transform to writ structure |
+| `onboarding/` | Help users discover what packages they need for their goals |
+| `manifest-authoring/` | Generate packages-manifest.yaml from user intent |
+| `package-authoring/` | Generate lore packages from existing scripts or documentation |
+| `shared/` | Cross-cutting assets (clarification prompts, common schemas) |
+
+### packages/
+
+Lore packages encoding tribal knowledge for software installation. Each package captures installation knowledge that would otherwise require hours of debugging, Stack Overflow searches, and trial-and-error. The goal: install once, document forever.
 
 ## Package Index
 
