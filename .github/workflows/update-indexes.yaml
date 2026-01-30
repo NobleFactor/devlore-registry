@@ -2,7 +2,7 @@ name: Update indexes
 
 on:
   push:
-    branches: [main]
+    branches: [develop]
     paths:
       - 'packages/**/lifecycle.yaml'
       - 'knowledge/**/*.md'
@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout devlore-registry
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.NOBLEFACTOR_REPOSITORY_ACCESS }}
 
       - name: Checkout noblefactor-ops
         uses: actions/checkout@v4
