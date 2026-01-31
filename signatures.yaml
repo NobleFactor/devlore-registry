@@ -1,0 +1,42 @@
+apt:
+    azure-cli: azure-cli
+    docker-ce: docker
+    docker.io: docker
+    kubectl: kubectl
+    pandoc: pandoc
+brew:
+    awscli: aws-cli
+    azure-cli: azure-cli
+    docker: docker
+    google-cloud-sdk: gcloud
+    kubectl: kubectl
+    kubernetes-cli: kubectl
+    pandoc: pandoc
+    terraform: terraform
+choco:
+    awscli: aws-cli
+    azure-cli: azure-cli
+    docker-desktop: docker
+    gcloudsdk: gcloud
+    kubernetes-cli: kubectl
+    pandoc: pandoc
+    terraform: terraform
+dnf:
+    azure-cli: azure-cli
+    docker-ce: docker
+    kubectl: kubectl
+    pandoc: pandoc
+mas:
+    "497799835": xcode
+npm:
+    astro: astro
+pacman:
+    kubectl: kubectl
+    pandoc: pandoc
+winget:
+    Amazon.AWSCLI: aws-cli
+    Docker.DockerDesktop: docker
+    Hashicorp.Terraform: terraform
+    JohnMacFarlane.Pandoc: pandoc
+    Kubernetes.kubectl: kubectl
+    Microsoft.AzureCLI: azure-cli

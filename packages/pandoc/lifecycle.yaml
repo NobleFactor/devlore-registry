@@ -1,14 +1,5 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Noble Factor. All rights reserved.
-#
-# pandoc - Package Lifecycle Manifest
-# Universal document converter
-#
-# This package demonstrates "invisible dependencies" — the tribal knowledge
-# that pandoc alone doesn't produce PDFs; you need a PDF engine, and if you
-# choose LaTeX, you need specific packages that aren't documented anywhere.
-#
-# Reference: https://pandoc.org/installing.html
 
 name: pandoc
 version: "3.6"
@@ -16,71 +7,30 @@ description: Universal document converter with PDF support
 homepage: https://pandoc.org
 repository: https://github.com/jgm/pandoc
 license: GPL-2.0-or-later
+maintainer: Noble Factor
 
-# AI search aliases for fuzzy matching and validation queries
 aliases:
   - document converter
   - markdown to pdf
   - markdown converter
-  - universal document converter
-  - md to docx
-  - latex to pdf
 
-# Upstream release artifacts — for verification, direct download, bundling
-# Hashes computed 2026-01-12 from github.com/jgm/pandoc/releases/tag/3.6
-sources:
-  - url: "https://github.com/jgm/pandoc/releases/download/3.6/pandoc-3.6-arm64-macOS.pkg"
-    sha256: "0d166657259e2c5d388225701f16649daea2a941d60d5068ec2195d0b808382d"
-    platform: darwin
-    arch: arm64
-
-  - url: "https://github.com/jgm/pandoc/releases/download/3.6/pandoc-3.6-x86_64-macOS.pkg"
-    sha256: "a8afb5f8a3dbb2482dec48d7b58e16629fe78ce0a5d13d6996f63a3901b652f1"
-    platform: darwin
-    arch: amd64
-
-  - url: "https://github.com/jgm/pandoc/releases/download/3.6/pandoc-3.6-linux-amd64.tar.gz"
-    sha256: "8e3702b195f75412e425df46f8f3f08241b66a2b33abbd9e04eda501bfde860c"
-    platform: linux
-    arch: amd64
-
-  - url: "https://github.com/jgm/pandoc/releases/download/3.6/pandoc-3.6-linux-arm64.tar.gz"
-    sha256: "4377731a0c896193aeab75734fd5965c21232638fde117f30e4d591700405e0f"
-    platform: linux
-    arch: arm64
-
-  - url: "https://github.com/jgm/pandoc/releases/download/3.6/pandoc-3.6-windows-x86_64.msi"
-    sha256: "efc621bb08901fbf9c78cc71d5c00d8e67eb9318f8ef994d908d71e0d28eb702"
-    platform: windows
-    arch: amd64
-
-# Package manager availability — for ensure/batch operations
-packages:
-  brew: pandoc
-  port: pandoc
-  apt: pandoc
-  dnf: pandoc
-  pacman: pandoc
-  winget: JohnMacFarlane.Pandoc
-  choco: pandoc
-
-authors:
-  - name: John MacFarlane
-    url: https://johnmacfarlane.net
+signatures:
+  brew: [pandoc]
+  apt: [pandoc]
+  dnf: [pandoc]
+  pacman: [pandoc]
+  choco: [pandoc]
+  winget: [JohnMacFarlane.Pandoc]
 
 platforms:
-  - darwin
-  - linux
-  - windows
+  - Darwin
+  - Linux
+  - Windows
 
-# Features enable optional capabilities
-# The invisible dependency problem: pandoc --pdf requires a PDF engine
 features:
   pdf-latex:
     description: PDF output via LaTeX (best typography, ~500MB-4GB depending on distribution)
     default: false
-    # This is the "invisible dependency" — users discover these by trial and error
-    # We encode the tribal knowledge once, share it forever
 
   pdf-weasyprint:
     description: PDF output via WeasyPrint (simpler, CSS-based, ~100MB)
@@ -94,16 +44,12 @@ features:
     description: Install shell completions for bash/zsh/fish
     default: true
 
-# Settings configure behavior
 settings:
   latex_distribution:
     description: LaTeX distribution size (when pdf-latex enabled)
     type: string
     default: "basic"
     values: ["basic", "medium", "full"]
-    # basic: basictex/tinytex (~500MB) - requires tlmgr packages
-    # medium: texlive-base (~1GB) - most common packages
-    # full: mactex/texlive-full (~4GB) - everything, no missing packages
 
   paper:
     description: Default paper size for PDF output
@@ -111,25 +57,17 @@ settings:
     default: "letter"
     values: ["letter", "a4", "legal"]
 
-# Dependencies
-dependencies: []
-
-# Conflicts
-conflicts: []
-
-# Phase scripts
-phases:
-  prepare: prepare.star
-  install: install.star
-  provision: provision.star
-  verify: verify.star
-
-# Verification command
 verification:
   command: "pandoc --version"
   pattern: "pandoc \\d+\\.\\d+"
 
-# Tags for search
+notes: |
+  INVISIBLE DEPENDENCIES:
+  pandoc --pdf requires a PDF engine. Options:
+  - LaTeX (pdf-latex): Best typography, large download
+  - WeasyPrint (pdf-weasyprint): CSS-based, simpler
+  - Typst (pdf-typst): Modern alternative, fast
+
 tags:
   - document
   - converter

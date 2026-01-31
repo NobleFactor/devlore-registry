@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devlore.noblefactor.com/schemas/knowledge.index.json",
+  "title": "Knowledge Domain Index",
+  "description": "Index of assets within a knowledge domain",
+  "type": "object",
+  "required": ["domain"],
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Knowledge domain name"
+    },
+    "prompts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/promptEntry"
+      }
+    },
+    "schemas": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/schemaEntry"
+      }
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/exampleEntry"
+      }
+    },
+    "transforms": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/transformEntry"
+      }
+    },
+    "signatures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/signatureEntry"
+      }
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/slotEntry"
+      }
+    }
+  },
+  "$defs": {
+    "promptEntry": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "purpose": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "schemaEntry": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "purpose": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "exampleEntry": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "purpose": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "transformEntry": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "source_system": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "signatureEntry": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "system": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "slotEntry": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "purpose": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}

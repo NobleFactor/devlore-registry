@@ -1,20 +1,5 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Noble Factor. All rights reserved.
-#
-# astro - Package Lifecycle Manifest
-# The web framework for content-driven websites
-#
-# Astro is a modern static site generator that supports multiple UI frameworks.
-# Unlike traditional SPA frameworks, Astro ships zero JavaScript by default.
-#
-# TRIBAL KNOWLEDGE:
-# - Node.js v18.20.8+, v20.3.0+, or v22+ required (v19 and v21 NOT supported)
-# - Astro is typically project-local, but global CLI enables `astro create`
-# - npm create astro@latest is preferred for new projects
-# - The create wizard handles TypeScript, templates, and integrations
-# - Build output defaults to dist/ directory
-#
-# Reference: https://docs.astro.build/en/install-and-setup/
 
 name: astro
 version: "5.1.3"
@@ -22,42 +7,25 @@ description: The web framework for content-driven websites
 homepage: https://astro.build
 repository: https://github.com/withastro/astro
 license: MIT
+maintainer: Noble Factor
 
-# AI search aliases for fuzzy matching and validation queries
 aliases:
   - astro.build
   - astrojs
   - astro framework
-  - static site generator
-  - ssg
 
-# npm package — no direct binary sources
-# Integrity handled by npm registry (package-lock.json contains SRI hashes)
-# Install via: npm install -g astro@5.1.3 OR npx create-astro@latest
-sources: []
-
-# Package manager availability — npm ecosystem only
-packages:
-  npm: astro
-  # Note: No system package managers provide Astro
-  # Astro is JavaScript tooling, installed via npm/pnpm/yarn
-
-authors:
-  - name: Astro Contributors
-    url: https://github.com/withastro/astro/graphs/contributors
+signatures:
+  npm: [astro]
 
 platforms:
-  - darwin
-  - linux
-  - windows
+  - Darwin
+  - Linux
+  - Windows
 
-# Features enable optional capabilities
 features:
   global-cli:
     description: Install Astro CLI globally for project creation
     default: true
-    # The global CLI allows running `astro create`, `astro add`, etc.
-    # Without this, you'd need npx astro or project-local installs
 
   completions:
     description: Install shell completions for bash/zsh
@@ -66,8 +34,6 @@ features:
   tailwind:
     description: Pre-configure with Tailwind CSS integration
     default: false
-    # This installs @astrojs/tailwind and tailwindcss globally
-    # Useful for teams that standardize on Tailwind
 
   react:
     description: Pre-configure with React integration
@@ -81,7 +47,6 @@ features:
     description: Pre-configure with Vue integration
     default: false
 
-# Settings configure behavior
 settings:
   package_manager:
     description: Preferred package manager for npm operations
@@ -89,48 +54,19 @@ settings:
     default: "npm"
     values: ["npm", "pnpm", "yarn"]
 
-  node_version:
-    description: Minimum Node.js version to verify (empty = any supported)
-    type: string
-    default: ""
-    # Supported: v18.20.8+, v20.3.0+, v22+
-    # NOT supported: v19, v21
-
   typescript:
     description: Default TypeScript mode for new projects
     type: string
     default: "strict"
     values: ["strict", "strictest", "relaxed", "none"]
 
-# Dependencies - Node.js is required
-dependencies:
-  - name: nodejs
-    features: ["lts"]
-    # Astro requires Node.js v18.20.8+, v20.3.0+, or v22+
-    # LTS versions are recommended
-
-# Conflicts
-conflicts: []
-
-# Phase scripts
-phases:
-  prepare: prepare.star
-  install: install.star
-  provision: provision.star
-  verify: verify.star
-
-# Verification command
 verification:
   command: "astro --version"
   pattern: "astro/\\d+\\.\\d+\\.\\d+"
 
-# Tags for search
 tags:
   - web
   - framework
-  - static-site
   - javascript
   - typescript
   - frontend
-  - ssg
-  - jamstack

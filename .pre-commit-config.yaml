@@ -5,12 +5,14 @@
 #
 # Install: pre-commit install
 # Run manually: pre-commit run --all-files
+#
+# Full schema validation runs in CI via: star registry validate
 
 repos:
   - repo: local
     hooks:
       - id: build-index
-        name: Generate knowledge index.yaml files
+        name: Check knowledge index.yaml files
         entry: scripts/Build-Index
         language: script
         files: ^knowledge/

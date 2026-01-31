@@ -1,24 +1,5 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Noble Factor. All rights reserved.
-#
-# xcode - Xcode IDE Package Lifecycle Manifest
-#
-# Xcode is Apple's integrated development environment (IDE) for building apps
-# for iOS, iPadOS, macOS, watchOS, tvOS, and visionOS. It includes the IDE,
-# Interface Builder, simulators, Instruments profiler, and all development tools.
-#
-# TRIBAL KNOWLEDGE ENCODED HERE:
-# 1. Xcode is distributed via Mac App Store or Apple Developer portal
-# 2. mas (Mac App Store CLI) can install Xcode: mas install 497799835
-# 3. First launch requires accepting license and installing additional components
-# 4. Simulators are downloaded separately and can be 2-5GB each
-# 5. xcodebuild -runFirstLaunch installs MobileDevice and other packages
-# 6. DevToolsSecurity must be enabled for debugging to work
-# 7. Multiple Xcode versions can coexist; xcode-select switches between them
-# 8. Xcode includes CLT but at /Applications/Xcode.app/Contents/Developer
-#
-# Reference: https://developer.apple.com/xcode/
-# Reference: https://developer.apple.com/documentation/xcode/downloading-and-installing-additional-xcode-components
 
 name: xcode
 version: "16.2"
@@ -26,104 +7,68 @@ description: Apple's integrated development environment for building apps
 homepage: https://developer.apple.com/xcode/
 repository: https://developer.apple.com/xcode/resources/
 license: Apple EULA
+maintainer: Noble Factor
 
-# AI search aliases for fuzzy matching and validation queries
 aliases:
   - xcode ide
   - apple xcode
-  - xcode app
   - ios development
   - macos development
   - swift ide
-  - interface builder
-  - xcode simulator
-  - instruments
-  - apple ide
 
-# No direct download sources available without authentication
-# Xcode is distributed via:
-#   1. Mac App Store (requires Apple ID)
-#   2. Apple Developer portal (requires developer account)
-# The install.star phase script uses mas (Mac App Store CLI) when available.
-sources: []
+signatures:
+  mas: ["497799835"]
 
-# Package manager availability
-# mas is the Mac App Store CLI - Xcode's App Store ID is 497799835
-packages:
-  mas: "497799835"
-
-authors:
-  - name: Apple Inc.
-    url: https://developer.apple.com
-
-# Darwin-only package
 platforms:
-  - darwin
+  - Darwin
 
-# Features enable optional capabilities
 features:
-  # Simulator platforms - each is a separate download (2-5GB)
   ios-simulator:
     description: Install iOS Simulator runtime for testing iOS apps
     default: true
-    # Installed via: xcodebuild -downloadPlatform iOS
 
   watchos-simulator:
     description: Install watchOS Simulator runtime for testing watch apps
     default: false
-    # Installed via: xcodebuild -downloadPlatform watchOS
 
   tvos-simulator:
     description: Install tvOS Simulator runtime for testing TV apps
     default: false
-    # Installed via: xcodebuild -downloadPlatform tvOS
 
   visionos-simulator:
     description: Install visionOS Simulator runtime for testing spatial apps
     default: false
-    # Installed via: xcodebuild -downloadPlatform visionOS
-    # Note: Requires Xcode 15+ and macOS Sonoma+
 
-  # Post-install configuration
   accept-license:
     description: Automatically accept Xcode license agreement
     default: true
-    # Equivalent to: xcodebuild -license accept
 
   first-launch:
     description: Install additional components (MobileDevice, etc.)
     default: true
-    # Equivalent to: xcodebuild -runFirstLaunch
-    # Installs packages from Xcode.app/Contents/Resources/Packages/
 
   dev-tools-security:
     description: Enable Developer Tools security for debugging
     default: true
-    # Equivalent to: DevToolsSecurity -enable
 
   rosetta:
     description: Install Rosetta 2 for x86_64 emulation (Apple Silicon only)
     default: false
-    # Required for running x86_64 simulators on Apple Silicon
 
   xcode-select:
     description: Set this Xcode as the active developer directory
     default: true
-    # Equivalent to: xcode-select -s /Applications/Xcode.app
 
-# Settings configure behavior
 settings:
   install_path:
     description: Installation path for Xcode.app
     type: string
     default: "/Applications/Xcode.app"
-    # Alternative paths allow multiple Xcode versions
 
   simulator_ios_version:
     description: Specific iOS simulator version to install (empty = latest)
     type: string
     default: ""
-    # Example: "17.2" to install iOS 17.2 simulator specifically
 
   mas_signin:
     description: Prompt for Mac App Store sign-in if not authenticated
@@ -131,42 +76,24 @@ settings:
     default: "true"
     values: ["true", "false"]
 
-# Dependencies
-dependencies:
-  - name: mas
-    optional: true
-    # mas (Mac App Store CLI) enables headless installation
-    # Without it, user must install Xcode manually from App Store
-
-# Conflicts
-conflicts: []
-  # Note: xcode-clt is NOT a conflict - Xcode includes CLT functionality
-  # Both can coexist; xcode-select determines which is active
-
-# Phase scripts
-phases:
-  prepare: prepare.star
-  install: install.star
-  provision: provision.star
-  verify: verify.star
-
-# Verification command
 verification:
   command: "xcodebuild -version"
   pattern: "Xcode \\d+\\.\\d+"
 
-# Tags for search
+notes: |
+  TRIBAL KNOWLEDGE:
+  - Xcode is distributed via Mac App Store or Apple Developer portal
+  - mas (Mac App Store CLI) can install Xcode: mas install 497799835
+  - First launch requires accepting license and installing additional components
+  - Simulators are downloaded separately and can be 2-5GB each
+  - Multiple Xcode versions can coexist; xcode-select switches between them
+
 tags:
   - ide
   - apple
   - xcode
   - ios
   - macos
-  - watchos
-  - tvos
-  - visionos
-  - simulator
   - swift
-  - objective-c
   - development
   - darwin

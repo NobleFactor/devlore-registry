@@ -1,0 +1,43 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - 'packages/**'
+      - 'knowledge/**'
+      - 'schemas/**'
+      - 'signatures.yaml'
+  push:
+    branches: [develop]
+    paths:
+      - 'packages/**'
+      - 'knowledge/**'
+      - 'schemas/**'
+      - 'signatures.yaml'
+
+jobs:
+  validate:
+    name: Validate YAML schemas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout noblefactor-ops
+        uses: actions/checkout@v4
+        with:
+          repository: NobleFactor/noblefactor-ops
+          path: noblefactor-ops
+          token: ${{ secrets.NOBLEFACTOR_REPOSITORY_ACCESS }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build star
+        run: cd noblefactor-ops && go build -o ../star ./cmd/star
+
+      - name: Validate all schemas
+        run: ./star registry validate
