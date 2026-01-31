@@ -1,10 +1,5 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Noble Factor. All rights reserved.
-#
-# aws-cli - Package Lifecycle Manifest
-# AWS Command Line Interface v2
-#
-# Reference: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 name: aws-cli
 version: "2.22.0"
@@ -12,57 +7,26 @@ description: AWS Command Line Interface for managing AWS services
 homepage: https://aws.amazon.com/cli/
 repository: https://github.com/aws/aws-cli
 license: Apache-2.0
+maintainer: Noble Factor
 
-# AI search aliases for fuzzy matching and validation queries
 aliases:
   - aws
   - awscli
   - amazon cli
-  - amazon web services cli
-  - aws command line
 
-# Upstream release artifacts — for verification, direct download, bundling
-# Note: AWS publishes "latest" installers (hashes change with each release)
-# Hashes computed 2026-01-12 from awscli.amazonaws.com
-sources:
-  - url: "https://awscli.amazonaws.com/AWSCLIV2.pkg"
-    sha256: "33768bc19814b37e50a5aad2aa428548839c4e484ddd6182fe1c8f6f521c9dbb"
-    platform: darwin
-    # Note: Universal binary (x86_64 + arm64)
-
-  - url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
-    sha256: "7eff778e8ba6e1db3d4f75de045606e17a3e65d8c27391711d4c9a251ce3806b"
-    platform: linux
-    arch: amd64
-
-  - url: "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
-    sha256: "6d7230eef275a56cd244d08e1b404eb707f34edca283b0547d3ed3a52d9f2478"
-    platform: linux
-    arch: arm64
-
-  - url: "https://awscli.amazonaws.com/AWSCLIV2.msi"
-    sha256: "16305063bfc190669d02eb4a2932387cf71a844b81342dc733bd68cfc9e03f80"
-    platform: windows
-    arch: amd64
-
-# Package manager availability — for ensure/batch operations
-packages:
-  brew: awscli
-  port: awscli2
-  choco: awscli
-  winget: Amazon.AWSCLI
-  # Note: apt/dnf not available (use direct installer)
-
-authors:
-  - name: Amazon Web Services
-    url: https://aws.amazon.com
+signatures:
+  brew: [awscli]
+  choco: [awscli]
+  winget: [Amazon.AWSCLI]
 
 platforms:
-  - darwin
-  - linux
-  - windows
+  - Darwin
+  - Linux
+  - Windows
 
-# Features enable optional capabilities
+conflicts:
+  - awscli  # v1 conflicts with v2
+
 features:
   completions:
     description: Install shell completions for bash/zsh
@@ -71,7 +35,6 @@ features:
     description: Install Session Manager plugin for EC2 access
     default: false
 
-# Settings configure behavior
 settings:
   output:
     description: Default output format (json, yaml, text, table)
@@ -82,26 +45,10 @@ settings:
     type: string
     default: ""
 
-# Dependencies that must be installed first
-dependencies: []
-
-# Packages that conflict (must be removed)
-conflicts:
-  - awscli  # v1 conflicts with v2
-
-# Phase scripts
-phases:
-  prepare: prepare.star
-  install: install.star
-  provision: provision.star
-  verify: verify.star
-
-# Verification command
 verification:
   command: "aws --version"
   pattern: "aws-cli/2\\.\\d+\\.\\d+"
 
-# Tags for search
 tags:
   - cloud
   - aws

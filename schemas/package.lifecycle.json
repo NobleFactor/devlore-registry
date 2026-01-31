@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://devlore.noblefactor.com/schemas/lifecycle.schema.json",
+  "title": "Lifecycle Manifest",
+  "description": "Schema for lore package lifecycle.yaml files",
+  "type": "object",
+  "required": ["name", "version", "description", "platforms"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Package name (lowercase, hyphenated)",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Package version"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description of the package"
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Package homepage URL"
+    },
+    "repository": {
+      "type": "string",
+      "description": "Source repository URL"
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX license identifier"
+    },
+    "maintainer": {
+      "type": "string",
+      "description": "Package maintainer"
+    },
+    "aliases": {
+      "type": "array",
+      "description": "Alternative names for search/matching",
+      "items": {
+        "type": "string"
+      }
+    },
+    "signatures": {
+      "type": "object",
+      "description": "Package manager signatures for detection",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "platforms": {
+      "type": "array",
+      "description": "Supported platforms",
+      "items": {
+        "type": "string",
+        "enum": ["Darwin", "Linux", "Windows", "darwin", "linux", "windows"]
+      },
+      "minItems": 1
+    },
+    "provides": {
+      "type": "array",
+      "description": "Capabilities this package provides",
+      "items": {
+        "type": "string"
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "description": "Packages that conflict with this one",
+      "items": {
+        "type": "string"
+      }
+    },
+    "features": {
+      "type": "object",
+      "description": "Optional features",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "default"],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "default": {
+            "type": "boolean"
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "description": "Configurable settings",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "type", "default"],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["string", "boolean", "integer"]
+          },
+          "default": {
+            "type": ["string", "boolean", "integer"]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": ["string", "boolean", "integer"]
+            }
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "description": "Search tags",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes and tribal knowledge"
+    },
+    "verification": {
+      "type": "object",
+      "description": "Verification configuration",
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Command to run for verification"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Regex pattern to match in output"
+        }
+      }
+    },
+    "hardware_provisions": {
+      "type": "object",
+      "description": "Hardware-specific configuration",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "boot_arg": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

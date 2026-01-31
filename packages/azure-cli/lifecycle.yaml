@@ -1,10 +1,5 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Noble Factor. All rights reserved.
-#
-# azure-cli - Package Lifecycle Manifest
-# Azure Command Line Interface
-#
-# Reference: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli
 
 name: azure-cli
 version: "2.81.0"
@@ -12,52 +7,25 @@ description: Azure Command Line Interface for managing Azure resources
 homepage: https://learn.microsoft.com/en-us/cli/azure/
 repository: https://github.com/Azure/azure-cli
 license: MIT
+maintainer: Noble Factor
 
-# AI search aliases for fuzzy matching and validation queries
 aliases:
   - az
   - az cli
   - azure
-  - microsoft azure cli
-  - azure command line
 
-# Upstream release artifacts — for verification, direct download, bundling
-# Hashes computed 2026-01-12
-sources:
-  - url: "https://aka.ms/installazureclidarwin"
-    sha256: "633393b37776f8babdf6ea9a427ecd842574aca2fc0131137350a7943c0c2f2f"
-    platform: darwin
-    # Note: Install script, downloads and installs CLI
-
-  - url: "https://azcliprod.blob.core.windows.net/msi/azure-cli-2.81.0-x64.msi"
-    sha256: "00cd75d65f599e183a94b55cc6557a6a008425ca6c490d5d1d6208fe742c3f57"
-    platform: windows
-    arch: amd64
-
-  # Linux: Uses apt/dnf repository scripts, not direct downloads
-
-# Package manager availability — for ensure/batch operations
-packages:
-  brew: azure-cli
-  port: azure-cli
-  apt: azure-cli        # via packages.microsoft.com repo
-  dnf: azure-cli        # via packages.microsoft.com repo
-  choco: azure-cli
-  winget: Microsoft.AzureCLI
-
-authors:
-  - name: Microsoft Corporation
-    url: https://microsoft.com
+signatures:
+  brew: [azure-cli]
+  apt: [azure-cli]
+  dnf: [azure-cli]
+  choco: [azure-cli]
+  winget: [Microsoft.AzureCLI]
 
 platforms:
-  - darwin
-  - linux/debian
-  - linux/ubuntu
-  - linux/fedora
-  - linux/rhel
-  - windows
+  - Darwin
+  - Linux
+  - Windows
 
-# Features enable optional capabilities
 features:
   completions:
     description: Install shell completions for bash/zsh/fish
@@ -66,34 +34,16 @@ features:
     description: Install common Azure CLI extensions
     default: false
 
-# Settings configure behavior
 settings:
   telemetry:
     description: Enable/disable telemetry collection
     type: boolean
     default: true
 
-# Dependencies that must be installed first
-dependencies:
-  - curl
-  - gnupg
-
-# Packages that conflict (must be removed)
-conflicts: []
-
-# Phase scripts
-phases:
-  prepare: prepare.star
-  install: install.star
-  provision: provision.star
-  verify: verify.star
-
-# Verification command
 verification:
   command: "az --version"
   pattern: "azure-cli\\s+\\d+\\.\\d+\\.\\d+"
 
-# Tags for search
 tags:
   - cloud
   - azure

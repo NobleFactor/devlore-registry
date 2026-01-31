@@ -1,13 +1,5 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Noble Factor. All rights reserved.
-#
-# lifecycle.yaml — Package Lifecycle Manifest for Docker
-#
-# Usage:
-#   lore deploy docker
-#   lore deploy docker --with rootless
-#
-# Phase scripts are in Linux.Debian/Deploy/
 
 name: docker
 version: "28.0.1"
@@ -25,6 +17,13 @@ aliases:
   - docker-compose
   - docker compose
   - container runtime
+
+signatures:
+  brew: [docker]
+  apt: [docker-ce, docker.io]
+  dnf: [docker-ce]
+  choco: [docker-desktop]
+  winget: [Docker.DockerDesktop]
 
 platforms:
   - Darwin
@@ -84,21 +83,6 @@ notes: |
   - Linux: Docker CE (open source, Apache 2.0 license)
   - Darwin/Windows: Docker Desktop (proprietary, requires paid subscription for
     enterprises with >250 employees or >$10M annual revenue)
-
-  LINUX:
-  - Docker CE installation requires removing conflicting system packages first.
-  - On ODROID C4/C5 boards, cgroup v1 compatibility mode must be enabled in boot.ini.
-  - User should be added to the docker group to avoid requiring sudo for every command.
-
-  DARWIN:
-  - Requires macOS current or two previous major versions.
-  - Rosetta 2 recommended for Apple Silicon.
-  - Docker Desktop is installed to /Applications/Docker.app.
-
-  WINDOWS:
-  - Requires Windows 10/11 Pro, Enterprise, or Education (Home only supports Linux containers).
-  - WSL 2 backend recommended (requires WSL version 2.1.5+).
-  - User must be added to docker-users group.
 
 tags:
   - container

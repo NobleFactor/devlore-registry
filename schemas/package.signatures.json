@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devlore.noblefactor.com/schemas/package.signatures.json",
+  "title": "Package Signatures Index",
+  "description": "Inverted index mapping package managers to native package names and their lore package equivalents",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "description": "Package manager (e.g., brew, apt, choco)",
+    "additionalProperties": {
+      "type": "string",
+      "description": "Lore package name"
+    }
+  }
+}
