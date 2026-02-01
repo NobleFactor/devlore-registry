@@ -1,0 +1,240 @@
+# Install Types - Patterns for software installation across platforms
+# These are the building blocks for lore package install phases
+
+install_types:
+
+  script_install:
+    name: "Script-based Installation"
+    description: "Download and execute an installation script (curl | sh pattern)"
+    platforms: [linux, darwin]
+    examples:
+      - homebrew_linux
+      - ollama_linux
+    pattern: |
+      curl -fsSL <script_url> | sh
+    considerations:
+      - Script should be auditable (provide source URL)
+      - May require sudo for system-wide install
+      - Often creates users, groups, services
+      - Idempotent scripts can be re-run safely
+    starlark_pattern: |
+      def install_via_script(script_url):
+          """Install using a remote script."""
+          shell.exec(
+              f"curl -fsSL {script_url} | sh",
+              allowed_commands=["curl", "sh"],
+          )
+    rollback_pattern: |
+      # Many scripts support --uninstall flag
+      # Or require manual cleanup of created resources
+    tribal_knowledge:
+      - "Always provide --uninstall or cleanup instructions"
+      - "Scripts may modify shell profiles (.bashrc, .zshrc)"
+      - "User may need to restart shell or source profile"
+
+  pkg_installer:
+    name: "macOS Package Installer"
+    description: "Standard macOS .pkg installer executed via Installer.app or installer CLI"
+    platforms: [darwin]
+    examples:
+      - macports
+      - homebrew_pkg
+    pattern: |
+      sudo installer -pkg <path_to_pkg> -target /
+    considerations:
+      - Requires downloading .pkg first
+      - Version-specific packages (must match macOS version)
+      - Can be silent with -pkg and -target flags
+      - Receipts stored in /var/db/receipts/
+    starlark_pattern: |
+      def install_via_pkg(pkg_url, pkg_name):
+          """Install using macOS .pkg installer."""
+          temp_path = f"/tmp/{pkg_name}"
+          http.download(pkg_url, temp_path)
+          shell.exec(
+              f"sudo installer -pkg {temp_path} -target /",
+              allowed_commands=["installer"],
+          )
+          fs.remove(temp_path)
+    rollback_pattern: |
+      # PKG installers don't have standard uninstall
+      # Must track installed files via receipts or documentation
+      # pkgutil --pkgs | grep <identifier>
+      # pkgutil --files <identifier>
+    tribal_knowledge:
+      - "Check pkgutil --pkgs for installed package receipts"
+      - "Some packages provide uninstall scripts"
+      - "Files may be scattered across /usr/local, /opt, /Library"
+
+  dmg_app_install:
+    name: "macOS DMG Application"
+    description: "Mount DMG, copy .app to /Applications"
+    platforms: [darwin]
+    examples:
+      - ollama_macos
+    pattern: |
+      hdiutil attach <dmg_path>
+      cp -R /Volumes/<name>/<app>.app /Applications/
+      hdiutil detach /Volumes/<name>
+    considerations:
+      - Mount point varies by DMG
+      - Some apps require first-run setup
+      - May install helper tools or CLI symlinks
+    starlark_pattern: |
+      def install_via_dmg(dmg_url, app_name, volume_name):
+          """Install macOS app from DMG."""
+          temp_dmg = f"/tmp/{app_name}.dmg"
+          http.download(dmg_url, temp_dmg)
+
+          # Mount DMG
+          result = shell.exec(
+              f"hdiutil attach {temp_dmg} -nobrowse",
+              allowed_commands=["hdiutil"],
+          )
+          mount_point = f"/Volumes/{volume_name}"
+
+          # Copy app
+          shell.exec(
+              f"cp -R {mount_point}/{app_name}.app /Applications/",
+              allowed_commands=["cp"],
+          )
+
+          # Cleanup
+          shell.exec(f"hdiutil detach {mount_point}", allowed_commands=["hdiutil"])
+          fs.remove(temp_dmg)
+    rollback_pattern: |
+      # Simply remove the .app bundle
+      rm -rf /Applications/<app_name>.app
+      # May also need to remove:
+      # ~/Library/Application Support/<app_name>
+      # ~/Library/Preferences/com.<vendor>.<app>.plist
+      # ~/Library/Caches/<app_name>
+    tribal_knowledge:
+      - "Use -nobrowse flag to prevent Finder from opening"
+      - "Some DMGs are code-signed and require verification"
+      - "First launch may trigger Gatekeeper approval"
+
+  exe_installer:
+    name: "Windows EXE/MSI Installer"
+    description: "Standard Windows installer with silent install options"
+    platforms: [windows]
+    examples:
+      - ollama_windows
+    pattern: |
+      <installer>.exe /S          # NSIS-style silent
+      msiexec /i <installer>.msi /qn  # MSI silent
+    considerations:
+      - Silent flags vary by installer type (/S, /silent, /quiet, /qn)
+      - May require elevated privileges
+      - Uninstall via registry or Add/Remove Programs
+    starlark_pattern: |
+      def install_via_exe(exe_url, exe_name, silent_flag="/S"):
+          """Install using Windows EXE installer."""
+          temp_path = env.expand("%TEMP%") + f"\\{exe_name}"
+          http.download(exe_url, temp_path)
+          shell.exec(
+              f"{temp_path} {silent_flag}",
+              allowed_commands=[temp_path],
+          )
+          fs.remove(temp_path)
+    rollback_pattern: |
+      # Query registry for uninstall string:
+      # HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall
+      # Or use: wmic product where name="<name>" call uninstall
+    tribal_knowledge:
+      - "NSIS installers use /S, InnoSetup uses /SILENT or /VERYSILENT"
+      - "MSI uses msiexec with /qn for quiet, no UI"
+      - "Some installers require reboot (/NORESTART to suppress)"
+
+  source_build:
+    name: "Source Compilation"
+    description: "Build from source using configure/make or similar"
+    platforms: [darwin, linux]
+    examples:
+      - macports_source
+    pattern: |
+      ./configure [--prefix=<path>]
+      make
+      sudo make install
+    considerations:
+      - Requires build tools (gcc/clang, make)
+      - May need additional dependencies
+      - Prefix determines install location
+    starlark_pattern: |
+      def install_from_source(tarball_url, name, version, configure_args=""):
+          """Build and install from source tarball."""
+          temp_dir = f"/tmp/{name}-{version}"
+          tarball = f"{temp_dir}.tar.gz"
+
+          http.download(tarball_url, tarball)
+          archive.extract(tarball, "/tmp")
+
+          shell.exec(
+              f"cd {temp_dir} && ./configure {configure_args}",
+              allowed_commands=["configure"],
+          )
+          shell.exec(f"cd {temp_dir} && make", allowed_commands=["make"])
+          shell.exec(f"cd {temp_dir} && sudo make install", allowed_commands=["make"])
+
+          fs.remove(temp_dir)
+          fs.remove(tarball)
+    rollback_pattern: |
+      # If Makefile has uninstall target:
+      sudo make uninstall
+      # Otherwise manual removal based on --prefix
+    tribal_knowledge:
+      - "Always check ./configure --help for options"
+      - "Use --prefix to install to non-standard location"
+      - "make -j$(nproc) for parallel builds"
+
+  selfupdate:
+    name: "Self-updating Package Manager"
+    description: "Package manager that can update itself"
+    platforms: [darwin, linux]
+    examples:
+      - macports
+      - homebrew
+    considerations:
+      - Critical after OS upgrades
+      - May require migration steps
+      - Can fail if base is too old
+    starlark_pattern: |
+      def selfupdate(command):
+          """Update the package manager itself."""
+          shell.exec(command, allowed_commands=[command.split()[0]])
+    tribal_knowledge:
+      - "Run selfupdate before installing new packages"
+      - "After OS upgrade, selfupdate may fail - reinstall base"
+      - "Keep package manager current to avoid dependency issues"
+
+os_upgrade_patterns:
+  description: "Patterns for handling package managers after OS upgrades"
+
+  homebrew:
+    steps:
+      - "Update Xcode Command Line Tools: xcode-select --install"
+      - "Run: brew update"
+      - "Run: brew upgrade"
+      - "Fix permissions if needed: sudo chown -R $(whoami) $(brew --prefix)/*"
+    common_issues:
+      - "Xcode license not accepted: sudo xcodebuild -license accept"
+      - "Broken bottles: brew reinstall <package>"
+
+  macports:
+    steps:
+      - "Update Xcode and Command Line Tools"
+      - "Accept Xcode license: sudo xcodebuild -license accept"
+      - "Review /opt/local/etc/macports/macports.conf"
+      - "Run: sudo port migrate"
+      - "Or reinstall MacPorts base from .pkg for current OS"
+    common_issues:
+      - "Ports built with old compiler won't work"
+      - "Registry permissions: sudo port outdated"
+      - "CLT headers missing: remove legacy c++ directory"
+    migration_command: "sudo port migrate"
+    full_reinstall:
+      - "Export port list: port -qv installed > myports.txt"
+      - "Uninstall all: sudo port -f uninstall installed"
+      - "Remove MacPorts: sudo rm -rf /opt/local"
+      - "Install new .pkg for current OS"
+      - "Restore: sudo port install $(cat myports.txt | awk '{print $1}')"

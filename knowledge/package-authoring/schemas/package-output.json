@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "PackageOutput",
-  "description": "Structured output for a generated lore package manifest",
+  "description": "Structured output for a generated lore package with operations, phases, and platform-specific scripts",
   "type": "object",
-  "required": ["package_name", "files"],
+  "required": ["package_name", "files", "platforms"],
   "properties": {
     "package_name": {
       "type": "string",
@@ -12,32 +12,24 @@
     },
     "files": {
       "type": "object",
-      "required": ["lifecycle", "prepare", "install", "provision", "verify", "readme"],
+      "description": "Platform-agnostic files at package root",
+      "required": ["lifecycle", "readme"],
       "properties": {
         "lifecycle": {
           "$ref": "#/$defs/FileContent",
-          "description": "lifecycle.yaml content"
-        },
-        "prepare": {
-          "$ref": "#/$defs/FileContent",
-          "description": "prepare.star content"
-        },
-        "install": {
-          "$ref": "#/$defs/FileContent",
-          "description": "install.star content"
-        },
-        "provision": {
-          "$ref": "#/$defs/FileContent",
-          "description": "provision.star content"
-        },
-        "verify": {
-          "$ref": "#/$defs/FileContent",
-          "description": "verify.star content"
+          "description": "lifecycle.yaml - package metadata, platforms, features, settings"
         },
         "readme": {
           "$ref": "#/$defs/FileContent",
-          "description": "README.md content"
+          "description": "README.md - documentation with tribal knowledge"
         }
+      }
+    },
+    "platforms": {
+      "type": "object",
+      "description": "Platform-specific operations. Keys: Common, Unix, Darwin, Linux, Linux.Debian, Linux.Fedora, Windows",
+      "additionalProperties": {
+        "$ref": "#/$defs/PlatformOperations"
       }
     },
     "tribal_knowledge_summary": {
@@ -53,7 +45,7 @@
           },
           "file": {
             "type": "string",
-            "description": "Which file implements it"
+            "description": "Which file implements it (e.g., 'Darwin/Deploy/install.star')"
           },
           "lines": {
             "type": "string",
@@ -74,6 +66,20 @@
           "relevance": { "type": "string" }
         }
       }
+    },
+    "binding_proposals": {
+      "type": "array",
+      "description": "Proposed new bindings when the package needs functionality not yet available",
+      "items": {
+        "$ref": "#/$defs/BindingProposal"
+      }
+    },
+    "shell_audit": {
+      "type": "array",
+      "description": "Audit of all plan.shell() calls - identifies binding gaps and violations",
+      "items": {
+        "$ref": "#/$defs/ShellAuditEntry"
+      }
     }
   },
   "$defs": {
@@ -83,11 +89,167 @@
       "properties": {
         "filename": {
           "type": "string",
-          "description": "Filename (e.g., 'lifecycle.yaml')"
+          "description": "Filename (e.g., 'lifecycle.yaml', 'Darwin/Deploy/install.star')"
         },
         "content": {
           "type": "string",
           "description": "Complete file content"
+        }
+      }
+    },
+    "PlatformOperations": {
+      "type": "object",
+      "description": "Operations for a specific platform",
+      "properties": {
+        "Deploy": {
+          "$ref": "#/$defs/DeployPhases",
+          "description": "Deploy operation - fresh installation"
+        },
+        "Upgrade": {
+          "$ref": "#/$defs/UpgradePhases",
+          "description": "Upgrade operation - version upgrade with migration"
+        },
+        "Decommission": {
+          "$ref": "#/$defs/DecommissionPhases",
+          "description": "Decommission operation - graceful removal"
+        }
+      }
+    },
+    "DeployPhases": {
+      "type": "object",
+      "description": "Phases for Deploy operation: prepare → install → provision → verify",
+      "required": ["install"],
+      "properties": {
+        "prepare": {
+          "$ref": "#/$defs/FileContent",
+          "description": "prepare.star - precondition checks, conflict detection"
+        },
+        "install": {
+          "$ref": "#/$defs/FileContent",
+          "description": "install.star - software acquisition (REQUIRED)"
+        },
+        "provision": {
+          "$ref": "#/$defs/FileContent",
+          "description": "provision.star - post-install configuration"
+        },
+        "verify": {
+          "$ref": "#/$defs/FileContent",
+          "description": "verify.star - installation verification"
+        }
+      }
+    },
+    "UpgradePhases": {
+      "type": "object",
+      "description": "Phases for Upgrade operation: prepare → upgrade → migrate → verify",
+      "required": ["upgrade"],
+      "properties": {
+        "prepare": {
+          "$ref": "#/$defs/FileContent",
+          "description": "prepare.star - precondition checks"
+        },
+        "upgrade": {
+          "$ref": "#/$defs/FileContent",
+          "description": "upgrade.star - version upgrade logic (REQUIRED)"
+        },
+        "migrate": {
+          "$ref": "#/$defs/FileContent",
+          "description": "migrate.star - data/config migration after upgrade"
+        },
+        "verify": {
+          "$ref": "#/$defs/FileContent",
+          "description": "verify.star - upgrade verification"
+        }
+      }
+    },
+    "DecommissionPhases": {
+      "type": "object",
+      "description": "Phases for Decommission operation: unprovision → uninstall → cleanup",
+      "required": ["uninstall"],
+      "properties": {
+        "unprovision": {
+          "$ref": "#/$defs/FileContent",
+          "description": "unprovision.star - remove configuration, stop services"
+        },
+        "uninstall": {
+          "$ref": "#/$defs/FileContent",
+          "description": "uninstall.star - remove software (REQUIRED)"
+        },
+        "cleanup": {
+          "$ref": "#/$defs/FileContent",
+          "description": "cleanup.star - remove dirs, users, final cleanup"
+        }
+      }
+    },
+    "BindingProposal": {
+      "type": "object",
+      "description": "Proposal for a new binding when existing bindings don't cover a needed operation",
+      "required": ["binding", "category", "signature", "description", "use_case", "file", "implementation"],
+      "properties": {
+        "binding": {
+          "type": "string",
+          "description": "Full binding path (e.g., 'system.network.connected', 'plan.file.chmod')",
+          "pattern": "^(package|system|plan)\\.[a-z_]+(\\.[a-z_]+)*$"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["package", "system", "plan"],
+          "description": "Which binding category: package (read-only context), system (read-only queries), plan (execution graph)"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Starlark function signature (e.g., 'chmod(path: string, mode: string) -> node')"
+        },
+        "description": {
+          "type": "string",
+          "description": "What the binding does"
+        },
+        "use_case": {
+          "type": "string",
+          "description": "Why this binding is needed for the current package"
+        },
+        "file": {
+          "type": "string",
+          "description": "Which devlore-cli file to add it to (e.g., 'internal/starlark/plan.go')"
+        },
+        "implementation": {
+          "type": "string",
+          "description": "Go implementation following devlore-cli patterns"
+        }
+      }
+    },
+    "ShellAuditEntry": {
+      "type": "object",
+      "description": "Audit entry for a plan.shell() call",
+      "required": ["command", "file", "line", "status", "reason"],
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "The shell command being audited"
+        },
+        "file": {
+          "type": "string",
+          "description": "File where this shell call appears (e.g., 'Darwin/Deploy/install.star')"
+        },
+        "line": {
+          "type": "integer",
+          "description": "Approximate line number"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["violation", "needs_binding", "acceptable"],
+          "description": "violation=should use existing binding, needs_binding=binding should be created, acceptable=no binding makes sense"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Explanation of status"
+        },
+        "correct_binding": {
+          "type": "string",
+          "description": "If status=violation, the binding that should be used instead"
+        },
+        "proposed_binding": {
+          "type": "string",
+          "description": "If status=needs_binding, the binding that should be created"
         }
       }
     }

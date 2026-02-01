@@ -1,0 +1,233 @@
+{
+  "_meta": {
+    "description": "Baseline analysis of ~/Workspace/Personal by Claude Opus 4.5",
+    "date": "2026-01-31",
+    "purpose": "Reference for comparing LLM output quality",
+    "notes": "Home vs System mapping needs work - Tools/ handling incomplete"
+  },
+  "analysis": {
+    "source_root": "/Users/david-noble/Workspace/Personal",
+    "system": "tuckr",
+    "system_confidence": 1.0,
+    "evidence": [
+      "TUCKR_HOME exported in Install-UnixUserConfiguration:20",
+      "tuckr add called at line 204",
+      "tuckr rm called at line 305",
+      "Groups in Home/Configs/ follow tuckr convention"
+    ],
+    "input_summary": "Tuckr-managed dotfiles repository with 13 groups in Home/Configs/. Platform naming uses dash convention (all-Darwin, noblefactor-Unix). Tools/ contains system-level configs for Darwin, Debian, RHEL, Windows with /etc structures. Root contains lifecycle scripts for deployment and package building. Uses git-crypt for secrets (.Personal-secrets, .git-crypt).",
+    "structure": {
+      "groups_path": "Home/Configs",
+      "naming_convention": "<group>-<Platform>",
+      "groups": [
+        "all",
+        "all-Darwin",
+        "all-Debian",
+        "all-Linux",
+        "all-Unix",
+        "all-Windows",
+        "microsoft",
+        "microsoft-Unix",
+        "microsoft-Windows",
+        "noblefactor",
+        "noblefactor-Unix",
+        "thenobles",
+        "thenobles-Darwin"
+      ],
+      "platforms": ["Darwin", "Debian", "Linux", "Unix", "Windows"]
+    },
+    "system_configs": {
+      "path": "Tools",
+      "description": "System-level configs that deploy to /etc and require root",
+      "platforms": ["Darwin", "Debian", "RHEL", "Windows"],
+      "contents": {
+        "Darwin": {
+          "etc/paths": "System PATH configuration",
+          "etc/paths.d/200-local": "Local PATH additions",
+          "etc/sudoers.d/local": "Sudoers configuration",
+          "etc/ssh/sshd_config.d/200-local.conf": "SSH daemon config",
+          "Initialize-Darwin": "System initialization script",
+          "com.apple.Terminal.plist": "Terminal.app preferences"
+        },
+        "Debian": "TBD - needs inspection",
+        "RHEL": "TBD - needs inspection",
+        "Windows": "TBD - needs inspection"
+      },
+      "writ_mapping": "Tools/<Platform>/ → System/<Platform>/"
+    },
+    "observations": [
+      "Well-organized tuckr repo with clear Home/Tools separation",
+      "Home/Configs/ maps cleanly to writ Home/",
+      "Tools/<Platform>/etc/ maps to writ System/<Platform>/etc/",
+      "Lifecycle scripts at root handle deployment (Install-*) and packaging (Build-*)",
+      "Already uses writ-like layering concept (Home vs System)"
+    ],
+    "warnings": [
+      {
+        "message": "git-crypt detected - writ uses SOPS for secrets",
+        "severity": "warning",
+        "files": [".git-crypt/", ".gitattributes"]
+      },
+      {
+        "message": ".Personal-secrets contains encrypted GPG keys",
+        "severity": "warning",
+        "mitigation": "Re-encrypt with age/SOPS after migration"
+      }
+    ],
+    "recommendations": [
+      "After migration, update Install-UnixUserConfiguration to use writ commands",
+      "Convert Build-*InitializationPackage to writ lifecycle packages",
+      "Create .sops.yaml to migrate from git-crypt to SOPS",
+      "Move Deployments/, Inventory/, design/, docs/, wiki/ outside of writ scope or to separate repo"
+    ]
+  },
+  "lifecycle_candidates": [
+    {
+      "script": "Install-UnixUserConfiguration",
+      "purpose": "Deploy user dotfiles via tuckr",
+      "line_count": 430,
+      "detected_tools": ["tuckr", "git", "zcompile", "ssh"],
+      "package_installs": [],
+      "writ_replacement": "writ deploy (native functionality)",
+      "notes": "Main deployment script - will be replaced entirely by writ"
+    },
+    {
+      "script": "Install-WindowsUserConfiguration.ps1",
+      "purpose": "Deploy user dotfiles on Windows via tuckr",
+      "detected_tools": ["tuckr"],
+      "writ_replacement": "writ deploy (native functionality)"
+    },
+    {
+      "script": "Build-DarwinInitializationPackage",
+      "purpose": "Build encrypted deployment package with brew/port lists",
+      "detected_tools": ["brew", "port", "gpg"],
+      "inputs": ["--brew-list", "--port-list"],
+      "writ_replacement": "writ package with lifecycle.yaml"
+    },
+    {
+      "script": "Build-DebianInitializationPackage",
+      "purpose": "Build deployment package for Debian",
+      "writ_replacement": "writ package with lifecycle.yaml"
+    },
+    {
+      "script": "Build-RHELInitializationPackage",
+      "purpose": "Build deployment package for RHEL",
+      "writ_replacement": "writ package with lifecycle.yaml"
+    },
+    {
+      "script": "Build-WindowsInitializationPackage",
+      "purpose": "Build deployment package for Windows",
+      "writ_replacement": "writ package with lifecycle.yaml"
+    },
+    {
+      "script": "Tools/Darwin/Initialize-Darwin",
+      "purpose": "System initialization (requires root)",
+      "writ_replacement": "System/Darwin/lifecycle.yaml"
+    },
+    {
+      "script": "Sync-CommonBuildTools",
+      "purpose": "Sync build tools across platforms",
+      "writ_replacement": "Evaluate if still needed"
+    }
+  ],
+  "execution_graph": {
+    "version": "1.0",
+    "tool": "writ",
+    "state": "pending",
+    "context": {
+      "source_root": "/Users/david-noble/Workspace/Personal",
+      "dry_run": true
+    },
+    "operations": {
+      "renames": {
+        "description": "Convert tuckr dash naming to writ dot naming",
+        "items": [
+          {"source": "Home/Configs/all-Darwin", "target": "Home/Configs/all.Darwin"},
+          {"source": "Home/Configs/all-Debian", "target": "Home/Configs/all.Debian"},
+          {"source": "Home/Configs/all-Linux", "target": "Home/Configs/all.Linux"},
+          {"source": "Home/Configs/all-Unix", "target": "Home/Configs/all.Unix"},
+          {"source": "Home/Configs/all-Windows", "target": "Home/Configs/all.Windows"},
+          {"source": "Home/Configs/microsoft-Unix", "target": "Home/Configs/microsoft.Unix"},
+          {"source": "Home/Configs/microsoft-Windows", "target": "Home/Configs/microsoft.Windows"},
+          {"source": "Home/Configs/noblefactor-Unix", "target": "Home/Configs/noblefactor.Unix"},
+          {"source": "Home/Configs/thenobles-Darwin", "target": "Home/Configs/thenobles.Darwin"}
+        ]
+      },
+      "moves": {
+        "description": "Move Tools/ to System/ for system-level configs",
+        "items": [
+          {"source": "Tools/Darwin", "target": "System/Darwin"},
+          {"source": "Tools/Debian", "target": "System/Debian"},
+          {"source": "Tools/RHEL", "target": "System/RHEL"},
+          {"source": "Tools/Windows", "target": "System/Windows"}
+        ]
+      },
+      "restructure": {
+        "description": "Flatten Home/Configs to Home (remove intermediate Configs/)",
+        "rationale": "Writ expects Home/<project>/ not Home/Configs/<project>/",
+        "items": [
+          {"source": "Home/Configs/*", "target": "Home/"}
+        ]
+      },
+      "cleanup": {
+        "description": "Remove empty directories after moves",
+        "items": [
+          {"remove": "Tools/", "after": "moves complete"},
+          {"remove": "Home/Configs/", "after": "restructure complete"}
+        ]
+      }
+    },
+    "nodes": [
+      {"id": "rename-001", "op": "rename", "source": "Home/Configs/all-Darwin", "target": "Home/Configs/all.Darwin", "status": "pending"},
+      {"id": "rename-002", "op": "rename", "source": "Home/Configs/all-Debian", "target": "Home/Configs/all.Debian", "status": "pending"},
+      {"id": "rename-003", "op": "rename", "source": "Home/Configs/all-Linux", "target": "Home/Configs/all.Linux", "status": "pending"},
+      {"id": "rename-004", "op": "rename", "source": "Home/Configs/all-Unix", "target": "Home/Configs/all.Unix", "status": "pending"},
+      {"id": "rename-005", "op": "rename", "source": "Home/Configs/all-Windows", "target": "Home/Configs/all.Windows", "status": "pending"},
+      {"id": "rename-006", "op": "rename", "source": "Home/Configs/microsoft-Unix", "target": "Home/Configs/microsoft.Unix", "status": "pending"},
+      {"id": "rename-007", "op": "rename", "source": "Home/Configs/microsoft-Windows", "target": "Home/Configs/microsoft.Windows", "status": "pending"},
+      {"id": "rename-008", "op": "rename", "source": "Home/Configs/noblefactor-Unix", "target": "Home/Configs/noblefactor.Unix", "status": "pending"},
+      {"id": "rename-009", "op": "rename", "source": "Home/Configs/thenobles-Darwin", "target": "Home/Configs/thenobles.Darwin", "status": "pending"},
+      {"id": "flatten-010", "op": "move", "source": "Home/Configs/all", "target": "Home/all", "status": "pending"},
+      {"id": "flatten-011", "op": "move", "source": "Home/Configs/all.Darwin", "target": "Home/all.Darwin", "status": "pending", "depends": ["rename-001"]},
+      {"id": "flatten-012", "op": "move", "source": "Home/Configs/all.Debian", "target": "Home/all.Debian", "status": "pending", "depends": ["rename-002"]},
+      {"id": "flatten-013", "op": "move", "source": "Home/Configs/all.Linux", "target": "Home/all.Linux", "status": "pending", "depends": ["rename-003"]},
+      {"id": "flatten-014", "op": "move", "source": "Home/Configs/all.Unix", "target": "Home/all.Unix", "status": "pending", "depends": ["rename-004"]},
+      {"id": "flatten-015", "op": "move", "source": "Home/Configs/all.Windows", "target": "Home/all.Windows", "status": "pending", "depends": ["rename-005"]},
+      {"id": "flatten-016", "op": "move", "source": "Home/Configs/microsoft", "target": "Home/microsoft", "status": "pending"},
+      {"id": "flatten-017", "op": "move", "source": "Home/Configs/microsoft.Unix", "target": "Home/microsoft.Unix", "status": "pending", "depends": ["rename-006"]},
+      {"id": "flatten-018", "op": "move", "source": "Home/Configs/microsoft.Windows", "target": "Home/microsoft.Windows", "status": "pending", "depends": ["rename-007"]},
+      {"id": "flatten-019", "op": "move", "source": "Home/Configs/noblefactor", "target": "Home/noblefactor", "status": "pending"},
+      {"id": "flatten-020", "op": "move", "source": "Home/Configs/noblefactor.Unix", "target": "Home/noblefactor.Unix", "status": "pending", "depends": ["rename-008"]},
+      {"id": "flatten-021", "op": "move", "source": "Home/Configs/thenobles", "target": "Home/thenobles", "status": "pending"},
+      {"id": "flatten-022", "op": "move", "source": "Home/Configs/thenobles.Darwin", "target": "Home/thenobles.Darwin", "status": "pending", "depends": ["rename-009"]},
+      {"id": "move-023", "op": "move", "source": "Tools/Darwin", "target": "System/Darwin", "status": "pending"},
+      {"id": "move-024", "op": "move", "source": "Tools/Debian", "target": "System/Debian", "status": "pending"},
+      {"id": "move-025", "op": "move", "source": "Tools/RHEL", "target": "System/RHEL", "status": "pending"},
+      {"id": "move-026", "op": "move", "source": "Tools/Windows", "target": "System/Windows", "status": "pending"},
+      {"id": "rmdir-027", "op": "rmdir", "source": "Tools", "status": "pending", "depends": ["move-023", "move-024", "move-025", "move-026"]},
+      {"id": "rmdir-028", "op": "rmdir", "source": "Home/Configs", "status": "pending", "depends": ["flatten-010", "flatten-011", "flatten-012", "flatten-013", "flatten-014", "flatten-015", "flatten-016", "flatten-017", "flatten-018", "flatten-019", "flatten-020", "flatten-021", "flatten-022"]}
+    ],
+    "edges": [
+      {"from": "rename-001", "to": "flatten-011", "relation": "requires"},
+      {"from": "rename-002", "to": "flatten-012", "relation": "requires"},
+      {"from": "rename-003", "to": "flatten-013", "relation": "requires"},
+      {"from": "rename-004", "to": "flatten-014", "relation": "requires"},
+      {"from": "rename-005", "to": "flatten-015", "relation": "requires"},
+      {"from": "rename-006", "to": "flatten-017", "relation": "requires"},
+      {"from": "rename-007", "to": "flatten-018", "relation": "requires"},
+      {"from": "rename-008", "to": "flatten-020", "relation": "requires"},
+      {"from": "rename-009", "to": "flatten-022", "relation": "requires"},
+      {"from": "move-023", "to": "rmdir-027", "relation": "requires"},
+      {"from": "move-024", "to": "rmdir-027", "relation": "requires"},
+      {"from": "move-025", "to": "rmdir-027", "relation": "requires"},
+      {"from": "move-026", "to": "rmdir-027", "relation": "requires"}
+    ]
+  },
+  "gaps_identified": [
+    "Home/Configs/ should flatten to Home/ - intermediate directory not needed",
+    "Tools/ → System/ mapping not in knowledge base",
+    "Deployments/, Inventory/, design/, docs/, wiki/, share/ not addressed",
+    "Root-level scripts disposition not clear",
+    ".github/ handling not addressed"
+  ]
+}

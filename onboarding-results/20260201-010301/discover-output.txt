@@ -1,0 +1,56 @@
+```json
+{
+  "product": {
+    "name": "MacPorts",
+    "canonical_name": "macports",
+    "category": "package-manager",
+    "vendor": "The MacPorts Project",
+    "version": "2.11.6",
+    "license": "BSD"
+  },
+  "sources": {
+    "homepage": "https://www.macports.org",
+    "installation": ["https://www.macports.org/install.php"],
+    "upgrade": ["https://www.macports.org/install.php"],
+    "uninstall": [],
+    "troubleshooting": ["https://trac.macports.org/wiki/FAQ"],
+    "repository": "https://github.com/macports/macports-base",
+    "releases": "https://github.com/macports/macports-base/releases"
+  },
+  "platforms": {
+    "darwin": {
+      "supported": true, 
+      "architectures": ["arm64", "x86_64"], 
+      "notes": "Supports macOS from Leopard (10.5) to Tahoe (v26) with version-specific .pkg installers"
+    },
+    "linux": {
+      "supported": true, 
+      "distributions": ["POSIX-compliant"], 
+      "notes": "Experimental support, must install from source"
+    },
+    "windows": {
+      "supported": false, 
+      "min_version": null, 
+      "notes": "Not supported"
+    }
+  },
+  "complexity": {
+    "rating": "complex",
+    "concerns": [
+      "OS upgrade requires migration",
+      "Version-specific installers required",
+      "Xcode Command Line Tools dependency",
+      "Manual shell configuration for source installs",
+      "Xcode license acceptance required",
+      "Different Xcode version requirements per macOS version"
+    ]
+  },
+  "next_urls_to_fetch": [
+    "https://trac.macports.org/wiki/Migration",
+    "https://trac.macports.org/wiki/FAQ",
+    "https://guide.macports.org",
+    "https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6.chk.txt",
+    "https://trac.macports.org/wiki/ProblemHotlist"
+  ]
+}
+```

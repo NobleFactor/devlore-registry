@@ -1,0 +1,1251 @@
+You are a document parser for the devlore package management system. Your task is to extract structured package information from unstructured documentation (wikis, READMEs, onboarding guides, runbooks).
+
+## Your Role
+
+Given a document (or set of documents), extract the information needed to create a lore package manifest. You fill "slots" — structured fields that describe how to install, configure, and verify software.
+
+## Slot Categories
+
+Extract information for these categories:
+
+1. **Identity** — Package name, version, description, homepage, license
+2. **Platform** — Which operating systems and architectures are supported
+3. **Installation** — Package manager commands, download URLs, archive extraction
+4. **Dependencies** — Other packages that must be installed first
+5. **Conflicts** — Packages that must be removed before installation
+6. **Configuration** — Post-install setup steps (PATH, shell config, license acceptance)
+7. **Verification** — Commands that prove the installation works
+8. **Features** — Optional components or modes (e.g., shell completions, plugins)
+9. **Settings** — Configurable values (ports, paths, endpoints)
+
+## Extraction Rules
+
+1. **Be literal** — Extract exactly what the document says. Do not infer installation methods not mentioned.
+2. **Note platform** — Associate each piece of information with its platform (darwin, linux, windows, or all).
+3. **Flag uncertainty** — If a document is ambiguous, mark the slot with confidence < 0.8.
+4. **Preserve tribal knowledge** — Warnings, gotchas, "make sure you..." notes are valuable. Extract them as annotations.
+5. **Identify conflicts** — "First remove X" or "incompatible with Y" are conflict slots.
+6. **Track sources** — Note which document and section each slot came from.
+
+## Output Format
+
+Respond with structured YAML matching the parse-output schema. Each extracted slot includes:
+- The slot name and value
+- Confidence score (0.0 to 1.0)
+- Source reference (document title + section/line)
+- Platform applicability
+- Any annotations or warnings
+
+## Handling Multiple Documents
+
+When given multiple documents:
+- Higher-trust sources override lower-trust sources for the same slot
+- Organization docs override vendor docs for org-specific settings
+- Note conflicts between documents in annotations
+- Prefer the most specific instruction over generic ones
+
+## What NOT to Do
+
+- Do not fabricate information not present in the documents
+- Do not assume package manager availability (don't add "brew install" unless the doc mentions it)
+- Do not normalize version numbers (keep exactly as written)
+- Do not skip "obvious" information — extract everything explicitly stated
+
+# === DOCUMENTS TO PARSE ===
+
+## Primary Document
+URL: https://www.macports.org/install.php
+```
+
+ 
+ The MacPorts Project -- Download & Installation
+ 
+ 
+ 
+ 
+ 
+ <meta name="description" content="The MacPorts Project is an open-source community initiative to design an easy-to-use
+ system for compiling, installing, and upgrading either command-line, X11 or Aqua based open-source software on the Mac
+ OS X operating system." />
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ The MacPorts Project
+ 
+ Skip to Content
+ 
+ Download MacPorts
+<!--
+ View site in
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+-->
+ 
+ 
+ 
+Home
+Installing MacPorts
+Available Ports
+Documentation
+Support & Development
+Contact Us
+News
+Donate
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Available Downloads
+MacPorts FAQ
+Report a Bug
+Bug reporting Guidelines
+Git Repository
+MacPorts Team
+Becoming a Member
+ 
+ 
+ Quickstart
+ 
+ Install Apple's Command Line Developer Tools: xcode-select --install
+ Install MacPorts for your version of the Mac operating system:
+ 
+ macOS Tahoe v26
+ macOS Sequoia v15
+ macOS Sonoma v14
+ macOS Ventura v13
+ Older OS? See here.
+ 
+ 
+ 
+ Installing MacPorts
+ MacPorts version 2.11.6 is available in various formats for download and installation (note, if you are upgrading to a new major release of macOS, see the migration info page):
+ 
+ 
+ &#8220;pkg&#8221; installers for
+ Tahoe,
+ Sequoia,
+ Sonoma, and
+ Ventura,
+ for use with the macOS Installer.
+ This is the simplest installation
+ procedure that most users should follow after meeting the requirements listed 
+ below. Installers for legacy platforms
+ Monterey,
+ Big Sur,
+ Catalina,
+ Mojave,
+ High Sierra,
+ Sierra,
+ El Capitan,
+ Yosemite,
+ Mavericks,
+ Mountain Lion,
+ Lion,
+ Snow Leopard,
+ and Leopard are
+ also available.
+ In source form as either a tar.bz2 package or a
+ tar.gz one for manual compilation, if you intend to customize your installation
+ in any way.
+ Git clone of the unpackaged sources, if you wish to follow MacPorts development.
+ The selfupdate target of the port(1) command, for users who already have
+ MacPorts installed and wish to upgrade to a newer release.
+ 
+ Checksums for our packaged downloads are contained in the corresponding <a
+ href="https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6.chk.txt">checksums file.
+ 
+ The public key to verify the detached GPG signatures can be found under the attachments section on jmr's wiki page. (Direct Link).
+ 
+ For some ports, your system might require installations of the following components:
+ 
+ Apple's Command Line Developer Tools, in case a port you're installing or one of its dependencies
+ are not available as binaries.
+ It can be installed on recent OS versions by running this command in the Terminal:
+ xcode-select --install
+ Older versions are found at the Apple Developer site,
+ or they can be installed from within Xcode back to version 4. Users of Xcode 3 or earlier can install them by ensuring that the appropriate
+ option(s) are selected at the time of Xcode's install ("UNIX Development", "System Tools", "Command Line Tools", or
+ "Command Line Support").
+ (Optional) Apple's Xcode Developer Tools, when building some ports from source.
+ MacPorts will let you know if this is the case.
+ Using the latest available version that will run on your OS is highly recommended, except for Snow Leopard where the last free version,
+ 3.2.6, is recommended:
+ 
+ 26.0 or later for Tahoe
+ 16.0 or later for Sequoia
+ 15.0 or later for Sonoma
+ 14.1 or later for Ventura
+ 13.1 or later for Monterey
+ 12.2 or later for Big Sur
+ 11.3 or later for Catalina
+ 10.0 or later for Mojave
+ 9.0 or later for High Sierra
+ 8.0 or later for Sierra
+ 7.0 or later for El Capitan
+ 6.1 or later for Yosemite
+ 5.0.1 or later for Mavericks
+ 4.4 or later for Mountain Lion
+ 4.1 or later for Lion
+ 3.2 or later for Snow Leopard
+ 3.1 or later for Leopard
+ 
+ It can be found on the Apple Developer
+ site, on your Mac operating system installation CDs/DVD, or in the Mac App Store.
+ With Xcode 4 and later, users need to accept the Xcode EULA by either launching Xcode or running:
+ xcodebuild -license
+ 
+ (Optional) The X11 windowing environment, for ports that depend on the functionality it provides to run. You have
+ multiple choices for an X11 server:
+ 
+ Install the xorg-server port from MacPorts (recommended).
+ The XQuartz Project provides a complete X11 release
+ for macOS including server and client libraries and applications.
+ Apple's X11.app is provided by the &#8220;X11 User&#8221; package on older OS versions. It is always installed on Lion, and
+ is an optional installation on your system CDs/DVD with previous OS versions.
+ 
+ 
+ 
+ 
+ macOS Package (.pkg) Installer
+ The easiest way to install MacPorts on a Mac is by downloading the pkg or dmg for
+ Tahoe,
+ Sequoia,
+ Sonoma,
+ Ventura,
+ Monterey,
+ Big Sur,
+ Catalina,
+ Mojave,
+ High Sierra,
+ Sierra,
+ El Capitan,
+ Yosemite,
+ Mavericks,
+ Mountain Lion,
+ Lion,
+ Snow Leopard,
+ or Leopard
+ and running the system's Installer by double-clicking on the pkg contained therein,
+ following the on-screen instructions until completion.
+ This procedure will place a fully-functional and default MacPorts installation on your host system, ready for usage.
+ If needed your shell configuration files will be adapted by
+ the installer to include the necessary settings to run MacPorts and the programs it installs, but you may need to
+ open a new shell for these changes to take effect.
+ The MacPorts &#8220;selfupdate&#8221; command will also be run for you by the installer to ensure you have our
+ latest available release and the latest revisions to the &#8220;Portfiles&#8221; that contain the instructions employed
+ in the building and installation of ports. After installation is done, it is recommended that you run this step manually
+ on a regular basis to to keep your MacPorts system always current:
+ sudo port -v selfupdate
+ At this point you should be ready to enjoy MacPorts!
+ Type &#8220;man port&#8221; at the command line prompt and/or browse over to our Guide to find out more information about using MacPorts. Help is also available.
+ 
+ Source Installation
+ If on the other hand you decide to install MacPorts from source, there are still a couple of things you will need to do
+ after downloading the tarball before you can start installing ports, namely compiling and installing MacPorts itself:
+ 
+ &#8220;cd&#8221; into the directory where you downloaded the package and run &#8220;tar xjvf
+ MacPorts-2.11.6.tar.bz2&#8221; or
+ &#8220;tar xzvf MacPorts-2.11.6.tar.gz&#8221;,
+ depending on whether you downloaded the bz2 tarball or the gz one, respectively.
+ Build and install the recently unpacked sources:
+ 
+ cd MacPorts-2.11.6
+ ./configure && make && sudo make install
+ 
+ Optionally:
+ 
+ cd ../
+ rm -rf MacPorts-2.11.6*
+ 
+ 
+ 
+ These steps need to be perfomed from an administrator account, for which &#8220;sudo&#8221; will ask the
+ password upon installation. This procedure will install a pristine MacPorts system and, if the optional steps are taken,
+ remove the as of now unnecessary MacPorts-2.11.6 source directory and corresponding tarball.
+ To customize your installation you should read the output of &#8220;./configure --help | more&#8221; and
+ pass the appropriate options for the settings you wish to tweak to the configuration script in the steps detailed above.
+ You will need to manually adapt your shell's environment to work with MacPorts and your chosen installation 
+ prefix (the value passed to configure's --prefix flag, defaulting to /opt/local):
+ 
+ 
+ Add ${prefix}/bin and ${prefix}/sbin to the start of your PATH environment variable
+ so that MacPorts-installed programs take precedence over system-provided programs of the same name.
+ If a standard MANPATH environment variable already exists (that is, one that doesn't contain any empty
+ components), add the ${prefix}/share/man path to it so that MacPorts-installed man pages are found by your
+ shell.
+ For Tiger and earlier only, add an appropriate X11 DISPLAY environment variable to run X11-dependent
+ programs, as Leopard takes care of this requirement on its own.
+ 
+ Lastly, you need to synchronize your installation with the MacPorts rsync server:
+ sudo port -v selfupdate
+ Upon completion MacPorts will be ready to install ports!
+ It is recommended to run the above command on a regular basis to keep your installation current. Type &#8220;man
+ port&#8221; at the command line prompt and/or browse over to our Guide to
+ find out more information about using MacPorts. Help is also available.
+ Git Sources
+ If you are developer or a user with a taste for the bleeding edge and wish for the latest changes and feature additions,
+ you may acquire the MacPorts sources through git. See the Guide section on installing from git.
+ Purpose-specific branches are also available at the https://github.com/macports/macports-base/branches url.
+ Alternatively, if you'd simply like to view the git repository without checking it out, you can do so via the <a
+ href="https://github.com/macports/macports-base/">GitHub web interface.
+ Selfupdate
+ If you already have MacPorts installed and have no restrictions to use the rsync networking protocol (tcp port 873 by
+ default), the easiest way to upgrade to our latest available release, 2.11.6, is
+ by using the selfupdate target of the port(1) command. This will both update your ports tree (by
+ performing a sync operation) and rebuild your current installation if it's outdated, preserving your customizations,
+ if any.
+ Other Platforms
+ Running on platforms other than macOS is not the main focus of The MacPorts Project, so remaining cross-platform is
+ not an actively-pursued development goal. Nevertheless, it is not an actively-discouraged goal either and as a result some
+ experimental support does exist for other POSIX-compliant platforms such as *BSD and GNU/Linux.
+ The full list of requirements to run MacPorts on these other platforms is as follows (we assume you have the basics such
+ as GCC and X11):
+ 
+ mtree for directory hierarchy.
+ rsync for syncing the ports.
+ cURL for downloading distfiles.
+ GNUstep (Base), for Foundation (optional, can be disabled via configure args).
+ OpenSSL for signature verification, and optionally for checksums. libmd may
+ be used instead for checksums.
+ 
+ Normally you must install from source or from an git checkout to run MacPorts
+ on any of these platforms.
+ Help
+ Help on a wide variety of topics is also available in the project Guide and
+ through our Trac portal should you run into any problems installing and/or using
+ MacPorts. Of particular relevance are the installation &
+ usage sections of the former and the FAQ section of the Wiki, where we keep track of questions
+ frequently fielded on our mailing lists.
+ If any of these resources do not answer your questions or if you need any kind of extended support, there are many ways
+ to contact us!
+ 
+ Copyright &#xA9; 2002&#x2013;2026, The MacPorts Project.
+ All rights reserved.
+ 
+ 
+```
+
+## Additional Document: 1-https___guide_macports_org.txt
+```
+
+MacPorts Guide
+					Single Page
+				
+					Chunked
+				MacPorts GuideMark DulingDr. Michael A MaibaumWill BartonClemens LangCopyright © 2007–2025 The MacPorts ProjectCopyright © 2002–2004 The OpenDarwin Project1. Introduction2. Installing MacPorts2.1. Install Xcode2.2. Install MacPorts2.3. Upgrade MacPorts2.4. Uninstall MacPorts2.5. MacPorts and the Shell3. Using MacPorts3.1. The port Command3.2. Port Variants3.3. Common Tasks3.4. Port Binaries4. Portfile Development4.1. Portfile Introduction4.2. Creating a Portfile4.3. Example Portfiles4.4. Port Variants4.5. Subports4.6. Patch Files4.7. Local Portfile Repositories4.8. Portfile Best Practices4.9. MacPorts' buildbot5. Portfile Reference5.1. Global Keywords5.2. Global Variables5.3. Port Phases5.4. Dependencies5.5. Variants5.6. Subports5.7. Tcl Extensions & Useful Tcl Commands5.8. StartupItems5.9. Livecheck / Distcheck5.10. PortGroups6. MacPorts Internals6.1. File Hierarchy6.2. Configuration Files6.3. Port Images6.4. APIs and Libs6.5. The MacPorts Registry6.6. Tests7. MacPorts Project7.1. Using Trac for Tickets7.2. Using Git and GitHub7.3. Contributing to MacPorts7.4. Port Update Policies7.5. Updating Documentation7.6. MacPorts Membership7.7. The PortMgr Team8. MacPorts Guide GlossaryGlossaryChapter 1. IntroductionMacPorts is an easy to use system for compiling, installing, and managing open source software. MacPorts may
+ be conceptually divided into two main parts: the infrastructure, known as MacPorts base, and the set of
+ available ports. A MacPorts port is a set of specifications contained in a Portfile that defines an application, its characteristics, and any
+ files or special instructions required to install it. This allows you to use a single command to tell MacPorts
+ to automatically download, compile, and install applications and libraries. But using MacPorts to manage your
+ open source software provides several other significant advantages. For example, MacPorts:Installs automatically any required support software, known as dependencies, for a given port.Provides for uninstalls and upgrades for installed ports.Confines ported software to a private “sandbox” that keeps it from intermingling with
+ your operating system and its vendor-supplied software to prevent them from becoming corrupted.Allows you to create pre-compiled binary installers of ported applications to quickly install software
+ on remote computers without compiling from source code.MacPorts is developed on macOS, though it is designed to be portable so it can work on other Unix-like systems,
+ especially those descended from the Berkeley Software Distribution (BSD). In practice, installing ports only
+ works on macOS. MacPorts base can be compiled on Linux (and possibly other POSIX-compatible systems) where it is
+ mainly used to set up mirrors and generate support files for installations on macOS.The following notational conventions are used in the MacPorts Guide to distinguish between terminal
+ input/output, file text, and other special text types.Terminal I/O and file text.$ Commands to be typed into a terminal window.Command output to a terminal window.File text.Other special text types.A hyperlink: spontaneous
+ combustion.A file: /var/log/system.log.A command: ifconfig.An option: port installChapter 2. Installing MacPorts2.1. Install Xcode2.2. Install MacPorts2.3. Upgrade MacPorts2.4. Uninstall MacPorts2.5. MacPorts and the ShellThis chapter shows you how to install MacPorts and its prerequisites step-by-step. Note that the section about
+ installing Xcode is macOS-specific. If you wish to install MacPorts on
+ another platform, first make sure you have a working C compiler installed, skip ahead to installing MacPorts from source, and continue to the end of the
+ chapter.2.1. Install Xcode2.1.1. Install Xcode on OS X 10.9 or Later2.1.2. Install Xcode on OS X 10.7 Lion or OS X 10.8 Mountain Lion2.1.3. Install Xcode on Mac OS X 10.6 Snow Leopard2.1.4. Install Xcode on Older Releases of Mac OS XXcode is a package provided by Apple containing
+ compilers, libraries and additional tools required to develop applications for macOS.NoteAlways make sure to install the latest available version of Xcode for your macOS release; using
+ outdated versions of Xcode may cause port install failures. Also note that Xcode is not updated via OS
+ X's Software Update utility on OS versions prior to 10.6, and is updated via the Mac App Store starting
+ with 10.7.Follow the instructions for your version of macOS:2.1.1. Install Xcode on OS X 10.9 or Later(Optional) Download the latest version of Xcode from the Apple developer website or
+ get it using the Mac App
+ Store.A few ports require a full Xcode installation to use, but most don’t 
+ (read the description of the use_xcode keyword for specifics).
+ If you are OK with being unable to use these ports, you do not need to install Xcode.Next, open a terminal, run xcode-select --install, and
+ click the Install button to install the required command line developer tools. Don't worry if you see
+ a message telling you the software cannot be installed because it is not currently available from the
+ Software Update Server. This usually means you already have the latest version installed. You can also
+ get the command line tools from the
+ Apple developer website.2.1.2. Install Xcode on OS X 10.7 Lion or OS X 10.8 Mountain LionDownload the latest version of Xcode from the Apple developer website or
+ get it using the Mac App
+ Store.2.1.2.1. Xcode 4.3 and LaterXcode 4.3 and later do not automatically install the command line tools, but MacPorts requires
+ them. To install them, open the Xcode application, go to the Preferences window, to the Downloads
+ section, and click the Install button next to Command Line Tools. Be sure to return to this window
+ after every Xcode upgrade to ensure that the command line tools are also upgraded.If you wish to create Installer packages with port pkg, you will also need
+ to install PackageMaker, which is in the “Auxiliary Tools for Xcode” package as of
+ Xcode 4.3. The download page for this package can be opened via the Xcode -> Open Developer Tool ->
+ More Developer Tools... menu item. After downloading and mounting the disk image, drag the
+ PackageMaker application to your /Applications directory.2.1.3. Install Xcode on Mac OS X 10.6 Snow LeopardIf you are using Mac OS X 10.6, there are two branches of Xcode which could be considered to be the
+ latest, 3.2.x and 4.x. Xcode 4 costs money, but Xcode 3 is still available free of charge. There are two
+ options for downloading it:Xcode 3.2 - smaller download, but you will need to run Software Update after installing to
+ get the latest version. Note that Apple might at some point discontinue providing these
+ updates via their update servers.Xcode 3.2.6 and iOS SDK 4.3 - includes the iOS SDK which is not needed for
+ MacPorts.Both are available from the Apple
+ developer website. You may also be able to install Xcode 3.2 from your Mac OS X 10.6 DVD and
+ then run Software Update to get the latest version.Ensure that those of the following options that are available in the installer for your version of
+ Xcode are selected:UNIX DevelopmentSystem ToolsX11 SDKCommand Line Support2.1.4. Install Xcode on Older Releases of Mac OS XIf you have an earlier release of Mac OS X, you may download the latest version of Xcode for Mac OS X 10.5
+ (Xcode 3.0 and Xcode 3.1 Developer Tools) or 10.4 (Xcode 2.4.1 and Xcode 2.5 Developer Tools) from the
+ Apple developer website.Ensure that those of the following options that are available in the installer for your version of
+ Xcode are selected:UNIX DevelopmentSystem ToolsX11 SDKCommand Line Support2.2. Install MacPorts2.2.1. macOS Package Install2.2.2. Source Install2.2.3. Git Install2.2.4. Install Multiple MacPorts CopiesIf you are using macOS, you should install MacPorts using the macOS package installer unless you do not wish
+ to install it to /opt/local/, the default MacPorts location, or if you wish to install
+ a pre-release version of MacPorts base. However, if you wish to install multiple copies of MacPorts or install
+ MacPorts on another OS platform, you must install MacPorts from
+ the source code.2.2.1. macOS Package InstallThe macOS package installer automatically installs MacPorts, sets the
+ shell environment, and runs a selfupdate
+ operation to update the ports tree and MacPorts base with the latest release.Download the latest
+ MacPorts-2.11.6-....pkg installer from the releases
+ on GitHub. Here
+ are direct links for the latest versions of macOS:
+ macOS 15 Sequoia:
+ MacPorts-2.11.6-15-Sequoia.pkg
+ macOS 14 Sonoma:
+ MacPorts-2.11.6-14-Sonoma.pkg
+ macOS 13 Ventura:
+ MacPorts-2.11.6-13-Ventura.pkg
+ macOS 12 Monterey:
+ MacPorts-2.11.6-12-Monterey.pkg
+ macOS 11 Big Sur:
+ MacPorts-2.11.6-11-BigSur.pkg
+ macOS 10.15 Catalina:
+ MacPorts-2.11.6-10.15-Catalina.pkg
+ macOS 10.14 Mojave:
+ MacPorts-2.11.6-10.14-Mojave.pkg
+ macOS 10.13 High Sierra:
+ MacPorts-2.11.6-10.13-HighSierra.pkg
+ macOS 10.12 Sierra:
+ MacPorts-2.11.6-10.12-Sierra.pkgDouble-click the downloaded package installer to perform the default “easy”
+ install.After this step you are done already, MacPorts is now installed and your shell environment was
+ set up automatically by the installer. To confirm the installation is working as expected, now
+ try using port in a new terminal
+ window.$ port versionVersion: 2.11.6In case of problems such as “command not found”, make sure that you opened a new
+ terminal window or consult Section 2.5, “MacPorts and the Shell”. Otherwise, please skip the
+ remainder of this chapter and continue with Chapter 3, Using MacPorts in this guide.2.2.2. Source InstallIf you installed MacPorts using the package installer, skip this section. To install MacPorts from the
+ source code, follow the steps below.Download and extract the MacPorts
+ 2.11.6 tarball. Either do so using your browser and the Finder, or use
+ the given commands in a terminal window.$ curl -O https://distfiles.macports.org/MacPorts/MacPorts-2.11.6.tar.bz2
+$ tar xf MacPorts-2.11.6.tar.bz2Afterwards, perform the commands shown in the terminal window. If you wish to use a path other
+ than /opt/local, follow the instructions for installing multiple copies of MacPorts
+ instead.$ cd MacPorts-2.11.6/
+$ ./configure
+$ make
+$ sudo make installPlease continue with Section 2.5, “MacPorts and the Shell” to set up your shell
+ environment.2.2.3. Git InstallIf you installed MacPorts using the package installer, skip this section.There are times when some may want to run MacPorts from a version newer than the current stable
+ release. Maybe there's a new feature that you'd like to use, or it fixes an issue you've encountered, or
+ you just like to be on the cutting edge. These steps explain how to setup MacPorts for developers,
+ using only Git to keep MacPorts up to date.Though a distinction is made between pre-release and release versions of MacPorts base, the ports
+ collection supports no such distinction or versioning. The selfupdate
+ command installs the latest ports tree, and updates MacPorts base to the latest released version.Check out MacPorts sourcePick a location to store a working copy of the MacPorts code. For this example,
+ /opt/mports will be used, but you can put the source anywhere. This example
+ will create /opt/mports/macports-base containing everything needed for
+ MacPorts.$ mkdir -p /opt/mports
+$ cd /opt/mports
+$ git clone https://github.com/macports/macports-base.git
+$ cd macports-base
+$ git checkout v2.11.6 # skip this if you want to use the development versionBuild and Install MacPortsMacPorts uses autoconf and makefiles for installation. These commands will build and install
+ MacPorts to /opt/local. You can add --prefix to
+ ./configure to relocate MacPorts to another directory if needed.$ cd /opt/mports/macports-base
+$ ./configure --enable-readline
+$ make
+$ sudo make install
+$ make distclean(Optional) Configure MacPorts to use port information from GitThis step is useful if you want to do port development. Check out the ports tree from git:$ cd /opt/mports
+$ git clone https://github.com/macports/macports-ports.gitThen open
+ /opt/local/etc/macports/sources.conf in a text editor. The last line
+ should look like this:rsync://rsync.macports.org/macports/release/tarballs/ports.tar [default]Change it to point to the working copy you checked out:file:///opt/mports/macports-ports [default]Now MacPorts will look for portfiles in the working copy and use Git instead of rsync
+ to update your ports tree.EnvironmentYou should setup your PATH and other environment options according to Section 2.5, “MacPorts and the Shell”.2.2.4. Install Multiple MacPorts CopiesOccasionally a MacPorts developer may wish to install more than one MacPorts instance on the same
+ host. Only one copy of MacPorts may use the default prefix /opt/local, so for
+ additional installations use the option --prefix as shown below. It's also recommended
+ to change the applications dir using --with-applications-dir to avoid conflicts in
+ /Applications/MacPorts.
+ Use --without-startupitems to automatically set startupitem_install no
+ in the new macports.conf, which is required to avoid conflicts in
+ /Library/LaunchAgents or /Library/LaunchDaemons.
+ NoteThe first command temporarily removes the standard MacPorts binary paths because they must not be
+ present while installing a second instance.$ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+$ MP_PREFIX=/opt/macports-test
+$ ./configure --prefix=$MP_PREFIX --with-applications-dir=$MP_PREFIX/Applications --without-startupitems
+$ make
+$ sudo make install2.3. Upgrade MacPortsMacPorts base upgrades are performed automatically (when a newer release is available) during a selfupdate operation. To upgrade a copy of MacPorts that was
+ installed from source to the newer release of the source code, simply repeat the source install with the newer version of the MacPorts source
+ code.2.4. Uninstall MacPorts2.4.1. Uninstall All Ports2.4.2. Remove Users and Groups2.4.3. Remove the Rest of MacPortsUninstalling MacPorts is a drastic step and, depending on the issue you are experiencing, you may not need
+ to do so. If you are unsure, ask on the macports-users mailing
+ list first. If you are sure you want to uninstall, read on.2.4.1. Uninstall All PortsIf you want to uninstall MacPorts and the port command is functioning, first
+ uninstall all the installed ports by running this command in the Terminal:$ sudo port -fp uninstall installedAll that will be left in your installation prefix now will be files that were not registered to any
+ port. This includes configuration files, databases, any files which MacPorts renamed in order to allow a
+ forced installation or upgrade, and the base MacPorts software itself. You may wish to save your
+ configuration files (most are in $prefix/etc), databases, or any other unique data
+ by moving it aside.If the port command is not functioning, you can proceed on to the next steps, but
+ if you had installed any ports that install files to nonstandard locations, those files might not be
+ removed.2.4.2. Remove Users and GroupsWhen MacPorts is installed, a macports macOS user and group are created for
+ privilege separation. If you want to remove them, you can use these commands from an account that has
+ admin privileges:$ sudo dscl . -delete /Users/macports
+$ sudo dscl . -delete /Groups/macportsIf you configured MacPorts to use a different user or group name, then specify that instead of
+ macports.Individual ports may create users and groups as well; you can remove them with the same commands, but
+ replacing macports with the user or group name you wish to delete.2.4.3. Remove the Rest of MacPortsIf you want to remove all remaining traces of MacPorts, run the following command in the Terminal. If
+ you have changed prefix, applications_dir or
+ frameworks_dir from their default values, then replace
+ /opt/local with your prefix, replace
+ /Applications/MacPorts with your applications_dir, and/or add
+ your frameworks_dir to the list, respectively.If you are running macOS 10.15 Catalina or later and have not disabled System Integrity Protection
+ (SIP), you will need to remove the
+ macports user first.$ sudo rm -rf \
+ /opt/local \
+ /Applications/DarwinPorts \
+ /Applications/MacPorts \
+ /Library/LaunchDaemons/org.macports.* \
+ /Library/Receipts/DarwinPorts*.pkg \
+ /Library/Receipts/MacPorts*.pkg \
+ /Library/StartupItems/DarwinPortsStartup \
+ /Library/Tcl/darwinports1.0 \
+ /Library/Tcl/macports1.0 \
+ ~/.macportsIf you use a shell other than bash (perhaps tcsh), you may need to adjust the above to fit your
+ shell's syntax.Depending on which version of MacPorts you have and which ports you have installed, not all of the
+ above paths will exist on your system; this is OK.2.5. MacPorts and the Shell2.5.1. The Postflight Script2.5.2. Verify the Configuration File2.5.3. Optional Editor VariablesMacPorts requires that some environment variables be set in the shell. When MacPorts is installed using
+ the macOS package installer, a “postflight” script is run after installation that automatically
+ adds or modifies a shell configuration file in your home directory, ensuring that it defines variables
+ according to the rules described in the following section. Those installing MacPorts from source code must modify their
+ environment manually using the rules as a guide.Depending on your shell and which configuration files already exist, the installer may use
+ .zprofile, .profile, .bash_login, 
+ .bash_profile, .tcshrc, or .cshrc.2.5.1. The Postflight ScriptThe postflight script automatically sets the PATH variable, and optionally the
+ MANPATH and DISPLAY variables according to the rules described
+ below. If a current shell configuration file exists at installation time it is renamed to
+ “mpsaved_$timestamp”. Those installing MacPorts
+ from source code must modify their environment manually using the rules as a guide.Required: PATH variableThis variable is set by the postflight script to prepend the MacPorts executable paths to the
+ current path as shown. This puts the MacPorts paths at the front of PATH
+ so that the MacPorts binaries will take precedence over vendor-supplied binaries.export PATH=/opt/local/bin:/opt/local/sbin:$PATHNoteThe user environment's $PATH is not in effect while ports are being installed, because the
+ $PATH is scrubbed before ports are installed, and restored afterwards. To change the search
+ path for locating system executables (rsync, tar, etc.) during port installation, see the
+ macports.conf file
+ variable binpath. But changing this variable is for advanced users only,
+ and is not generally needed or recommended.Optional: MANPATH variableCondition: If prior to MacPorts installation a MANPATH variable exists in
+ a current .profile that contains neither the value
+ ${prefix}/share/man, nor any empty items separated by a colon, the
+ postflight script sets the MANPATH variable as shown below. Otherwise, the
+ MANPATH variable is omitted.export MANPATH=/opt/local/share/man:$MANPATHOptional: DISPLAY variableCondition: If installing on a Mac OS X version earlier than 10.5 (Leopard), and if a shell
+ configuration file exists at time of MacPorts installation without a DISPLAY
+ variable, the postflight script sets a DISPLAY variable as shown below. The
+ DISPLAY variable is always omitted on Mac OS X 10.5 or higher.export DISPLAY=:0.02.5.2. Verify the Configuration FileTo verify that the file containing the MacPorts variables is in effect, type env in
+ the terminal to verify the current environment settings after the file has been created. Example output
+ for env is shown below.NoteChanges to shell configuration files do not take effect until a new terminal session is
+ opened.MANPATH=
+TERM_PROGRAM=Apple_Terminal
+TERM=xterm-color
+SHELL=/bin/bash
+TERM_PROGRAM_VERSION=237
+USER=joebob
+__CF_USER_TEXT_ENCODING=0x1FC:0:0
+PATH=/opt/local/bin:/opt/local/sbin:/bin:/sbin:/u```
+
+## Additional Document: 2-https___trac_macports_org_wiki_FAQ.txt
+```
+
+ 
+ 
+ 
+ 
+ 
+ FAQ – MacPorts
+ 
+ 
+ 
+ 
+ if (/^#__msie303:/.test(window.location.hash))
+ window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ jQuery("#trac-noscript").remove();
+ jQuery(document).ready(function($) {
+ $(".trac-autofocus").focus();
+ $(".trac-target-new").attr("target", "_blank");
+ if ($.ui) { /* is jquery-ui added? */
+ $(".trac-datepicker:not([readonly])").prop("autocomplete", "off").datepicker();
+ $(".trac-datetimepicker:not([readonly])").prop("autocomplete", "off").datetimepicker();
+ $("#main").addClass("trac-nodatetimehint");
+ }
+ $(".trac-disable").disableSubmit(".trac-disable-determinant");
+ setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+ $(".trac-disable-on-submit").disableOnSubmit();
+ });
+ 
+ 
+ jQuery(document).ready(function($) {
+ $("#content").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+ $("#content").find(".wikianchor").each(function() {
+ $(this).addAnchor(babel.format(_("Link to #%(id)s"), {id: $(this).attr('id')}));
+ });
+ $(".foldable").enableFolding(true, true);
+ });
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ Search:
+ 
+ 
+ 
+ 
+ 
+ 
+ GitHub LoginPreferencesMy Notifications
+ 
+ 
+ 
+ 
+ 
+ TicketsWiki​GitHubRoadmapTicket ReportsSearch
+ 
+ 
+ 
+ 
+ wiki:FAQ
+ 
+ Context Navigation
+ 
+ Start PageIndexHistoryWatch Page
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+There is also a HOWTO section, which may answer some questions not listed here and provides useful tutorials for performing a number of different tasks using MacPorts.
+Table of Contents
+ 
+ 
+ General Questions
+ 
+ 
+ Does MacPorts always build from source?
+ 
+ 
+ A port fails to build. What should I do?
+ 
+ 
+ I get the error "C compiler cannot create executables" or "ld: library not found for -lcrt1.10.6.o" or "can't read "build.cmd": Failed to locate 'make' in path" when I try to install a port. Why?
+ 
+ 
+ Will my MacPorts install continue to work after installing a new major OS release or migrating to a new machine with a different CPU architecture?
+ 
+ 
+ Is MacPorts Universal?
+ 
+ 
+ Why is /opt/local the default install location for MacPorts?
+ 
+ 
+ Can I install software in /usr/local while using MacPorts?
+ 
+ 
+ Can I install frameworks in /Library/Frameworks while using MacPorts?
+ 
+ 
+ How do I remove or uninstall MacPorts?
+ 
+ 
+ What are the folders in ${prefix}/var/macports/ for and why do they take up so much space?
+ 
+ 
+ I get Error: checksum (md5/sha1/rmd160) mismatch for port. What can I do about it?
+ 
+ 
+ Where can I find a GUI frontend for MacPorts?
+ 
+ 
+ What do I do if port selfupdate doesn't work or the rsync server refuses connections?
+ 
+ 
+ port list produces unexpected output
+ 
+ 
+ Why has feature XYZ not been implemented yet, it is important?
+ 
+ 
+ How should I report MacPorts issues encountered when using prerelease versions of macOS, Xcode, or Apple hardware?
+ 
+ 
+ 
+ 
+ Software Questions
+ 
+ 
+ Why do I have to install xorg-* ports?
+ 
+ 
+ What does 'Xlib: extension "RANDR" missing on display "/tmp/launch-XXXXXX/:0"' mean?
+ 
+ 
+ Will MacPorts link to system libraries rather than its own?
+ 
+ 
+ Why is MacPorts using its own libraries?
+ 
+ 
+ GNOME has an empty menu
+ 
+ 
+ Why do the python ports have so many dependencies?
+ 
+ 
+ When should I use the force option (-f)
+ 
+ 
+ Using build_arch
+ 
+ 
+ How can I get a list of all dependencies for a port?
+ 
+ 
+ Why can't I install both the "-devel" and non-"-devel" versions of a package?
+ 
+ 
+ Why am I getting an error about the wrong C++ runtime or libc++ or libstdc++?
+ 
+ 
+ Why am I getting a message, "Warning… indications of -Wimplicit-function-declaration"?
+ 
+ 
+ 
+ 
+ Portfile Development and Maintenance Questions
+ 
+ 
+ Is it possible to have a dependency on a specific variant of another port? E.g. "postgresql8 +server"?
+ 
+ 
+ Why won't portindex work? I have a local repository set up
+ 
+ 
+ What is the process for becoming a committer?
+ 
+ 
+ Why Tcl?
+ 
+ 
+ 
+ 
+ Runtime Errors
+ 
+ 
+ I try to disable a variant, but it just informs me of the proper usage for the port command
+ 
+ 
+ 
+ 
+ GitHub Migration
+ 
+ 
+ What changed with the migration to GitHub in fall 2016?
+ 
+ 
+ 
+ 
+ Information security and the integrity of the MacPorts base sofware and individual packages
+ 
+ 
+ What measures are in place to ensure that MacPorts is not tainted with malicious contributions and that the port scripts are not installing other than what it says on a Portfile?
+ 
+ 
+ How can the integrity of a MacPorts installation be verified?
+ 
+ 
+ What capabilities does MacPorts offer for auditing of installations?
+ 
+ 
+ 
+ 
+General Questions
+Does MacPorts always build from source?
+MacPorts 2.0.0, released in 2011, added the ability to securely install ports from prebuilt binary archives. With a default configuration, you don't need to do anything to take advantage of this,
+MacPorts will automatically install from an archive if one is available.
+If no archive is available, MacPorts will fall back to building from source. This can happen for a number of reasons:
+Each port is only prebuilt with its default set of variants. So if you specify different variants when installing, the port will be built from source.
+Some software has a license that is incompatible with that of a dependency, making it impossible to legally distribute binaries. A common example is software licensed under the GPL that depends on OpenSSL without adding a special exception to allow linking with it.
+Archives are only prebuilt for a limited number of CPU architectures and OS versions.
+If you are using a custom value for any of the following macports.conf settings, the prebuilt archives are not compatible with your installation and will not be used: prefix, applications_dir, frameworks_dir, cxx_stdlib, delete_la_files
+There is always some amount of time between when a Portfile is updated in git and when the Buildbot finishes building it and makes it available. This may be more noticeable if you sync your ports tree directly from git.
+Most of these limitations could be avoided by using a custom archive site configured to suit your needs, rather than the official one, though of course someone still needs to build the archives. See howto/ShareArchives2.
+A port fails to build. What should I do?
+First, make sure you have the latest version of MacPorts and the ports tree. To do that, run sudo port selfupdate.
+Make sure you have the latest version of Xcode. Old versions of Xcode sometimes make certain ports fail.
+Clean the port. Run sudo port clean <portname>.
+Try again. If you have files in /usr/local or also use other package managers such as fink, homebrew, or pkgsrc, also try trace mode (-t):
+sudo port install <portname> # without trace mode, or
+sudo port -t install <portname> # with trace mode
+If this does not help, check ProblemHotlist and see if your issue is mentioned.
+If not, search for an existing ticket. Enter the name of the failing port in this field to see all tickets filed for this port:
+ 
+ 
+ 
+ 
+If there are no matching tickets, please file one. Please respect our guide on ​how to properly create a new ticket.
+I get the error "C compiler cannot create executables" or "ld: library not found for -lcrt1.10.6.o" or "can't read "build.cmd": Failed to locate 'make' in path" when I try to install a port. Why?
+You need to ​install Xcode and the command line tools.
+Note: Starting with 2.3.0, MacPorts should detect this problem and warn you. See ProblemHotlist#clt for more information.
+Will my MacPorts install continue to work after installing a new major OS release or migrating to a new machine with a different CPU architecture?
+In general the answer is no. See Migration for how to get things working again.
+Note: Starting with 2.3.0, MacPorts will detect this situation. Follow Migration to make your MacPorts installation ready for the new OS.
+Is MacPorts Universal?
+MacPorts works on Apple Silicon as well as Intel- and PowerPC-based Macs, but, by default, the ports you install will be compiled only for the architecture you're currently running on. This means that if you migrate from, say, a PowerPC Mac to an Intel one and use Migration Assistant to copy your data to the new machine, you should reinstall all your ports on the new machine to get versions built for Intel. See the Migration link in the previous question.
+For many ports, there's now an alternative: select the +universal variant when you install each port, and MacPorts will install universal binaries that work on multiple processor architectures. The set of architectures is controlled by the universal_archs setting in ​macports.conf.
+Using +universal can allow you to run ports which do not build for your preferred architecture alongside those that do. For example, the wine port only builds for i386, but shares many dependencies with ports that can build for x86_64. On x86_64 hardware, the dependencies can be built with +universal so they support both i386 and x86_64 dependents.
+Historically, +universal could also be useful if you anticipated migrating to a different Mac soon, or if you wanted to install MacPorts on an external hard drive used by both Intel- and PowerPC-based Macs. But note that because +universal is not necessarily tested by port maintainers, it may not work correctly for all ports, even if no error message is shown during installation. If you find a port that will not build with +universal, or if it builds but then does not work correctly, please file a bug report. If you can provide a patch to fix the problem, that's even better.
+Some ports may only work on PowerPC Macs or only on Intel Macs. Others may work on 32-bit archs but not 64-bit. In some cases, these are bugs that need to be fixed. If there is a newer version of the software available, you should report this to the port maintainer. Maybe the new version works correctly on both architectures. If the port is already using the latest version, report the problem to the upstream authors of the software; the software may need to be updated. In other cases, the software may be specifically written for one processor architecture such that it will not be possible to make it available to the other.
+See also Universal for a (highly outdated at this point) list of ports that were tested for +universal support and the results.
+Why is /opt/local the default install location for MacPorts?
+ 
+Traditionally, the place to install third party software on many UNIX systems is /usr/local.
+However, having MacPorts under /usr/local would be error-prone for precisely that reason. 
+Many other software packages and packaging systems install into /usr/local,
+and could accidentally overwrite what MacPorts has installed, or vice versa.
+While this could be dismissed as the user's own error, it is a fact that
+people click through installers blindly, and consequently collisions under 
+/usr/local (and other prominent directories) happen very often.
+MacPorts doesn't want to be a victim of that, and /opt/local provides
+the splendid isolation (as would any other dedicated directory, of course).
+Also, /usr/local traditionally contains the given system's local admin tools;
+MacPorts doesn't want to stomp on that either.
+(For the same reasons, fink uses /opt/sw as its prefix.)
+Can I install software in /usr/local while using MacPorts?
+No. Even though MacPorts is installed elsewhere, software installed in /usr/local can still interfere with MacPorts.
+Some software (especially the GNU auto* tools and gcc) looks into /usr/local for external headers, libraries, and binaries. Certain ports might (and do) fail to build because during their build something incompatible is found and picked up
+from /usr/local. Good ports avoid this by explicitly specifying --with-libfoo=/opt/local/lib/ or explicitly disabling all such possible dependencies altogether with --disable-foo or --without-bar but not all ports are able to do that.
+And even if all files that should be found in /opt/local are correctly used, headers and libraries provided by the operating system in /usr will still be overridden if files of the same name exist in /usr/local.
+If you ask us for help with a port failing to build because of something
+that it found in /usr/local you will be asked to remove what you've installed in /usr/local
+or to temporarily rename /usr/local to make it disappear entirely for the duration of the build.
+Note that starting with 2.3.0, MacPorts can automatically hide /usr/local (and all other files a port does not depend on) from ports' build systems.
+This feature is called trace mode and is activated by providing the -t flag to port, e.g.
+sudo port -t install <portname>
+You'll notice a small performance penalty when using trace mode, and a very small number of ports will fail to build due to the changes in the environment (currently, only the go and sbcl ports are known to be affected). Warnings about sandbox violations are normal when using trace mode. If a port fails to build in trace mode, the problem is very likely a bug. You should file a ticket if none exists yet.
+Can I install frameworks in /Library/Frameworks while using MacPorts?
+No. This can interfere with software you want to install with MacPorts, in much the same way that installing software into /usr/local can interfere. 
+If you ask us for help with a port failing to build because of something
+that it found in /Library/Frameworks you will be asked to remove what you've installed in /Library/Frameworks
+or to temporarily rename /Library/Frameworks to make it disappear entirely for the duration of the build.
+How do I remove or uninstall MacPorts?
+See ​the Guide.
+What are the folders in ${prefix}/var/macports/ for and why do they take up so much space?
+man porthier says: "MacPorts runtime data", but it contains some more subfolders:
+build
+Is used during the building of ports, usually it contains only empty folders, does not take much space. During the building of a port there is a soft link ${prefix}/var/macports/sources/rsync.macports.org/release/ports/<category>/<name>/work pointing to the corresponding folder here.
+distfiles
+The downloaded sources of each built port, could be removed with port clean --dist <port>.
+packages
+Contains the binary archives of each installed port. Could be removed with port clean --archive <port> <version>+<variant>. These files are helpful for uninstalling and later reinstalling the exact same ports (eg. for testing something). Only unpacking the archive is needed and no build will be performed. If these archives are never needed they can be disabled in ${prefix}/etc/macports/macports.conf with the portarchivemode option.
+registry and the older receipts
+Contains detailed information about each installed port, e.g. which files belong to the port with corresponding checksums.
+software
+Contains the compressed archives of installed software. If a port is activated its files are extracted to the ${prefix} folders from the compressed files here. port uninstall <port> <version>+<variant> would remove it from here, but then this port can not be used anymore.
+sources
+In the subfolder rsync.macports.org/release/base are the MacPorts sources themselves (e.g., for the port(1) command). A port selfupdate updates this from the MacPorts rsync server.
+In the subfolder rsync.macports.org/release/ports are folders for each port category and the ports themselves therein, where the corresponding Portfile and patches are found. port sync and also port selfupdate update this from the MacPorts rsync server.
+I get Error: checksum (md5/sha1/rmd160) mismatch for port. What can I do about it?
+MacPorts computes checksums of downloaded files to ensure they aren't corrupted and haven't been tampered with. Each Portfile lists the checksums for the files that the port will download (using md5, sha1 and/or rmd160). If the computed checksum of the downloaded file doesn't match the one listed in the Portfile, that means the file you downloaded is not the one the port designer used when creating the port, and so MacPorts stops the installation.
+First aid, download the file again:
+$ sudo port selfupdate
+$ sudo port clean --dist <portname>
+$ sudo port install <portname>
+If this doesn't help, then you should attempt to discover why there is a checksum mismatch.
+Please do NOT file a ticket without first ruling out a misconfiguration on your end. Also make sure that you specify which mirror your download came from when filing a ticket.
+There are several possible reasons for checksum mismatches:
+The file is corrupt. If it was corrupted by the transfer, download it again (as shown above). If it is corrupted on the server, there is not much you can do about it. Open a bug in ​Trac and assign it to the port's maintainer. As for solving the problem: if there are other mirrors, try one of them. You can also ask if someone has a complete file they can send you on the ​MacPorts users' mailing list.
+The developer has performed a "stealth upgrade". Sometimes upstream developers make "stealth upgrades" in which they change the contents of their distribution archive but not its version number, without informing MacPorts of this change. Perhaps the developer has repackaged the distribution with a different archiving program, or has fixed typos in the included documentation or made other presumably minor changes that did not warrant a regular release. This practice is not recommended because of the obvious difficulties it presents to MacPorts and other port systems that compute package checksums. Attempt to get confirmation from the developer of the software that this has occurred. If the developer cannot be reached, attempt to determine yourself whether a stealth upgrade has happened. ​Search the Internet and try to locate the older version of the archive that matches the checksum in the Portfile. Also download the version currently available on the developer's site, extract both, and compare the contents (for example with diff -r -u <old> <new>). If the changes look minor and benign, or there are no changes at all, then it is safe for you to update the checksum in the Portfile, and the port maintainer should be informed of this so that they can make the change official. If you cannot determine whether a stealth upgrade has taken place, ask for help on the ​users' mailing list.
+The file has been tampered with. It is perhaps somewhat unlikely yet theoretically possible (and it has happened a few times in practice) that the archive being distributed by the developer (or by a mirror) has been genuinely compromised. If a hacker was able to manipulate the developer's (or the mirror's) server, the hacker could have uploaded a revised archive containing malware (a virus, a trojan horse, a spam-sending platform, etc.) of the hacker's choosing, and you would certainly not want to install such software. You must attempt to determine, as above, whether this has occurred by contacting the developer, or by locating an older version of the archive and comparing them. You can also contact the port maintainer or the ​users' mailing list.
+A proxy is blocking your request. Some internet connections are protected by a proxy which may not allow file downloads, tar/zip downloads, or may not allow your particular computer to access the internet without being specifically allowed. In that case, the proxy may return a simple "disallowed" message (with an erroneous 200 status), which MacPorts mistakes for the file that should be downloaded. Examining the content of the downloaded file will determine if this is the case. If so, contact your network administrator for access.
+A download server and/or your DNS server is misbehaving. See MisbehavingServers.
+Where can I find a GUI frontend for MacPorts?
+There are several GUIs for MacPorts in development.
+​PortAuthority has been around for a long time. Donationware as of 2019.
+​JPortsUI is a free open-source Java-based GUI.
+​Porticus cannot be used at this time because it has not been updated to work with OS X 10.7 or later or MacPorts 2.0 or later.
+What do I do if port selfupdate doesn't work or the ```
+
+## Additional Document: 3-https___trac_macports_org_wiki_Migration.txt
+```
+
+ 
+ 
+ 
+ 
+ 
+ Migration – MacPorts
+ 
+ 
+ 
+ 
+ if (/^#__msie303:/.test(window.location.hash))
+ window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ jQuery("#trac-noscript").remove();
+ jQuery(document).ready(function($) {
+ $(".trac-autofocus").focus();
+ $(".trac-target-new").attr("target", "_blank");
+ if ($.ui) { /* is jquery-ui added? */
+ $(".trac-datepicker:not([readonly])").prop("autocomplete", "off").datepicker();
+ $(".trac-datetimepicker:not([readonly])").prop("autocomplete", "off").datetimepicker();
+ $("#main").addClass("trac-nodatetimehint");
+ }
+ $(".trac-disable").disableSubmit(".trac-disable-determinant");
+ setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+ $(".trac-disable-on-submit").disableOnSubmit();
+ });
+ 
+ 
+ jQuery(document).ready(function($) {
+ $("#content").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+ $("#content").find(".wikianchor").each(function() {
+ $(this).addAnchor(babel.format(_("Link to #%(id)s"), {id: $(this).attr('id')}));
+ });
+ $(".foldable").enableFolding(true, true);
+ });
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ Search:
+ 
+ 
+ 
+ 
+ 
+ 
+ GitHub LoginPreferencesMy Notifications
+ 
+ 
+ 
+ 
+ 
+ TicketsWiki​GitHubRoadmapTicket ReportsSearch
+ 
+ 
+ 
+ 
+ wiki:Migration
+ 
+ Context Navigation
+ 
+ Start PageIndexHistoryWatch Page
+ 
+ 
+ 
+ 
+ 
+ 
+ Migrating MacPorts after a major operating system upgrade or from one computer to another
+A MacPorts installation is designed to work with a particular operating system and a particular hardware architecture.
+This migration procedure ensures a smooth transition after major system changes, such as:
+major operating system upgrades (e.g., from macOS 13 Ventura to macOS 14 Sonoma).
+CPU architecture changes (e.g., from Intel to Apple Silicon).
+If you don't want to migrate, you can always ​uninstall MacPorts entirely before manually reinstalling ports.
+Note: If you plan to move from one Mac to another Mac using ​Migration Assistant, you have to do that first before you can use this procedure.
+Migration procedure
+Note that this procedure requires MacPorts 2.10.0 or later. If you have an older version of MacPorts installed, you will first need to install the current version (this will not affect your installed ports).
+Install the latest version of Xcode and/or the Xcode command-line tools
+If you have Xcode installed, ​upgrade it to the latest version that is compatible with your OS.
+Open the Xcode application once after installation and follow any prompts.
+Install the latest version of the command line tools for your OS. (Run xcode-select --install). On some macOS versions, you may need to run Software Update to update the CLTs if an older version is already installed. Some recent versions of macOS have a bug that prevents them from automatically updating the command line tools, so if the preceding command says they're already installed, they may not be up to date and you may need to update manually by following the instructions in ProblemHotlist#reinstall-clt.
+Review macports.conf settings
+If your macports.conf (typically at /opt/local/etc/macports/macports.conf) contains uncommented settings for universal_archs or build_arch, you will likely want to update them, since newer OS versions may support different CPU architectures. Default values are fine for most users, so unless you know you need something different, just comment out these two lines.
+Several other settings in macports.conf have changed their defaults over the years. Take a moment to compare each line of your macports.conf with the corresponding line in macports.conf.default in the same directory. Unless you know a reason why a line in your settings file should be different from the defaults, adopt the line from the defaults file.
+Run port migrate
+sudo port migrate
+This will reinstall the MacPorts base system for your current system if needed, and reinstall ports that are not compatible with your current system. Any ports that are not able to be reinstalled will be reported at the end.
+(Optional) Managing migration snapshots
+port migrate takes a snapshot of your installed ports before reinstalling them. If some of your ports failed to reinstall, you may want to try again later after they have been fixed—this can be done by running:
+sudo port restore --last
+When you no longer need the snapshot, you can delete it to save some disk space. Run port snapshot --list to see the snapshots that exist, and note the ID number in the first column of the output. Then run
+sudo port snapshot --delete <ID>
+replacing <ID> with the ID number of the snapshot you want to delete.
+Troubleshooting
+A potential problem comes from possible differences between ports that do compile on an older macOS, but no longer on the newer. For instance, you might have installed OpenBLAS on macOS Mojave. This was built with gcc10, the then preferred version of gcc. OpenBLAS sets a +gcc10 variant for this and it has remained like that as long as you were updating it. When upgrading to macOS Monterey according to the procedure above, MacPorts will try to exactly recreate what was on Mojave, hence OpenBLAS +gcc10. But gcc10 may not compile on macOS Monterey (it does not as I write this example). Hence, the migration of OpenBLAS and everything that depends on it fails.
+Another issue may come from incompatibility between some additional components, which may manifest itself with ports failing with a message like
+Failure Reason: The version of the CoreSimulator framework installed on this Mac is out-of-date and not supported by this version of Xcode.
+Recovery Suggestion: Please ensure that you have installed all available updates to your Mac's software, and that you are running the most recent version of Xcode supported by macOS.
+In this case you may be able to solve it by running 
+xcodebuild -runFirstLaunch
+Old Migration procedure
+Note that the information below is for the older, more manual Migration procedure. You probably don't need it if you are using MacPorts 2.10.0 or later.
+Show old Migration procedure
+Install the latest version of Xcode and the Xcode command-line tools
+​Install the latest version of Xcode that is compatible with your OS.
+Open the Xcode application once after installation and follow any prompts.
+Install the same version of the command line tools. (Run xcode-select --install). Recent versions of macOS have a bug that prevents them from automatically updating the command line tools, so if the preceding command says they're already installed, they may not be up to date and you may need to update manually by following the instructions in ProblemHotlist#reinstall-clt.
+Reinstall MacPorts base system
+To reinstall, simply install the base MacPorts system
+for your new platform. If there is no macOS Installer package available for your new OS version, you can install from source.
+Update your macports.conf (if not default)
+If your macports.conf (typically at /opt/local/etc/macports/macports.conf) contains uncommented settings for universal_archs or build_arch, you will likely want to update them, since newer OS versions may support different CPU architectures. Default values are fine for most users, so unless you know you need something different, just comment out these two lines.
+Several other settings in macports.conf have changed their defaults over the years. Take a moment to compare each line of your macports.conf with the corresponding line in macports.conf.default in the same directory. Unless you know a reason why a line in your settings file should be different from the defaults, adopt the line from the defaults file.
+Reinstall your ports
+Save the list of installed ports:
+port -qv installed > myports.txt
+Save the list of requested ports:
+port echo requested | cut -d ' ' -f 1 | uniq > requested.txt
+Uninstall all installed ports:
+sudo port -f uninstall installed
+Run a regular clear out of your installation:
+sudo port reclaim
+Download and execute the ​restore_ports script. (If you installed MacPorts from source and used a custom prefix, then you'll need to use the -p option when you run restore_ports.tcl; see ./restore_ports.tcl -h.)
+curl --location --remote-name https://github.com/macports/macports-contrib/raw/master/restore_ports/restore_ports.tcl
+chmod +x restore_ports.tcl
+xattr -d com.apple.quarantine restore_ports.tcl
+sudo ./restore_ports.tcl myports.txt
+Note: ports that are not available on your new platform will be skipped, with only a warning message. 
+Restore requested status:
+If you saved the list of requested ports, you can now restore the requested flags for your newly installed ports to their former states.
+sudo port unsetrequested installed
+xargs sudo port setrequested < requested.txt
+Warning: if a port in requested.txt was not installed in the previous step, the iterative setrequested will terminate, leaving some ports still marked as not-requested. Edit requested.txt to remove any ports that were not installed and repeat this step. Double-check your desired ports are set as requested with port echo requested.
+Troubleshooting Old Migration Procedure
+Though it is now quite well-tested, the restore_ports script may fail in some cases. One known issue is that the script will fail if there are conflicting ports in the list. It's possible to have conflicting ports installed provided at most one of the conflicting set is active. If the script fails, for this reason, you can delete one of the conflicting ports from myports.txt and then simply run the script again. You may need to do this multiple times if there are multiple conflicting ports listed.
+In the worst case, you can reinstall your ports manually by browsing myports.txt and installing the ports one by one, remembering to specify the appropriate variants:
+sudo port install portname +variant1 +variant2 …
+Note that if you have specified variants which are not the default, you may need to install ports in an order other than the alphabetical order recorded in myports.txt. You may skip explicitly installing ports that you did not request as long as they are not using non-default variants since they will be installed as dependencies of other ports.
+If you see an "infinite loop" error message, such as this:
+Error: we appear to be stuck, exiting...
+infinite loop
+ while executing
+"sort_ports $portList"
+ invoked from within
+"set operationList [sort_ports $portList]"
+ (file "./restore_ports.tcl" line 285)
+it indicates that the script has a list of ports to install, and it can't figure out which of the ports to install next. Each port has some obstacle that prevents it from being the next to install. One cause of this problem is a "dependency cycle": port A depends directly or indirectly on port B, while port B depends on port A. A workaround is to reduce your list of ports to install, until it no longer has a dependency cycle. 
+If things go really wrong, don't forget that you can always ​uninstall MacPorts entirely before manually reinstalling ports.
+Another potential problem is that the restore_ports.tcl command may fail with a Too many open files error message. Under macOS Sierra, the default shell has a default ulimit of 256 open files. The solution is to restore the ports with a slightly modified command:
+sudo bash -c "ulimit -n 4096; ./restore_ports.tcl myports.txt"
+This will raise the file limit for the duration of the restore_ports.tcl command.
+ 
+ 
+ Last modified 12 months ago
+ Last modified on Feb 20, 2025, 9:16:27 PM
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ Download in other formats:
+ 
+ 
+ Plain Text
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+```
+
+# === OUTPUT SCHEMA ===
+
+Respond with valid YAML matching this structure:
+```yaml
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ParseOutput",
+  "description": "Structured output from document parsing for lore package creation",
+  "type": "object",
+  "required": ["package_name", "slots", "sources"],
+  "properties": {
+    "package_name": {
+      "type": "string",
+      "description": "Extracted package name (lowercase, hyphenated)",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "slots": {
+      "type": "array",
+      "description": "Extracted slot values from the document(s)",
+      "items": {
+        "$ref": "#/$defs/Slot"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "description": "Documents that were parsed",
+      "items": {
+        "$ref": "#/$defs/Source"
+      }
+    },
+    "ambiguities": {
+      "type": "array",
+      "description": "Unresolved ambiguities requiring clarification",
+      "items": {
+        "$ref": "#/$defs/Ambiguity"
+      }
+    },
+    "tribal_knowledge": {
+      "type": "array",
+      "description": "Warnings, gotchas, and non-obvious insights extracted",
+      "items": {
+        "$ref": "#/$defs/TribalKnowledge"
+      }
+    }
+  },
+  "$defs": {
+    "Slot": {
+      "type": "object",
+      "required": ["category", "name", "value", "confidence", "platform"],
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["identity", "platform", "installation", "dependency", "conflict", "configuration", "verification", "feature", "setting"]
+        },
+        "name": {
+          "type": "string",
+          "description": "Slot field name (e.g., 'version', 'install_command', 'verify_command')"
+        },
+        "value": {
+          "description": "The extracted value (string, array, or object depending on slot type)"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Confidence in extraction accuracy"
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["all", "darwin", "linux", "windows"],
+          "description": "Which platform this slot applies to"
+        },
+        "source_ref": {
+          "type": "string",
+          "description": "Document and section where this was found"
+        },
+        "annotation": {
+          "type": "string",
+          "description": "Additional context or warnings about this slot"
+        }
+      }
+    },
+    "Source": {
+      "type": "object",
+      "required": ["title", "trust_level"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Document title or URL"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Source URL if available"
+        },
+        "trust_level": {
+          "type": "string",
+          "enum": ["vendor", "organization", "community", "web"],
+          "description": "Trust level per ADR-012 hierarchy"
+        },
+        "sections_used": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Which sections were relevant"
+        }
+      }
+    },
+    "Ambiguity": {
+      "type": "object",
+      "required": ["slot_name", "description", "options"],
+      "properties": {
+        "slot_name": {
+          "type": "string",
+          "description": "Which slot is ambiguous"
+        },
+        "description": {
+          "type": "string",
+          "description": "What is unclear"
+        },
+        "options": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Possible interpretations"
+        },
+        "suggested_default": {
+          "type": "string",
+          "description": "Recommended resolution"
+        }
+      }
+    },
+    "TribalKnowledge": {
+      "type": "object",
+      "required": ["title", "description"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Short name for the insight"
+        },
+        "description": {
+          "type": "string",
+          "description": "What the insight is and why it matters"
+        },
+        "source_ref": {
+          "type": "string",
+          "description": "Where this was found"
+        },
+        "affects_phase": {
+          "type": "string",
+          "enum": ["prepare", "install", "provision", "verify"],
+          "description": "Which lifecycle phase this affects"
+        }
+      }
+    }
+  }
+}
+```

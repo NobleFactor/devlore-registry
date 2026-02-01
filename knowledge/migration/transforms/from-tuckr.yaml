@@ -28,7 +28,7 @@ concept_mapping:
     target: "writ status"
     notes: "Show deployment state"
   - source: "Encrypted files (gpg)"
-    target: ".age/.sops extension"
+    target: ".sops extension"
     notes: "Different encryption backend"
 
 preserved_behaviors:
@@ -40,7 +40,7 @@ preserved_behaviors:
 new_capabilities:
   - "Platform variants via segment suffixes"
   - "Template rendering (.template extension)"
-  - "Secret decryption (.age/.sops)"
+  - "Secret decryption (.sops)"
   - "Conflict resolution options (backup, overwrite, skip)"
   - "State tracking (receipt + state file)"
   - "Package management delegation to lore"
@@ -106,4 +106,4 @@ common_questions:
   - question: "What does your Hooks.toml do? (Primarily package installs?)"
     resolves: "packages.manifest creation"
   - question: "Do you have encrypted files managed with GPG?"
-    resolves: "Encryption conversion to age"
+    resolves: "Encryption conversion to SOPS"

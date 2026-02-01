@@ -69,7 +69,7 @@ migration_strategy:
   multiple_repos: |
     If user maintained separate bare repos (e.g., public + private):
     - Each repo becomes a separate project in one source root
-    - Private repo files may need .age encryption
+    - Private repo files may need .sops encryption
 
 common_aliases: ["dotfiles", "cfg", "dot", "config"]
 

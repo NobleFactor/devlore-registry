@@ -46,3 +46,13 @@ signatures:
     - name: tuckr.yaml
       system: tuckr
       description: Detection markers for Tuckr
+    - name: yadm.yaml
+      system: yadm
+      description: Detection markers for yadm dotfile manager
+concepts:
+    - name: writ-structure.yaml
+      purpose: directory-structure
+      description: Writ directory structure and Home/System mapping
+    - name: lifecycle-patterns.yaml
+      purpose: lifecycle-detection
+      description: Patterns for detecting package installs in scripts

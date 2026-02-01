@@ -1,0 +1,201 @@
+# Lifecycle Script Detection Patterns
+#
+# Patterns for detecting package installations and system setup in scripts.
+# Used by writ migrate to identify lifecycle candidates.
+
+name: lifecycle-patterns
+description: |
+  Lifecycle scripts are shell scripts or configuration that install software,
+  configure system settings, or perform one-time setup tasks. These can be
+  converted to writ lifecycle.yaml or packages.manifest files.
+
+package_manager_patterns:
+  # macOS
+  brew:
+    commands:
+      - pattern: 'brew install\s+(.+)'
+        extracts: "package names"
+      - pattern: 'brew cask install\s+(.+)'
+        extracts: "cask names"
+        deprecated: "Use 'brew install --cask' instead"
+      - pattern: 'brew install --cask\s+(.+)'
+        extracts: "cask names"
+      - pattern: 'brew tap\s+(\S+)'
+        extracts: "tap name"
+      - pattern: 'brew bundle'
+        notes: "Look for Brewfile"
+    files:
+      - name: "Brewfile"
+        confidence: 0.95
+        format: |
+          tap "homebrew/cask"
+          brew "ripgrep"
+          cask "visual-studio-code"
+
+  port:
+    commands:
+      - pattern: 'sudo port install\s+(.+)'
+        extracts: "port names"
+      - pattern: 'port install\s+(.+)'
+        extracts: "port names"
+
+  # Linux - Debian/Ubuntu
+  apt:
+    commands:
+      - pattern: 'apt(-get)? install\s+(-y\s+)?(.+)'
+        extracts: "package names"
+      - pattern: 'sudo apt(-get)? install\s+(.+)'
+        extracts: "package names"
+
+  # Linux - RHEL/Fedora
+  dnf:
+    commands:
+      - pattern: 'dnf install\s+(-y\s+)?(.+)'
+        extracts: "package names"
+      - pattern: 'sudo dnf install\s+(.+)'
+        extracts: "package names"
+
+  yum:
+    commands:
+      - pattern: 'yum install\s+(-y\s+)?(.+)'
+        extracts: "package names"
+
+  # Linux - Arch
+  pacman:
+    commands:
+      - pattern: 'pacman -S\s+(--noconfirm\s+)?(.+)'
+        extracts: "package names"
+      - pattern: 'sudo pacman -S\s+(.+)'
+        extracts: "package names"
+
+  yay:
+    commands:
+      - pattern: 'yay -S\s+(.+)'
+        extracts: "AUR package names"
+
+  # Cross-platform
+  cargo:
+    commands:
+      - pattern: 'cargo install\s+(.+)'
+        extracts: "crate names"
+    notes: "Rust package manager, cross-platform"
+
+  pip:
+    commands:
+      - pattern: 'pip3? install\s+(--user\s+)?(.+)'
+        extracts: "Python package names"
+      - pattern: 'python3? -m pip install\s+(.+)'
+        extracts: "Python package names"
+
+  npm:
+    commands:
+      - pattern: 'npm install\s+(-g\s+)?(.+)'
+        extracts: "npm package names"
+      - pattern: 'npm i\s+(-g\s+)?(.+)'
+        extracts: "npm package names"
+
+  go:
+    commands:
+      - pattern: 'go install\s+(.+)@'
+        extracts: "Go module paths"
+
+  # Windows
+  choco:
+    commands:
+      - pattern: 'choco install\s+(-y\s+)?(.+)'
+        extracts: "Chocolatey package names"
+
+  winget:
+    commands:
+      - pattern: 'winget install\s+(.+)'
+        extracts: "winget package IDs"
+
+  scoop:
+    commands:
+      - pattern: 'scoop install\s+(.+)'
+        extracts: "scoop package names"
+
+script_naming_conventions:
+  description: "Common naming patterns for lifecycle scripts"
+  patterns:
+    install:
+      - "install.sh"
+      - "install-*.sh"
+      - "Install-*"
+      - "setup.sh"
+      - "setup-*.sh"
+      - "Setup-*"
+    bootstrap:
+      - "bootstrap.sh"
+      - "bootstrap"
+      - ".yadm/bootstrap"
+      - "init.sh"
+    initialize:
+      - "Initialize-*"
+      - "init-*.sh"
+    build:
+      - "Build-*"
+      - "build.sh"
+      - "build-*.sh"
+    configure:
+      - "configure.sh"
+      - "Configure-*"
+      - "config.sh"
+
+# Files that contain package lists
+package_list_files:
+  - name: "Brewfile"
+    manager: "brew"
+    format: "brew DSL"
+
+  - name: "Gemfile"
+    manager: "bundler"
+    format: "Ruby DSL"
+
+  - name: "requirements.txt"
+    manager: "pip"
+    format: "one package per line"
+
+  - name: "package.json"
+    manager: "npm"
+    format: "JSON dependencies"
+
+  - name: "Cargo.toml"
+    manager: "cargo"
+    format: "TOML dependencies"
+
+  - name: "go.mod"
+    manager: "go"
+    format: "Go module file"
+
+# Writ conversion
+writ_conversion:
+  packages_manifest:
+    description: |
+      Simple package lists convert to packages.manifest:
+      One package per line, optionally prefixed with manager.
+    example: |
+      # Home/all/.config/packages.manifest
+      ripgrep
+      fd
+      bat
+      brew:neovim
+      cargo:starship
+
+  lifecycle_yaml:
+    description: |
+      Complex setup scripts convert to lifecycle.yaml:
+      Declarative specification of installation steps.
+    example: |
+      # Home/all/lifecycle.yaml
+      packages:
+        - name: ripgrep
+        - name: fd
+        - name: bat
+      scripts:
+        pre:
+          - name: "Setup directories"
+            run: "mkdir -p ~/.local/bin"
+        post:
+          - name: "Configure shell"
+            run: "echo 'eval \"$(starship init zsh)\"' >> ~/.zshrc"

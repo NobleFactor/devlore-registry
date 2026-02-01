@@ -31,7 +31,7 @@ preserved_behaviors:
 new_capabilities:
   - "Platform variants via segment directories"
   - "Template rendering (.template extension)"
-  - "Secret decryption (.age/.sops extensions)"
+  - "Secret decryption (.sops extension)"
   - "Conflict resolution options (backup, overwrite, skip)"
   - "State tracking (receipt + state file)"
   - "Package management delegation to lore"

@@ -1,0 +1,442 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: SSPL-1.0
+# Copyright (c) 2025-2026 Noble Factor. All rights reserved.
+#
+# Test-Onboarding - Test the lore onboard pipeline
+#
+# Simulates: lore onboard <url>
+#
+# Pipeline:
+#   1. DISCOVER - Fetch URL, identify product, find related URLs
+#   2. EXTRACT  - Fetch all URLs, parse to slots
+#   3. GENERATE - Transform slots to lore package
+#
+# Usage:
+#   ./scripts/Test-Onboarding <installation-url> [--provider gemini|anthropic]
+#
+# Example:
+#   export GEMINI_API_KEY="..."
+#   ./scripts/Test-Onboarding https://www.macports.org/install.php
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Defaults
+URL=""
+PROVIDER="anthropic"
+OUTPUT_DIR="$REPO_ROOT/onboarding-results"
+MAX_URLS=5  # Maximum URLs to fetch in discovery
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --provider)
+            PROVIDER="$2"
+            shift 2
+            ;;
+        --output-dir)
+            OUTPUT_DIR="$2"
+            shift 2
+            ;;
+        --max-urls)
+            MAX_URLS="$2"
+            shift 2
+            ;;
+        -h|--help)
+            sed -n '2,/^$/p' "$0" | sed 's/^# //' | sed 's/^#//'
+            exit 0
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            exit 1
+            ;;
+        *)
+            if [[ -z "$URL" ]]; then
+                URL="$1"
+            else
+                echo "Unexpected argument: $1" >&2
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [[ -z "$URL" ]]; then
+    echo "Error: URL required" >&2
+    echo "Usage: $0 <installation-url> [--provider gemini|anthropic]" >&2
+    exit 1
+fi
+
+# Create output directory
+mkdir -p "$OUTPUT_DIR"
+TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+RUN_DIR="$OUTPUT_DIR/$TIMESTAMP"
+mkdir -p "$RUN_DIR"
+
+echo "=== Lore Onboarding Test ==="
+echo "URL: $URL"
+echo "Provider: $PROVIDER"
+echo "Output: $RUN_DIR"
+echo ""
+
+# Provider API call function
+call_llm() {
+    local prompt_file="$1"
+    local output_file="$2"
+    local description="$3"
+
+    echo "   Calling $PROVIDER: $description..."
+
+    if [[ "$PROVIDER" == "gemini" ]]; then
+        if [[ -z "${GEMINI_API_KEY:-}" ]]; then
+            echo "Error: GEMINI_API_KEY not set" >&2
+            exit 1
+        fi
+
+        local request_file="${output_file%.txt}-request.json"
+        jq -n --rawfile prompt "$prompt_file" '{
+            "contents": [{"parts": [{"text": $prompt}]}],
+            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 65536}
+        }' > "$request_file"
+
+        local response
+        response=$(curl -s -X POST \
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$GEMINI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d @"$request_file")
+
+        echo "$response" > "${output_file%.txt}-raw.json"
+        echo "$response" | jq -r '.candidates[0].content.parts[0].text // "ERROR: No content"' > "$output_file"
+
+    elif [[ "$PROVIDER" == "anthropic" ]]; then
+        if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
+            echo "Error: ANTHROPIC_API_KEY not set" >&2
+            exit 1
+        fi
+
+        local request_file="${output_file%.txt}-request.json"
+        local prompt_content
+        prompt_content=$(cat "$prompt_file")
+
+        jq -n --arg prompt "$prompt_content" '{
+            "model": "claude-sonnet-4-20250514",
+            "max_tokens": 64000,
+            "messages": [{"role": "user", "content": $prompt}]
+        }' > "$request_file"
+
+        local response
+        response=$(curl -s -X POST \
+            "https://api.anthropic.com/v1/messages" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d @"$request_file")
+
+        echo "$response" > "${output_file%.txt}-raw.json"
+        echo "$response" | jq -r '.content[0].text // "ERROR: No content"' > "$output_file"
+    fi
+}
+
+# Fetch URL content
+fetch_url() {
+    local url="$1"
+    local output_file="$2"
+
+    echo "   Fetching: $url"
+    # Use a simple curl to get content, convert to markdown-ish format
+    # Write to temp file first to avoid SIGPIPE from head truncation
+    local tmp_file="${output_file}.tmp"
+    curl -sL "$url" | \
+        sed 's/<script[^>]*>.*<\/script>//g' | \
+        sed 's/<style[^>]*>.*<\/style>//g' | \
+        sed 's/<[^>]*>//g' | \
+        sed 's/&nbsp;/ /g' | \
+        sed 's/&amp;/\&/g' | \
+        sed 's/&lt;/</g' | \
+        sed 's/&gt;/>/g' | \
+        tr -s ' \n' > "$tmp_file"
+    # Truncate to 50KB
+    head -c 50000 "$tmp_file" > "$output_file"
+    rm -f "$tmp_file"
+}
+
+#=============================================================================
+# PHASE 1: DISCOVER
+#=============================================================================
+echo "[1/3] DISCOVER - Identifying product and sources..."
+
+# Fetch initial URL
+fetch_url "$URL" "$RUN_DIR/initial-content.txt"
+
+# Build discovery prompt
+DISCOVER_PROMPT="$RUN_DIR/discover-prompt.txt"
+{
+    cat "$REPO_ROOT/knowledge/onboarding/prompts/discover-product.txt"
+    echo ""
+    echo "# === CONTENT TO ANALYZE ==="
+    echo ""
+    echo "URL: $URL"
+    echo ""
+    echo "Content:"
+    echo '```'
+    cat "$RUN_DIR/initial-content.txt"
+    echo '```'
+} > "$DISCOVER_PROMPT"
+
+call_llm "$DISCOVER_PROMPT" "$RUN_DIR/discover-output.txt" "Product discovery"
+
+# Extract JSON from discovery output (strip markdown fences if present)
+sed '1{/^```/d}; ${/^```/d}' "$RUN_DIR/discover-output.txt" | \
+    sed '/^```json$/d; /^```$/d' > "$RUN_DIR/discovery.json"
+
+# Validate and extract info
+if jq . "$RUN_DIR/discovery.json" > /dev/null 2>&1; then
+    PRODUCT_NAME=$(jq -r '.product.canonical_name // "unknown"' "$RUN_DIR/discovery.json")
+    echo "   Product identified: $PRODUCT_NAME"
+    echo "   Complexity: $(jq -r '.complexity.rating // "unknown"' "$RUN_DIR/discovery.json")"
+
+    # Get next URLs to fetch
+    jq -r '.next_urls_to_fetch[]?' "$RUN_DIR/discovery.json" | head -n "$MAX_URLS" > "$RUN_DIR/urls-to-fetch.txt"
+    URL_COUNT=$(wc -l < "$RUN_DIR/urls-to-fetch.txt" | tr -d ' ')
+    echo "   Found $URL_COUNT additional URLs to fetch"
+else
+    echo "   Warning: Discovery output is not valid JSON"
+    PRODUCT_NAME="unknown"
+    touch "$RUN_DIR/urls-to-fetch.txt"
+fi
+
+#=============================================================================
+# PHASE 2: EXTRACT
+#=============================================================================
+echo ""
+echo "[2/3] EXTRACT - Fetching sources and extracting slots..."
+
+# Fetch additional URLs
+mkdir -p "$RUN_DIR/fetched"
+FETCH_COUNT=0
+while IFS= read -r fetch_url; do
+    [[ -z "$fetch_url" ]] && continue
+    FETCH_COUNT=$((FETCH_COUNT + 1))
+    safe_name=$(echo "$fetch_url" | sed 's/[^a-zA-Z0-9]/_/g' | cut -c1-50)
+    fetch_url "$fetch_url" "$RUN_DIR/fetched/${FETCH_COUNT}-${safe_name}.txt"
+done < "$RUN_DIR/urls-to-fetch.txt"
+
+# Build extraction prompt with all content
+EXTRACT_PROMPT="$RUN_DIR/extract-prompt.txt"
+{
+    cat "$REPO_ROOT/knowledge/package-authoring/prompts/parse-document.txt"
+    echo ""
+    echo "# === DOCUMENTS TO PARSE ==="
+    echo ""
+    echo "## Primary Document"
+    echo "URL: $URL"
+    echo '```'
+    cat "$RUN_DIR/initial-content.txt"
+    echo '```'
+    echo ""
+
+    for f in "$RUN_DIR/fetched"/*.txt; do
+        [[ -f "$f" ]] || continue
+        echo "## Additional Document: $(basename "$f")"
+        echo '```'
+        head -c 20000 "$f"
+        echo '```'
+        echo ""
+    done
+
+    echo "# === OUTPUT SCHEMA ==="
+    echo ""
+    echo "Respond with valid YAML matching this structure:"
+    echo '```yaml'
+    cat "$REPO_ROOT/knowledge/package-authoring/schemas/parse-output.json"
+    echo '```'
+} > "$EXTRACT_PROMPT"
+
+call_llm "$EXTRACT_PROMPT" "$RUN_DIR/extract-output.txt" "Slot extraction"
+
+# Save slots
+cp "$RUN_DIR/extract-output.txt" "$RUN_DIR/slots.yaml"
+echo "   Slots extracted"
+
+#=============================================================================
+# PHASE 3: GENERATE
+#=============================================================================
+echo ""
+echo "[3/3] GENERATE - Creating lore package..."
+
+# Build generation prompt
+GENERATE_PROMPT="$RUN_DIR/generate-prompt.txt"
+{
+    cat "$REPO_ROOT/knowledge/package-authoring/prompts/generate-package.txt"
+    echo ""
+
+    # Include bindings reference for gap detection
+    if [[ -f "$REPO_ROOT/knowledge/package-authoring/bindings/reference.yaml" ]]; then
+        echo "# === AVAILABLE BINDINGS REFERENCE ==="
+        echo ""
+        echo "These are the currently available bindings. If you need functionality not listed here,"
+        echo "use plan.shell() as a workaround AND propose the missing binding in binding_proposals."
+        echo ""
+        echo '```yaml'
+        cat "$REPO_ROOT/knowledge/package-authoring/bindings/reference.yaml"
+        echo '```'
+        echo ""
+    fi
+
+    # Include install type concepts
+    if [[ -f "$REPO_ROOT/knowledge/packages/concepts/install-types.yaml" ]]; then
+        echo "# === INSTALL TYPE PATTERNS ==="
+        echo ""
+        echo '```yaml'
+        cat "$REPO_ROOT/knowledge/packages/concepts/install-types.yaml"
+        echo '```'
+        echo ""
+    fi
+
+    echo "# === EXAMPLES ==="
+    echo ""
+    cat "$REPO_ROOT/knowledge/package-authoring/examples/generate-examples.yaml"
+    echo ""
+
+    echo "# === OUTPUT SCHEMA ==="
+    echo ""
+    echo '```json'
+    cat "$REPO_ROOT/knowledge/package-authoring/schemas/package-output.json"
+    echo '```'
+    echo ""
+
+    echo "# === EXTRACTED SLOTS ==="
+    echo ""
+    echo "Generate a lore package from these extracted slots:"
+    echo '```yaml'
+    cat "$RUN_DIR/slots.yaml"
+    echo '```'
+    echo ""
+
+    echo "# === DISCOVERY CONTEXT ==="
+    echo ""
+    echo "Product discovery results:"
+    echo '```json'
+    cat "$RUN_DIR/discovery.json" 2>/dev/null || echo "{}"
+    echo '```'
+} > "$GENERATE_PROMPT"
+
+call_llm "$GENERATE_PROMPT" "$RUN_DIR/generate-output.txt" "Package generation"
+
+# Extract and save package - find JSON object in output
+# LLM may include preamble text before the JSON and markdown fences
+first_brace=$(grep -n '^{' "$RUN_DIR/generate-output.txt" | head -1 | cut -d: -f1)
+if [[ -n "$first_brace" ]]; then
+    tail -n "+$first_brace" "$RUN_DIR/generate-output.txt" | sed '/^```$/d' > "$RUN_DIR/package.json"
+else
+    # Fallback: try stripping markdown fences
+    sed '/^```/d' "$RUN_DIR/generate-output.txt" > "$RUN_DIR/package.json"
+fi
+
+if jq . "$RUN_DIR/package.json" > /dev/null 2>&1; then
+    echo "   Package generated successfully"
+
+    # Save individual files
+    PACKAGE_DIR="$RUN_DIR/package-$PRODUCT_NAME"
+    mkdir -p "$PACKAGE_DIR"
+
+    # Root files
+    jq -r '.files.lifecycle.content // empty' "$RUN_DIR/package.json" > "$PACKAGE_DIR/lifecycle.yaml" 2>/dev/null || true
+    jq -r '.files.readme.content // empty' "$RUN_DIR/package.json" > "$PACKAGE_DIR/README.md" 2>/dev/null || true
+
+    # Platform-specific operation/phase scripts
+    # Structure: {Platform}/{Operation}/{phase}.star
+    # Operations: Deploy, Upgrade, Decommission
+    # Deploy phases: prepare, install, provision, verify
+    # Upgrade phases: prepare, upgrade, migrate, verify
+    # Decommission phases: unprovision, uninstall, cleanup
+    for platform in $(jq -r '.platforms | keys[]' "$RUN_DIR/package.json" 2>/dev/null); do
+        for operation in Deploy Upgrade Decommission; do
+            # Check if this operation exists for this platform
+            has_operation=$(jq -r ".platforms[\"$platform\"].$operation // empty" "$RUN_DIR/package.json" 2>/dev/null)
+            if [[ -n "$has_operation" && "$has_operation" != "null" ]]; then
+                mkdir -p "$PACKAGE_DIR/$platform/$operation"
+
+                # Get phases for this operation
+                case "$operation" in
+                    Deploy)
+                        phases="prepare install provision verify"
+                        ;;
+                    Upgrade)
+                        phases="prepare upgrade migrate verify"
+                        ;;
+                    Decommission)
+                        phases="unprovision uninstall cleanup"
+                        ;;
+                esac
+
+                for phase in $phases; do
+                    content=$(jq -r ".platforms[\"$platform\"].$operation.$phase.content // empty" "$RUN_DIR/package.json" 2>/dev/null)
+                    if [[ -n "$content" ]]; then
+                        echo "$content" > "$PACKAGE_DIR/$platform/$operation/$phase.star"
+                    fi
+                done
+            fi
+        done
+    done
+
+    echo ""
+    echo "   Package structure:"
+    find "$PACKAGE_DIR" -type f | sort | sed "s|$PACKAGE_DIR/||"
+else
+    echo "   Warning: Package output is not valid JSON"
+fi
+
+#=============================================================================
+# SUMMARY
+#=============================================================================
+echo ""
+echo "=== Complete ==="
+echo "Product: $PRODUCT_NAME"
+echo "Results: $RUN_DIR"
+echo ""
+echo "Pipeline outputs:"
+echo "  discovery.json  - Product identification and source URLs"
+echo "  slots.yaml      - Extracted installation slots"
+echo "  package.json    - Generated lore package"
+if [[ -d "$RUN_DIR/package-$PRODUCT_NAME" ]]; then
+    echo "  package-$PRODUCT_NAME/ - Extracted package files"
+fi
+
+# Check for shell audit violations
+if jq -e '.shell_audit | length > 0' "$RUN_DIR/package.json" > /dev/null 2>&1; then
+    VIOLATION_COUNT=$(jq '[.shell_audit[] | select(.status == "violation")] | length' "$RUN_DIR/package.json")
+    NEEDS_BINDING_COUNT=$(jq '[.shell_audit[] | select(.status == "needs_binding")] | length' "$RUN_DIR/package.json")
+    ACCEPTABLE_COUNT=$(jq '[.shell_audit[] | select(.status == "acceptable")] | length' "$RUN_DIR/package.json")
+
+    echo ""
+    echo "=== Shell Audit ==="
+
+    if [[ "$VIOLATION_COUNT" -gt 0 ]]; then
+        echo "  VIOLATIONS ($VIOLATION_COUNT): Shell calls that should use existing bindings"
+        jq -r '.shell_audit[] | select(.status == "violation") | "    - \(.command | .[0:60])... -> \(.correct_binding)"' "$RUN_DIR/package.json" 2>/dev/null || true
+    fi
+
+    if [[ "$NEEDS_BINDING_COUNT" -gt 0 ]]; then
+        echo "  NEEDS BINDING ($NEEDS_BINDING_COUNT): Common patterns that need new bindings"
+        jq -r '.shell_audit[] | select(.status == "needs_binding") | "    - \(.command | .[0:60])... -> \(.proposed_binding)"' "$RUN_DIR/package.json" 2>/dev/null || true
+    fi
+
+    if [[ "$ACCEPTABLE_COUNT" -gt 0 ]]; then
+        echo "  ACCEPTABLE ($ACCEPTABLE_COUNT): Package-specific commands"
+    fi
+fi
+
+# Check for binding proposals
+if jq -e '.binding_proposals | length > 0' "$RUN_DIR/package.json" > /dev/null 2>&1; then
+    PROPOSAL_COUNT=$(jq '.binding_proposals | length' "$RUN_DIR/package.json")
+    echo ""
+    echo "=== Binding Proposals ($PROPOSAL_COUNT) ==="
+    echo "The following new bindings are needed but don't exist yet:"
+    echo ""
+    jq -r '.binding_proposals[] | "  \(.binding) - \(.description)\n    Use case: \(.use_case)\n    File: \(.file)\n"' "$RUN_DIR/package.json"
+    echo "See package.json for full implementation proposals."
+fi

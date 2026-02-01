@@ -1,0 +1,188 @@
+# Homebrew package slots - extracted from primary sources
+# Source: https://brew.sh
+# Source: https://docs.brew.sh/Installation
+# Source: https://docs.brew.sh/Homebrew-on-Linux
+# Source: https://github.com/Homebrew/install
+
+package_name: homebrew
+description: "The Missing Package Manager for macOS (or Linux)"
+category: package-manager
+tags:
+  - package-manager
+  - macos
+  - linux
+  - cli
+
+platforms:
+  darwin:
+    supported: true
+    architectures:
+      - arm64   # Apple Silicon - installs to /opt/homebrew
+      - x86_64  # Intel - installs to /usr/local
+    min_version: "14.0"  # macOS Sonoma officially supported
+    install_methods:
+      script:
+        url: "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+        command: '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+      pkg:
+        url: "https://github.com/Homebrew/brew/releases/latest"
+        notes: "Download .pkg from GitHub releases"
+    install_paths:
+      arm64: "/opt/homebrew"
+      x86_64: "/usr/local"
+    dependencies:
+      - name: "Command Line Tools for Xcode"
+        install: "xcode-select --install"
+        verify: "xcode-select -p"
+    notes:
+      - "Apple Silicon installs to /opt/homebrew"
+      - "Intel Macs install to /usr/local"
+      - "Requires bash shell for installation"
+
+  linux:
+    supported: true
+    architectures:
+      - x86_64
+      - arm64  # Tier 3 support
+    install_method: script
+    install_path: "/home/linuxbrew/.linuxbrew"
+    install_command: '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+    dependencies:
+      debian:
+        packages: ["build-essential", "procps", "curl", "file", "git"]
+        command: "sudo apt-get install build-essential procps curl file git"
+      fedora:
+        packages: ["procps-ng", "curl", "file"]
+        commands:
+          - "sudo dnf group install development-tools"
+          - "sudo dnf install procps-ng curl file"
+      rhel:
+        packages: ["procps-ng", "curl", "file"]
+        commands:
+          - "sudo dnf group install 'Development Tools'"
+          - "sudo dnf install procps-ng curl file"
+      arch:
+        packages: ["base-devel", "procps-ng", "curl", "file", "git"]
+        command: "sudo pacman -S base-devel procps-ng curl file git"
+    notes:
+      - "Uses /home/linuxbrew/.linuxbrew for prebuilt bottles"
+      - "Alternative paths require building from source"
+      - "WSL2 supported, WSL1 has issues"
+
+uninstall:
+  script_url: "https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh"
+  command: '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"'
+  noninteractive: 'NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)"'
+  specific_prefix: '/bin/bash uninstall.sh --path /usr/local'  # For Intel->ARM migration
+
+verification:
+  command: "brew --version"
+  success_pattern: "Homebrew"
+  functional_test:
+    command: "brew list"
+    description: "List installed packages"
+
+post_install:
+  shell_setup:
+    description: "Add Homebrew to PATH"
+    darwin_arm64: 'eval "$(/opt/homebrew/bin/brew shellenv)"'
+    darwin_x86_64: 'eval "$(/usr/local/bin/brew shellenv)"'
+    linux: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+  first_update:
+    command: "brew update"
+    description: "Sync with Homebrew repositories"
+
+features:
+  analytics:
+    type: boolean
+    default: true
+    description: "Enable anonymous usage analytics"
+    disable_command: "brew analytics off"
+
+settings:
+  homebrew_prefix:
+    type: string
+    description: "Installation prefix (auto-detected)"
+    env_var: "HOMEBREW_PREFIX"
+
+  homebrew_no_install_cleanup:
+    type: boolean
+    default: false
+    env_var: "HOMEBREW_NO_INSTALL_CLEANUP"
+    description: "Retain old formula versions after upgrade"
+
+  homebrew_no_analytics:
+    type: boolean
+    default: false
+    env_var: "HOMEBREW_NO_ANALYTICS"
+    description: "Disable analytics"
+
+environment_variables:
+  NONINTERACTIVE: "Set to 1 for unattended install/uninstall"
+  HOMEBREW_BREW_GIT_REMOTE: "Git mirror for brew repository"
+  HOMEBREW_CORE_GIT_REMOTE: "Git mirror for homebrew-core"
+  HOMEBREW_NO_INSTALL_FROM_API: "Tap homebrew-core (pre-4.0 behavior)"
+
+os_upgrade:
+  steps:
+    - description: "Update Xcode Command Line Tools"
+      command: "xcode-select --install"
+    - description: "Accept Xcode license"
+      command: "sudo xcodebuild -license accept"
+    - description: "Update Homebrew"
+      command: "brew update"
+    - description: "Upgrade all packages"
+      command: "brew upgrade"
+  common_issues:
+    - issue: "Permission errors after OS upgrade"
+      fix: "sudo chown -R $(whoami) $(brew --prefix)/*"
+    - issue: "Xcode license not accepted"
+      fix: "sudo xcodebuild -license accept"
+    - issue: "Broken bottles"
+      fix: "brew reinstall <package>"
+
+tribal_knowledge:
+  - title: "Architecture-specific install paths"
+    detail: "Apple Silicon uses /opt/homebrew, Intel uses /usr/local. This affects PATH configuration."
+    source: "https://docs.brew.sh/Installation"
+
+  - title: "Shell configuration required"
+    detail: "After install, must add eval \"$(brew shellenv)\" to shell profile"
+    source: "https://docs.brew.sh/Installation"
+
+  - title: "GUI apps need App Management permission"
+    detail: "For in-place cask upgrades that preserve settings, grant terminal App Management or Full Disk Access"
+    source: "https://docs.brew.sh/FAQ"
+
+  - title: "Avoid conflicting package managers"
+    detail: "Don't install in same prefix as Fink or MacPorts to avoid conflicts"
+    source: "https://docs.brew.sh/Installation"
+
+  - title: "launchctl PATH for GUI apps"
+    detail: "If GUI apps can't find brew tools: sudo launchctl config user path \"$(brew --prefix)/bin:${PATH}\""
+    source: "https://docs.brew.sh/FAQ"
+
+  - title: "Intel to ARM migration"
+    detail: "When migrating, uninstall old prefix first: /bin/bash uninstall.sh --path /usr/local"
+    source: "https://github.com/Homebrew/install"
+
+sources:
+  - url: "https://brew.sh"
+    title: "Homebrew homepage"
+    accessed: "2026-01-31"
+
+  - url: "https://docs.brew.sh/Installation"
+    title: "Installation documentation"
+    accessed: "2026-01-31"
+
+  - url: "https://docs.brew.sh/Homebrew-on-Linux"
+    title: "Linux installation guide"
+    accessed: "2026-01-31"
+
+  - url: "https://docs.brew.sh/FAQ"
+    title: "FAQ and troubleshooting"
+    accessed: "2026-01-31"
+
+  - url: "https://github.com/Homebrew/install"
+    title: "Install/uninstall scripts repository"
+    accessed: "2026-01-31"

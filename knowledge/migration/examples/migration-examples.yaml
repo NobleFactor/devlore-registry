@@ -102,9 +102,9 @@ examples:
             - ".chezmoi.homeDir → .Home"
       encryption_conversions:
         - source_path: dot_ssh/encrypted_id_ed25519.age
-          target_path: personal/.ssh/id_ed25519.age
+          target_path: personal/.ssh/id_ed25519.sops
           source_method: age
-          target_method: age
+          target_method: sops
       script_conversions:
         - source_path: run_once_install-packages.sh
           packages_extracted: [ripgrep, fd, bat, neovim, tmux]
@@ -134,7 +134,7 @@ examples:
         - number: 4
           title: "Move encrypted files"
           commands:
-            - "cp dot_ssh/encrypted_id_ed25519.age ~/dotfiles/personal/.ssh/id_ed25519.age"
+            - "cp dot_ssh/encrypted_id_ed25519.age ~/dotfiles/personal/.ssh/id_ed25519.sops"
           reversible: true
           destructive: false
         - number: 5
@@ -216,13 +216,13 @@ examples:
             - "{% endif %} → {{ end }}"
       encryption_conversions:
         - source_path: .ssh/id_ed25519
-          target_path: personal/.ssh/id_ed25519.age
+          target_path: personal/.ssh/id_ed25519.sops
           source_method: gpg
-          target_method: age
+          target_method: sops
       warnings:
         - message: "Jinja2 → Go template conversion requires manual review. Complex filters and macros have no direct equivalent."
           severity: warning
           mitigation: "Review each template after conversion. Simplify complex Jinja2 logic."
-        - message: "GPG → age re-encryption requires decrypting with GPG first, then re-encrypting with age."
+        - message: "GPG → SOPS re-encryption requires decrypting with GPG first, then re-encrypting with SOPS."
           severity: info
-          mitigation: "gpg -d secret | age -R recipients.txt -o secret.age"
+          mitigation: "gpg -d secret > secret.decrypted && sops -e secret.decrypted > secret.sops"

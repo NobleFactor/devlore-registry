@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: SSPL-1.0
+# Copyright (c) 2025-2026 Noble Factor. All rights reserved.
+#
+# Sync-ModelLimits - Fetch and cache model context limits from LiteLLM
+#
+# This script fetches the community-maintained model_prices_and_context_window.json
+# from LiteLLM and extracts the fields we need for writ migrate input budgeting.
+#
+# Usage:
+#   ./scripts/Sync-ModelLimits
+#
+# Output:
+#   knowledge/shared/providers/litellm-cache.json
+#
+# The cached data includes:
+#   - max_input_tokens
+#   - max_output_tokens
+#   - litellm_provider
+#
+# Run periodically via GitHub Actions to keep limits current.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUTPUT_DIR="$REPO_ROOT/knowledge/shared/providers"
+OUTPUT_FILE="$OUTPUT_DIR/litellm-cache.json"
+
+# LiteLLM source (raw GitHub URL for the JSON file)
+LITELLM_URL="https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json"
+
+# Ensure output directory exists
+mkdir -p "$OUTPUT_DIR"
+
+echo "Fetching model limits from LiteLLM..."
+
+# Fetch and transform the data
+# Extract only the fields we need to minimize cache size
+curl -fsSL "$LITELLM_URL" | jq '{
+  _meta: {
+    source: "https://github.com/BerriAI/litellm",
+    source_file: "model_prices_and_context_window.json",
+    license: "MIT (https://github.com/BerriAI/litellm/blob/main/LICENSE)",
+    fetched_at: (now | strftime("%Y-%m-%dT%H:%M:%SZ")),
+    description: "Model context limits cached from LiteLLM. Auto-generated - do not edit."
+  },
+  models: (
+    to_entries
+    | map(select(.value.max_input_tokens != null or .value.max_tokens != null))
+    | map({
+        key: .key,
+        value: {
+          max_input_tokens: (.value.max_input_tokens // .value.max_tokens // null),
+          max_output_tokens: (.value.max_output_tokens // null),
+          litellm_provider: (.value.litellm_provider // null),
+          supports_function_calling: (.value.supports_function_calling // false),
+          supports_vision: (.value.supports_vision // false)
+        }
+      })
+    | from_entries
+  )
+}' > "$OUTPUT_FILE"
+
+# Count models cached
+model_count=$(jq '.models | length' "$OUTPUT_FILE")
+echo "Cached $model_count models to $OUTPUT_FILE"
+
+# Show sample of what we cached
+echo ""
+echo "Sample entries:"
+jq -r '.models | to_entries | .[0:3] | .[] | "  \(.key): \(.value.max_input_tokens // "?") input, \(.value.max_output_tokens // "?") output"' "$OUTPUT_FILE"

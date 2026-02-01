@@ -1,0 +1,37 @@
+# Bare git repository signature
+# DIY approach: bare git repo with $HOME as worktree
+
+name: bare-git
+description: |
+  A bare git repository (typically ~/.dotfiles or ~/.cfg) with $HOME as the
+  worktree. Users create shell aliases like "dotfiles" to run git commands
+  against this bare repo. The key marker is showUntrackedFiles=no to avoid
+  git status showing all of $HOME.
+
+markers:
+  - type: file
+    path: "~/.dotfiles/HEAD"
+    confidence: 0.95
+    description: "Bare git repo in .dotfiles"
+
+  - type: file
+    path: "~/.cfg/HEAD"
+    confidence: 0.9
+    description: "Bare git repo in .cfg"
+
+  - type: git_config
+    pattern: "showUntrackedFiles = no"
+    confidence: 0.9
+    description: "Git config to hide untracked files"
+
+  - type: shell_alias
+    pattern: "git --git-dir=.*\\.(dotfiles|cfg) --work-tree="
+    confidence: 1.0
+    description: "Shell alias for dotfiles management"
+
+common_aliases: ["dotfiles", "cfg", "dot", "config"]
+
+notes: |
+  Bare git repos have no organizational structure. All files are tracked
+  directly in $HOME. Migration consolidates files into projects and uses
+  symlinks instead of direct tracking.
