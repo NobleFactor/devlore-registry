@@ -3,7 +3,7 @@
   "title": "MigrationPlan",
   "description": "Structured migration plan from a dotfile manager to writ",
   "type": "object",
-  "required": ["source_system", "repo_layer", "projects", "steps"],
+  "required": ["source_system", "repo_layer", "projects", "execution_graph"],
   "properties": {
     "source_system": {
       "type": "string",
@@ -65,11 +65,25 @@
         "$ref": "#/$defs/ScriptConversion"
       }
     },
-    "steps": {
-      "type": "array",
-      "description": "Ordered migration steps",
-      "items": {
-        "$ref": "#/$defs/Step"
+    "execution_graph": {
+      "type": "object",
+      "description": "Execution graph with nodes and edges for programmatic execution",
+      "required": ["nodes"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "description": "Operations to execute",
+          "items": {
+            "$ref": "#/$defs/Node"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "description": "Ordering constraints between nodes",
+          "items": {
+            "$ref": "#/$defs/Edge"
+          }
+        }
       }
     },
     "warnings": {
@@ -168,8 +182,8 @@
         },
         "target_method": {
           "type": "string",
-          "enum": ["age", "sops"],
-          "description": "New encryption method"
+          "const": "sops",
+          "description": "New encryption method (always SOPS)"
         }
       }
     },
@@ -187,7 +201,7 @@
         },
         "recommendation": {
           "type": "string",
-          "description": "Suggested action (e.g., 'Encrypt with .age extension')"
+          "description": "Suggested action (e.g., 'Encrypt with .sops extension')"
         },
         "severity": {
           "type": "string",
@@ -217,34 +231,48 @@
         }
       }
     },
-    "Step": {
+    "Node": {
       "type": "object",
-      "required": ["number", "title", "commands"],
+      "required": ["id", "op"],
       "properties": {
-        "number": {
-          "type": "integer",
-          "description": "Step order"
-        },
-        "title": {
+        "id": {
           "type": "string",
-          "description": "What this step does"
+          "description": "Unique identifier (e.g., 'rename-001', 'mkdir-002')"
         },
-        "description": {
+        "op": {
           "type": "string",
-          "description": "Detailed explanation"
+          "enum": ["rename", "mkdir", "copy", "generate", "decrypt", "remove"],
+          "description": "Operation type"
         },
-        "commands": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Shell commands to execute"
+        "source": {
+          "type": "string",
+          "description": "Source path (relative to source_location)"
         },
-        "reversible": {
-          "type": "boolean",
-          "description": "Whether this step can be undone"
+        "target": {
+          "type": "string",
+          "description": "Target path (relative to target_location)"
         },
-        "destructive": {
-          "type": "boolean",
-          "description": "Whether this step removes files (requires confirmation)"
+        "project": {
+          "type": "string",
+          "description": "Which project this belongs to"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why this operation is needed"
+        }
+      }
+    },
+    "Edge": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "Source node ID"
+        },
+        "to": {
+          "type": "string",
+          "description": "Target node ID"
         }
       }
     }

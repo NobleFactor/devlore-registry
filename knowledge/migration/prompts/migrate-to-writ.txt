@@ -32,7 +32,7 @@ Given information about a user's current dotfile setup, generate a migration pla
 - **Projects** = named collections of files (deployed selectively)
 - **Segments** = platform/context variants (suffixed directories)
 - **Symlinks** = source is truth, targets are symlinks
-- **Extensions** = `.template`, `.age`, `.sops` trigger processing
+- **Extensions** = `.template`, `.sops` trigger processing
 - **Delegation** = `packages.manifest` files delegate to lore for software installation
 
 ### File Processing Extensions
@@ -40,7 +40,6 @@ Given information about a user's current dotfile setup, generate a migration pla
 |-----------|--------|
 | (none) | Symlink source → target |
 | `.template` | Render Go text/template, write result |
-| `.age` | Decrypt with age, write result (mode 0600) |
 | `.sops` | Decrypt with SOPS, write result (mode 0600) |
 
 ### Segment Matching
@@ -62,12 +61,46 @@ Directory suffixes are dot-separated conditions:
 
 For each migration, produce:
 
-1. **Concept mapping** — Table of source concepts → writ equivalents
-2. **What changes** — Differences in workflow and mental model
-3. **What stays the same** — Familiar patterns that carry over
-4. **Directory structure translation** — Before/after tree diagrams
-5. **Step-by-step procedure** — Numbered migration steps with commands
-6. **Common patterns** — How to handle specific source-system idioms
+1. **Analysis** — What system is detected, what projects exist, what platforms
+2. **Warnings** — Security issues, lossy conversions, things requiring manual attention
+3. **Execution graph** — Machine-executable operations (rename, mkdir, copy, etc.)
+
+## Execution Graph Format
+
+The execution graph contains **nodes** (operations) and **edges** (ordering):
+
+### Node Operations
+| Op | Description | Required Fields |
+|----|-------------|-----------------|
+| `rename` | Rename/move a file or directory | source, target |
+| `mkdir` | Create a directory | target |
+| `copy` | Copy a file (not symlink) | source, target |
+| `generate` | Generate a new file from analysis | target, reason |
+| `decrypt` | Re-encrypt from source method to SOPS | source, target |
+| `remove` | Remove a file/directory | source |
+
+### Node Structure
+```json
+{
+  "id": "rename-001",
+  "op": "rename",
+  "source": "Home/Configs/all-Darwin",
+  "target": "Home/all.Darwin",
+  "project": "all",
+  "reason": "Convert platform segment naming from dash to dot"
+}
+```
+
+### Edge Structure
+Edges define ordering constraints. If node B must run after node A:
+```json
+{"from": "rename-001", "to": "rename-002"}
+```
+
+Use edges for:
+- mkdir must precede files being moved into that directory
+- decrypt must precede remove of encrypted source
+- Operations within the same project should be ordered
 
 ## Migration Rules
 
@@ -75,7 +108,7 @@ For each migration, produce:
 2. **Suggest consolidation** — Multiple source groups/packages that are always deployed together should merge into one project
 3. **Identify platform variants** — Branch-per-machine, alt files, conditional templates → segment directories
 4. **Convert templates** — Jinja2 → Go text/template syntax; `.tmpl` → `.template`
-5. **Convert encryption** — GPG → age; list-based → per-file extension
+5. **Convert encryption** — GPG/git-crypt → SOPS; list-based → per-file `.sops` extension
 6. **Convert scripts** — Install scripts → packages.manifest for lore delegation
 7. **Warn about lossy conversions** — If source system has features writ doesn't (e.g., yadm hooks, chezmoi modify_ scripts)
 
@@ -120,10 +153,32 @@ Identify files that appear to contain sensitive data but are NOT encrypted:
 For each unencrypted secret found, include it in `unencrypted_secrets` with:
 - The file path
 - Why it appears to be a secret (which signal matched)
-- Recommended action (encrypt with .age or .sops extension)
+- Recommended action (encrypt with .sops extension)
 
 This is a **critical security check**. Users migrating to writ should encrypt secrets before committing.
 
 ## Output Format
 
-Respond with a structured migration plan matching the migration-plan schema.
+Respond with valid JSON matching the migration-plan schema. The response MUST include:
+
+1. `source_system` — Detected dotfile manager (stow, chezmoi, yadm, tuckr, bare-git, custom)
+2. `repo_layer` — Repository layer (base, team, personal)
+3. `projects` — List of writ projects to create
+4. `execution_graph` — Object with `nodes` array and `edges` array
+
+The `execution_graph` is REQUIRED and must contain concrete, executable operations.
+
+Example minimal response:
+```json
+{
+  "source_system": "tuckr",
+  "repo_layer": "personal",
+  "projects": [{"name": "all", "description": "Core configs", "source_groups": ["all"]}],
+  "execution_graph": {
+    "nodes": [
+      {"id": "rename-001", "op": "rename", "source": "Home/Configs/all-Darwin", "target": "Home/all.Darwin", "project": "all"}
+    ],
+    "edges": []
+  }
+}
+```

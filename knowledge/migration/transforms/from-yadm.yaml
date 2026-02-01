@@ -16,7 +16,7 @@ concept_mapping:
     target: "Segment directories"
     notes: "Per-file suffix → directory-level segments"
   - source: ".yadm/encrypt"
-    target: ".age/.sops extension"
+    target: ".sops extension"
     notes: "GPG list-based → per-file age extension"
   - source: "Jinja2/envtpl templates"
     target: "Go text/template (.template)"
@@ -80,16 +80,16 @@ template_syntax_mapping:
 
 encryption_migration: |
   yadm uses GPG with a file list (.yadm/encrypt).
-  writ uses per-file age extensions.
+  writ uses per-file SOPS encryption (.sops extension).
 
   Migration steps:
   1. Decrypt each file: gpg -d encrypted_file > decrypted_file
-  2. Re-encrypt with age: age -R ~/.config/age/recipients.txt -o file.age file
-  3. Place .age file in source tree
+  2. Re-encrypt with SOPS: sops -e file > file.sops
+  3. Place .sops file in source tree
 
   If using git-crypt instead:
   1. git-crypt unlock
-  2. age -R recipients.txt -o secret.age secret
+  2. sops -e secret > secret.sops
 
 preserved_behaviors: []  # Very little carries over directly
 
@@ -98,7 +98,7 @@ new_capabilities:
   - "No showUntrackedFiles=no hack needed"
   - "Segment directories instead of ## suffixes (cleaner, greppable)"
   - "Go templates instead of Jinja2 (more portable)"
-  - "age encryption instead of GPG (simpler key management)"
+  - "SOPS encryption instead of GPG (simpler key management, multiple backends)"
   - "State tracking and drift detection"
   - "Package management via lore delegation"
 

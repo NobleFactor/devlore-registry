@@ -1,0 +1,131 @@
+# Ollama package slots - extracted from primary sources
+# Source: https://ollama.com/download/
+# Source: https://github.com/ollama/ollama
+
+package_name: ollama
+description: "Run large language models locally"
+category: ai
+tags:
+  - llm
+  - ai
+  - machine-learning
+  - local-inference
+
+platforms:
+  darwin:
+    supported: true
+    min_version: "14.0"  # macOS Sonoma
+    install_method: dmg
+    download_url: "https://ollama.com/download/Ollama.dmg"
+    notes:
+      - "Installs as a macOS application"
+      - "Runs as a menu bar item"
+      - "Binary available at /usr/local/bin/ollama after install"
+
+  linux:
+    supported: true
+    install_method: script
+    install_command: "curl -fsSL https://ollama.com/install.sh | sh"
+    script_url: "https://ollama.com/install.sh"
+    architectures:
+      - amd64
+      - arm64
+    notes:
+      - "Creates ollama system user"
+      - "Installs systemd service"
+      - "Adds user to render and video groups for GPU access"
+      - "Auto-detects NVIDIA and AMD GPUs"
+      - "Supports WSL2 (not WSL1)"
+    dependencies:
+      - curl
+      - systemd  # optional but recommended
+    gpu_support:
+      nvidia:
+        auto_install_cuda: true
+        detection: "nvidia-smi or lspci"
+      amd:
+        detection: "lspci or lshw"
+
+  windows:
+    supported: true
+    min_version: "10"
+    install_method: exe
+    download_url: "https://ollama.com/download/OllamaSetup.exe"
+    notes:
+      - "Standard Windows installer"
+      - "Runs as system tray application"
+
+verification:
+  command: "ollama --version"
+  success_pattern: "ollama version"
+  functional_test:
+    command: "ollama list"
+    description: "List available models"
+
+features:
+  gpu_acceleration:
+    type: boolean
+    default: true
+    description: "Enable GPU acceleration if available"
+
+  systemd_service:
+    type: boolean
+    default: true
+    platforms: [linux]
+    description: "Install and enable systemd service"
+
+settings:
+  ollama_host:
+    type: string
+    default: "127.0.0.1:11434"
+    env_var: "OLLAMA_HOST"
+    description: "Host and port for Ollama API server"
+
+  ollama_models:
+    type: string
+    default: "~/.ollama/models"
+    env_var: "OLLAMA_MODELS"
+    description: "Directory for storing downloaded models"
+
+post_install:
+  - description: "Pull a default model for testing"
+    command: "ollama pull llama3.2:1b"
+    optional: true
+
+tribal_knowledge:
+  - title: "WSL2 only, not WSL1"
+    detail: "The install script checks for WSL2 specifically. WSL1 is rejected."
+    source: "https://ollama.com/install.sh"
+
+  - title: "GPU group membership"
+    detail: "On Linux, users need to be in 'render' and 'video' groups for GPU access"
+    source: "https://ollama.com/install.sh"
+
+  - title: "JetPack special handling"
+    detail: "NVIDIA Jetson devices with JetPack 5 or 6 get architecture-specific binaries"
+    source: "https://ollama.com/install.sh"
+
+  - title: "Compression format preference"
+    detail: "Prefers .tar.zst if zstd is available, falls back to .tgz"
+    source: "https://ollama.com/install.sh"
+
+sources:
+  - url: "https://ollama.com/download"
+    title: "Official download page"
+    accessed: "2026-01-31"
+
+  - url: "https://ollama.com/download/linux"
+    title: "Linux installation page"
+    accessed: "2026-01-31"
+
+  - url: "https://ollama.com/download/windows"
+    title: "Windows installation page"
+    accessed: "2026-01-31"
+
+  - url: "https://ollama.com/install.sh"
+    title: "Linux install script source"
+    accessed: "2026-01-31"
+
+  - url: "https://github.com/ollama/ollama"
+    title: "GitHub repository"
+    accessed: "2026-01-31"

@@ -1,0 +1,26 @@
+name: Sync model limits
+
+on:
+  schedule:
+    # Weekly on Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    # Allow manual trigger
+
+jobs:
+  sync-model-limits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.NOBLEFACTOR_REPOSITORY_ACCESS }}
+
+      - name: Sync model limits from LiteLLM
+        run: ./scripts/Sync-ModelLimits
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: sync model limits from LiteLLM"
+          file_pattern: "knowledge/shared/providers/litellm-cache.json"

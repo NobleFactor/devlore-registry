@@ -1,0 +1,197 @@
+# Writ Directory Structure Reference
+#
+# This file documents the expected writ directory structure and how to map
+# source systems to it during migration.
+
+name: writ-structure
+description: |
+  Writ organizes configuration files into a hierarchy that separates
+  user-level configs (Home) from system-level configs (System), with
+  platform-specific segments.
+
+# Top-level structure
+directories:
+  Home:
+    description: |
+      User-level configuration files. These deploy to $HOME (~/) and do not
+      require root/administrator privileges.
+    target: "$HOME"
+    examples:
+      - "Home/all/.bashrc → ~/.bashrc"
+      - "Home/all/.config/git/config → ~/.config/git/config"
+      - "Home/work/.config/work-vpn.conf → ~/.config/work-vpn.conf"
+    detection_signals:
+      - "Files that start with dot (.bashrc, .gitconfig)"
+      - "Paths under .config/, .local/, .ssh/"
+      - "User shell configs, editor configs, tool configs"
+
+  System:
+    description: |
+      System-level configuration files. These deploy to / (root) and typically
+      require root/administrator privileges. Platform-specific by nature.
+    target: "/"
+    examples:
+      - "System/Darwin/etc/paths.d/local → /etc/paths.d/local"
+      - "System/Linux/etc/ssh/sshd_config.d/local.conf → /etc/ssh/sshd_config.d/local.conf"
+      - "System/Windows/ProgramData/ssh/sshd_config → C:\\ProgramData\\ssh\\sshd_config"
+    detection_signals:
+      - "Paths starting with /etc"
+      - "Paths starting with /usr/local"
+      - "sudoers.d, sshd_config.d, paths.d"
+      - "System daemons, services, global settings"
+    platforms:
+      Darwin:
+        paths: ["/etc", "/Library", "/usr/local"]
+        examples: ["paths.d", "sudoers.d", "LaunchDaemons"]
+      Linux:
+        paths: ["/etc", "/usr/local"]
+        examples: ["sshd_config.d", "sudoers.d", "systemd/system"]
+      Windows:
+        paths: ["C:\\ProgramData", "C:\\Windows\\System32"]
+        examples: ["ssh\\sshd_config", "GroupPolicy"]
+
+# Project and segment naming
+naming:
+  projects:
+    description: "Named collections of files deployed together"
+    pattern: "<name>"
+    examples: ["all", "work", "personal", "noblefactor", "thenobles"]
+    conventions:
+      - "all: files deployed on every machine"
+      - "work: work-specific configs"
+      - "personal: personal machine configs"
+      - "<org>: organization-specific configs"
+
+  segments:
+    description: "Platform-specific variants of a project"
+    pattern: "<project>.<Platform>[.<Arch>]"
+    separator: "."  # NOT dash, NOT underscore
+    examples:
+      - "all.Darwin"
+      - "all.Linux"
+      - "all.Linux.Debian"
+      - "all.Linux.Arch"
+      - "all.Windows"
+      - "work.Darwin.arm64"
+    platforms:
+      # Base platforms
+      - name: Darwin
+        description: "macOS"
+        aliases: ["darwin", "macos", "mac", "osx", "macOS"]
+        uname: "Darwin"
+        package_manager: "brew"
+
+      - name: Linux
+        description: "Generic Linux (fallback when distro not detected)"
+        aliases: ["linux"]
+        uname: "Linux"
+        package_manager: null  # Distro-specific
+
+      - name: Windows
+        aliases: ["windows", "win", "win32", "win64"]
+        uname: "Windows_NT"
+        package_manager: "winget"
+
+      # Linux distro families (use Linux.Distro notation in segments)
+      - name: Linux.Debian
+        description: "Debian-based distros (Debian, Ubuntu, Mint, etc.)"
+        aliases: ["debian", "ubuntu", "mint"]
+        detection: "/etc/debian_version exists"
+        package_manager: "apt"
+
+      - name: Linux.Fedora
+        description: "Fedora-based distros (Fedora, RHEL, CentOS, Rocky, Alma)"
+        aliases: ["fedora", "rhel", "redhat", "centos", "rocky", "alma"]
+        detection: "/etc/fedora-release exists OR /etc/redhat-release exists"
+        package_manager: "dnf"
+
+      - name: Linux.Arch
+        description: "Arch-based distros (Arch, Manjaro, EndeavourOS)"
+        aliases: ["arch", "manjaro", "endeavouros"]
+        detection: "/etc/arch-release exists"
+        package_manager: "pacman"
+
+      # Meta-platforms
+      - name: Unix
+        description: "Matches both Darwin and Linux (POSIX-compatible)"
+        aliases: ["unix", "posix"]
+        matches: ["Darwin", "Linux"]
+
+# Source system mapping
+source_mappings:
+  tuckr:
+    description: "Tuckr uses Configs/ subdirectory and dash separators"
+    structure:
+      from: "Home/Configs/<group>-<Platform>"
+      to: "Home/<group>.<Platform>"
+    transformations:
+      - "Remove intermediate Configs/ directory"
+      - "Replace dash with dot in platform suffix"
+    system_configs:
+      from: "Tools/<Platform>"
+      to: "System/<Platform>"
+
+  stow:
+    description: "Stow packages are flat at root, no platform awareness"
+    structure:
+      from: "<package>/"
+      to: "Home/<package>/"
+    notes: |
+      Stow has no built-in platform support. Users create their own conventions:
+      - Some use separate repos per machine
+      - Some use package-macos, package-linux naming
+      - Some use branches
+      Migration requires asking about platform strategy.
+
+  chezmoi:
+    description: "chezmoi uses dot_ prefix and metadata in filenames"
+    structure:
+      from: "dot_<name>"
+      to: "Home/all/.<name>"
+    platform_handling: |
+      chezmoi uses template conditionals for platform differences:
+        {{ if eq .chezmoi.os "darwin" }}...{{ end }}
+      These must be split into separate segment directories.
+
+  yadm:
+    description: "yadm uses ## suffixes for alternate files"
+    structure:
+      from: ".bashrc##os.Darwin"
+      to: "Home/all.Darwin/.bashrc"
+    platform_handling: |
+      Alt file suffixes map directly to segment directories:
+        ##os.Darwin → .Darwin segment
+        ##os.Linux → .Linux segment
+        ##class.work → consider as separate project
+
+  bare-git:
+    description: "Bare git repos with $HOME as worktree"
+    structure:
+      from: "$HOME/<file>"
+      to: "Home/all/<file>"
+    notes: |
+      Bare git repos have no organizational structure.
+      All files at root level, no packages/groups.
+      Migration consolidates into 'all' project.
+
+# Common anti-patterns to detect and fix
+anti_patterns:
+  - name: "Intermediate Configs/ directory"
+    detection: "Home/Configs/ exists"
+    fix: "Flatten: Home/Configs/<project> → Home/<project>"
+
+  - name: "Dash instead of dot for platform"
+    detection: "Directory matches *-Darwin, *-Linux, etc."
+    fix: "Rename: <project>-<Platform> → <project>.<Platform>"
+
+  - name: "Mixed case platform names"
+    detection: "darwin, DARWIN, Darwin mixed usage"
+    fix: "Normalize to: Darwin, Linux, Windows (capital first letter)"
+
+  - name: "Tools/ for system configs"
+    detection: "Tools/ contains /etc paths"
+    fix: "Move: Tools/<Platform> → System/<Platform>"
+
+  - name: "Root-level platform directories"
+    detection: "darwin/, linux/, windows/ at root"
+    fix: "Move to: Home/all.<Platform>/ or System/<Platform>/"

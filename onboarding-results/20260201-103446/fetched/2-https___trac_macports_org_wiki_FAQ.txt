@@ -1,0 +1,484 @@
+
+ 
+ 
+ 
+ 
+ 
+ FAQ – MacPorts
+ 
+ 
+ 
+ 
+ if (/^#__msie303:/.test(window.location.hash))
+ window.location.replace(window.location.hash.replace(/^#__msie303:/, '#'));
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ jQuery("#trac-noscript").remove();
+ jQuery(document).ready(function($) {
+ $(".trac-autofocus").focus();
+ $(".trac-target-new").attr("target", "_blank");
+ if ($.ui) { /* is jquery-ui added? */
+ $(".trac-datepicker:not([readonly])").prop("autocomplete", "off").datepicker();
+ $(".trac-datetimepicker:not([readonly])").prop("autocomplete", "off").datetimepicker();
+ $("#main").addClass("trac-nodatetimehint");
+ }
+ $(".trac-disable").disableSubmit(".trac-disable-determinant");
+ setTimeout(function() { $(".trac-scroll").scrollToTop() }, 1);
+ $(".trac-disable-on-submit").disableOnSubmit();
+ });
+ 
+ 
+ jQuery(document).ready(function($) {
+ $("#content").find("h1,h2,h3,h4,h5,h6").addAnchor(_("Link to this section"));
+ $("#content").find(".wikianchor").each(function() {
+ $(this).addAnchor(babel.format(_("Link to #%(id)s"), {id: $(this).attr('id')}));
+ });
+ $(".foldable").enableFolding(true, true);
+ });
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ Search:
+ 
+ 
+ 
+ 
+ 
+ 
+ GitHub LoginPreferencesMy Notifications
+ 
+ 
+ 
+ 
+ 
+ TicketsWiki​GitHubRoadmapTicket ReportsSearch
+ 
+ 
+ 
+ 
+ wiki:FAQ
+ 
+ Context Navigation
+ 
+ Start PageIndexHistoryWatch Page
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+There is also a HOWTO section, which may answer some questions not listed here and provides useful tutorials for performing a number of different tasks using MacPorts.
+Table of Contents
+ 
+ 
+ General Questions
+ 
+ 
+ Does MacPorts always build from source?
+ 
+ 
+ A port fails to build. What should I do?
+ 
+ 
+ I get the error "C compiler cannot create executables" or "ld: library not found for -lcrt1.10.6.o" or "can't read "build.cmd": Failed to locate 'make' in path" when I try to install a port. Why?
+ 
+ 
+ Will my MacPorts install continue to work after installing a new major OS release or migrating to a new machine with a different CPU architecture?
+ 
+ 
+ Is MacPorts Universal?
+ 
+ 
+ Why is /opt/local the default install location for MacPorts?
+ 
+ 
+ Can I install software in /usr/local while using MacPorts?
+ 
+ 
+ Can I install frameworks in /Library/Frameworks while using MacPorts?
+ 
+ 
+ How do I remove or uninstall MacPorts?
+ 
+ 
+ What are the folders in ${prefix}/var/macports/ for and why do they take up so much space?
+ 
+ 
+ I get Error: checksum (md5/sha1/rmd160) mismatch for port. What can I do about it?
+ 
+ 
+ Where can I find a GUI frontend for MacPorts?
+ 
+ 
+ What do I do if port selfupdate doesn't work or the rsync server refuses connections?
+ 
+ 
+ port list produces unexpected output
+ 
+ 
+ Why has feature XYZ not been implemented yet, it is important?
+ 
+ 
+ How should I report MacPorts issues encountered when using prerelease versions of macOS, Xcode, or Apple hardware?
+ 
+ 
+ 
+ 
+ Software Questions
+ 
+ 
+ Why do I have to install xorg-* ports?
+ 
+ 
+ What does 'Xlib: extension "RANDR" missing on display "/tmp/launch-XXXXXX/:0"' mean?
+ 
+ 
+ Will MacPorts link to system libraries rather than its own?
+ 
+ 
+ Why is MacPorts using its own libraries?
+ 
+ 
+ GNOME has an empty menu
+ 
+ 
+ Why do the python ports have so many dependencies?
+ 
+ 
+ When should I use the force option (-f)
+ 
+ 
+ Using build_arch
+ 
+ 
+ How can I get a list of all dependencies for a port?
+ 
+ 
+ Why can't I install both the "-devel" and non-"-devel" versions of a package?
+ 
+ 
+ Why am I getting an error about the wrong C++ runtime or libc++ or libstdc++?
+ 
+ 
+ Why am I getting a message, "Warning… indications of -Wimplicit-function-declaration"?
+ 
+ 
+ 
+ 
+ Portfile Development and Maintenance Questions
+ 
+ 
+ Is it possible to have a dependency on a specific variant of another port? E.g. "postgresql8 +server"?
+ 
+ 
+ Why won't portindex work? I have a local repository set up
+ 
+ 
+ What is the process for becoming a committer?
+ 
+ 
+ Why Tcl?
+ 
+ 
+ 
+ 
+ Runtime Errors
+ 
+ 
+ I try to disable a variant, but it just informs me of the proper usage for the port command
+ 
+ 
+ 
+ 
+ GitHub Migration
+ 
+ 
+ What changed with the migration to GitHub in fall 2016?
+ 
+ 
+ 
+ 
+ Information security and the integrity of the MacPorts base sofware and individual packages
+ 
+ 
+ What measures are in place to ensure that MacPorts is not tainted with malicious contributions and that the port scripts are not installing other than what it says on a Portfile?
+ 
+ 
+ How can the integrity of a MacPorts installation be verified?
+ 
+ 
+ What capabilities does MacPorts offer for auditing of installations?
+ 
+ 
+ 
+ 
+General Questions
+Does MacPorts always build from source?
+MacPorts 2.0.0, released in 2011, added the ability to securely install ports from prebuilt binary archives. With a default configuration, you don't need to do anything to take advantage of this,
+MacPorts will automatically install from an archive if one is available.
+If no archive is available, MacPorts will fall back to building from source. This can happen for a number of reasons:
+Each port is only prebuilt with its default set of variants. So if you specify different variants when installing, the port will be built from source.
+Some software has a license that is incompatible with that of a dependency, making it impossible to legally distribute binaries. A common example is software licensed under the GPL that depends on OpenSSL without adding a special exception to allow linking with it.
+Archives are only prebuilt for a limited number of CPU architectures and OS versions.
+If you are using a custom value for any of the following macports.conf settings, the prebuilt archives are not compatible with your installation and will not be used: prefix, applications_dir, frameworks_dir, cxx_stdlib, delete_la_files
+There is always some amount of time between when a Portfile is updated in git and when the Buildbot finishes building it and makes it available. This may be more noticeable if you sync your ports tree directly from git.
+Most of these limitations could be avoided by using a custom archive site configured to suit your needs, rather than the official one, though of course someone still needs to build the archives. See howto/ShareArchives2.
+A port fails to build. What should I do?
+First, make sure you have the latest version of MacPorts and the ports tree. To do that, run sudo port selfupdate.
+Make sure you have the latest version of Xcode. Old versions of Xcode sometimes make certain ports fail.
+Clean the port. Run sudo port clean <portname>.
+Try again. If you have files in /usr/local or also use other package managers such as fink, homebrew, or pkgsrc, also try trace mode (-t):
+sudo port install <portname> # without trace mode, or
+sudo port -t install <portname> # with trace mode
+If this does not help, check ProblemHotlist and see if your issue is mentioned.
+If not, search for an existing ticket. Enter the name of the failing port in this field to see all tickets filed for this port:
+ 
+ 
+ 
+ 
+If there are no matching tickets, please file one. Please respect our guide on ​how to properly create a new ticket.
+I get the error "C compiler cannot create executables" or "ld: library not found for -lcrt1.10.6.o" or "can't read "build.cmd": Failed to locate 'make' in path" when I try to install a port. Why?
+You need to ​install Xcode and the command line tools.
+Note: Starting with 2.3.0, MacPorts should detect this problem and warn you. See ProblemHotlist#clt for more information.
+Will my MacPorts install continue to work after installing a new major OS release or migrating to a new machine with a different CPU architecture?
+In general the answer is no. See Migration for how to get things working again.
+Note: Starting with 2.3.0, MacPorts will detect this situation. Follow Migration to make your MacPorts installation ready for the new OS.
+Is MacPorts Universal?
+MacPorts works on Apple Silicon as well as Intel- and PowerPC-based Macs, but, by default, the ports you install will be compiled only for the architecture you're currently running on. This means that if you migrate from, say, a PowerPC Mac to an Intel one and use Migration Assistant to copy your data to the new machine, you should reinstall all your ports on the new machine to get versions built for Intel. See the Migration link in the previous question.
+For many ports, there's now an alternative: select the +universal variant when you install each port, and MacPorts will install universal binaries that work on multiple processor architectures. The set of architectures is controlled by the universal_archs setting in ​macports.conf.
+Using +universal can allow you to run ports which do not build for your preferred architecture alongside those that do. For example, the wine port only builds for i386, but shares many dependencies with ports that can build for x86_64. On x86_64 hardware, the dependencies can be built with +universal so they support both i386 and x86_64 dependents.
+Historically, +universal could also be useful if you anticipated migrating to a different Mac soon, or if you wanted to install MacPorts on an external hard drive used by both Intel- and PowerPC-based Macs. But note that because +universal is not necessarily tested by port maintainers, it may not work correctly for all ports, even if no error message is shown during installation. If you find a port that will not build with +universal, or if it builds but then does not work correctly, please file a bug report. If you can provide a patch to fix the problem, that's even better.
+Some ports may only work on PowerPC Macs or only on Intel Macs. Others may work on 32-bit archs but not 64-bit. In some cases, these are bugs that need to be fixed. If there is a newer version of the software available, you should report this to the port maintainer. Maybe the new version works correctly on both architectures. If the port is already using the latest version, report the problem to the upstream authors of the software; the software may need to be updated. In other cases, the software may be specifically written for one processor architecture such that it will not be possible to make it available to the other.
+See also Universal for a (highly outdated at this point) list of ports that were tested for +universal support and the results.
+Why is /opt/local the default install location for MacPorts?
+ 
+Traditionally, the place to install third party software on many UNIX systems is /usr/local.
+However, having MacPorts under /usr/local would be error-prone for precisely that reason. 
+Many other software packages and packaging systems install into /usr/local,
+and could accidentally overwrite what MacPorts has installed, or vice versa.
+While this could be dismissed as the user's own error, it is a fact that
+people click through installers blindly, and consequently collisions under 
+/usr/local (and other prominent directories) happen very often.
+MacPorts doesn't want to be a victim of that, and /opt/local provides
+the splendid isolation (as would any other dedicated directory, of course).
+Also, /usr/local traditionally contains the given system's local admin tools;
+MacPorts doesn't want to stomp on that either.
+(For the same reasons, fink uses /opt/sw as its prefix.)
+Can I install software in /usr/local while using MacPorts?
+No. Even though MacPorts is installed elsewhere, software installed in /usr/local can still interfere with MacPorts.
+Some software (especially the GNU auto* tools and gcc) looks into /usr/local for external headers, libraries, and binaries. Certain ports might (and do) fail to build because during their build something incompatible is found and picked up
+from /usr/local. Good ports avoid this by explicitly specifying --with-libfoo=/opt/local/lib/ or explicitly disabling all such possible dependencies altogether with --disable-foo or --without-bar but not all ports are able to do that.
+And even if all files that should be found in /opt/local are correctly used, headers and libraries provided by the operating system in /usr will still be overridden if files of the same name exist in /usr/local.
+If you ask us for help with a port failing to build because of something
+that it found in /usr/local you will be asked to remove what you've installed in /usr/local
+or to temporarily rename /usr/local to make it disappear entirely for the duration of the build.
+Note that starting with 2.3.0, MacPorts can automatically hide /usr/local (and all other files a port does not depend on) from ports' build systems.
+This feature is called trace mode and is activated by providing the -t flag to port, e.g.
+sudo port -t install <portname>
+You'll notice a small performance penalty when using trace mode, and a very small number of ports will fail to build due to the changes in the environment (currently, only the go and sbcl ports are known to be affected). Warnings about sandbox violations are normal when using trace mode. If a port fails to build in trace mode, the problem is very likely a bug. You should file a ticket if none exists yet.
+Can I install frameworks in /Library/Frameworks while using MacPorts?
+No. This can interfere with software you want to install with MacPorts, in much the same way that installing software into /usr/local can interfere. 
+If you ask us for help with a port failing to build because of something
+that it found in /Library/Frameworks you will be asked to remove what you've installed in /Library/Frameworks
+or to temporarily rename /Library/Frameworks to make it disappear entirely for the duration of the build.
+How do I remove or uninstall MacPorts?
+See ​the Guide.
+What are the folders in ${prefix}/var/macports/ for and why do they take up so much space?
+man porthier says: "MacPorts runtime data", but it contains some more subfolders:
+build
+Is used during the building of ports, usually it contains only empty folders, does not take much space. During the building of a port there is a soft link ${prefix}/var/macports/sources/rsync.macports.org/release/ports/<category>/<name>/work pointing to the corresponding folder here.
+distfiles
+The downloaded sources of each built port, could be removed with port clean --dist <port>.
+packages
+Contains the binary archives of each installed port. Could be removed with port clean --archive <port> <version>+<variant>. These files are helpful for uninstalling and later reinstalling the exact same ports (eg. for testing something). Only unpacking the archive is needed and no build will be performed. If these archives are never needed they can be disabled in ${prefix}/etc/macports/macports.conf with the portarchivemode option.
+registry and the older receipts
+Contains detailed information about each installed port, e.g. which files belong to the port with corresponding checksums.
+software
+Contains the compressed archives of installed software. If a port is activated its files are extracted to the ${prefix} folders from the compressed files here. port uninstall <port> <version>+<variant> would remove it from here, but then this port can not be used anymore.
+sources
+In the subfolder rsync.macports.org/release/base are the MacPorts sources themselves (e.g., for the port(1) command). A port selfupdate updates this from the MacPorts rsync server.
+In the subfolder rsync.macports.org/release/ports are folders for each port category and the ports themselves therein, where the corresponding Portfile and patches are found. port sync and also port selfupdate update this from the MacPorts rsync server.
+I get Error: checksum (md5/sha1/rmd160) mismatch for port. What can I do about it?
+MacPorts computes checksums of downloaded files to ensure they aren't corrupted and haven't been tampered with. Each Portfile lists the checksums for the files that the port will download (using md5, sha1 and/or rmd160). If the computed checksum of the downloaded file doesn't match the one listed in the Portfile, that means the file you downloaded is not the one the port designer used when creating the port, and so MacPorts stops the installation.
+First aid, download the file again:
+$ sudo port selfupdate
+$ sudo port clean --dist <portname>
+$ sudo port install <portname>
+If this doesn't help, then you should attempt to discover why there is a checksum mismatch.
+Please do NOT file a ticket without first ruling out a misconfiguration on your end. Also make sure that you specify which mirror your download came from when filing a ticket.
+There are several possible reasons for checksum mismatches:
+The file is corrupt. If it was corrupted by the transfer, download it again (as shown above). If it is corrupted on the server, there is not much you can do about it. Open a bug in ​Trac and assign it to the port's maintainer. As for solving the problem: if there are other mirrors, try one of them. You can also ask if someone has a complete file they can send you on the ​MacPorts users' mailing list.
+The developer has performed a "stealth upgrade". Sometimes upstream developers make "stealth upgrades" in which they change the contents of their distribution archive but not its version number, without informing MacPorts of this change. Perhaps the developer has repackaged the distribution with a different archiving program, or has fixed typos in the included documentation or made other presumably minor changes that did not warrant a regular release. This practice is not recommended because of the obvious difficulties it presents to MacPorts and other port systems that compute package checksums. Attempt to get confirmation from the developer of the software that this has occurred. If the developer cannot be reached, attempt to determine yourself whether a stealth upgrade has happened. ​Search the Internet and try to locate the older version of the archive that matches the checksum in the Portfile. Also download the version currently available on the developer's site, extract both, and compare the contents (for example with diff -r -u <old> <new>). If the changes look minor and benign, or there are no changes at all, then it is safe for you to update the checksum in the Portfile, and the port maintainer should be informed of this so that they can make the change official. If you cannot determine whether a stealth upgrade has taken place, ask for help on the ​users' mailing list.
+The file has been tampered with. It is perhaps somewhat unlikely yet theoretically possible (and it has happened a few times in practice) that the archive being distributed by the developer (or by a mirror) has been genuinely compromised. If a hacker was able to manipulate the developer's (or the mirror's) server, the hacker could have uploaded a revised archive containing malware (a virus, a trojan horse, a spam-sending platform, etc.) of the hacker's choosing, and you would certainly not want to install such software. You must attempt to determine, as above, whether this has occurred by contacting the developer, or by locating an older version of the archive and comparing them. You can also contact the port maintainer or the ​users' mailing list.
+A proxy is blocking your request. Some internet connections are protected by a proxy which may not allow file downloads, tar/zip downloads, or may not allow your particular computer to access the internet without being specifically allowed. In that case, the proxy may return a simple "disallowed" message (with an erroneous 200 status), which MacPorts mistakes for the file that should be downloaded. Examining the content of the downloaded file will determine if this is the case. If so, contact your network administrator for access.
+A download server and/or your DNS server is misbehaving. See MisbehavingServers.
+Where can I find a GUI frontend for MacPorts?
+There are several GUIs for MacPorts in development.
+​PortAuthority has been around for a long time. Donationware as of 2019.
+​JPortsUI is a free open-source Java-based GUI.
+​Porticus cannot be used at this time because it has not been updated to work with OS X 10.7 or later or MacPorts 2.0 or later.
+What do I do if port selfupdate doesn't work or the rsync server refuses connections?
+First try sudo port -d selfupdate to get all errors to display. If your connection to the rsync server fails you may get blocked by a firewall or other network control software.
+Some firewalls block connections using the rsync protocol (TCP port 873). Ask your network administrator to allow outbound connections to this port or switch to one of the alternative methods mentioned below.
+If you run LittleSnitch, create a rule for rsync (/usr/bin/rsync) that allows connections to server hostname rsync.macports.org, port 873 (rsync), protocol 6 (TCP). Make sure the rule is enabled.
+The connection problem may also only exist to certain hosts. Our main mirror is hosted by the University of Erlangen-Nuremberg, Germany inside the German Research Network. If you think you might have trouble connecting to their mirror service, you can try using one of our other mirrors.
+Additionally, our main mirror provides IPv6 connectivity. If your network has problems with IPv6 connections, try one of our mirrors that does not advertise IPv6 support.
+If getting through a firewall or fixing your network is not a possibility, there are other methods you can use which are a bit more manual:
+You can sync your port tree using Git
+You can download a tarball, built daily, and update with that
+port list produces unexpected output
+You probably want port installed or port outdated instead. If you were trying to use port list installed, you probably want port installed (or, equivalently, port installed installed). If you were trying to use port list outdated, you probably want port outdated (or, equivalently, port outdated installed). If you were trying to use port list someport, you probably want either port installed someport or port outdated someport.
+For every port specified on the command line (or expanded from pseudo-ports like installed), port list displays the version of that port currently available in the ports tree -- not the version currently installed. So if for example you have port foo installed at versions 1 and 2 (with 2 being the current version available), port list installed will show foo at version 2, twice, whereas port installed foo will show foo at version 1 once and foo at version 2 once.
+Why has feature XYZ not been implemented yet, it is important?
+There are a number of enhancements which would improve MacPorts, but time is finite and the project is perpetually in need of more base-level developers. This means that new features must be prioritized (bugs usually being more important) and other, useful features don't get implemented for some time. See ​the guide entry on contributing for how to get involved if you'd like to help improve MacPorts.
+How should I report MacPorts issues encountered when using prerelease versions of macOS, Xcode, or Apple hardware?
+If the bug seems to be in the prerelease Apple software or hardware, ​report it to Apple. Otherwise, see below.
+If you have access to beta, preview, or prerelease versions of macOS, Xcode, or Apple hardware, you almost certainly have a non-disclosure agreement (NDA) with Apple. We encourage you to abide by this agreement, but we are not a party to your agreement and we do not necessarily know what it says, and we cannot give advice on how to interpret it. If you have any doubts about what you are and are not allowed to do under your NDA, please consult a qualified legal professional.
+Apple NDAs often prohibit disclosing information about the covered materials publicly that has not already been made public by Apple, which may mean you are not allowed to post build logs, error messages, or screenshots in public MacPorts communication channels, including on the mailing lists, in tickets or pull requests, or on IRC or chat. If this is the case for you, you may be allowed to privately share the information with a MacPorts developer who is also under NDA on the same prerelease Apple software or hardware.
+Here is a list of MacPorts developers and the prerelease Apple products they are disclosed on, to whom you may be able to report your issue :
+ MacPorts developer Disclosed prerelease software/hardware
+ Mark Anderson macOS 26 Tahoe Dev Beta 
+If you are a MacPorts developer disclosed on prerelease Apple software or hardware and would like to make yourself available for addressing pertinent MacPorts issues, please edit this page and add your name to the above table.
+Software Questions
+Why do I have to install xorg-* ports?
+MacPorts does not use the X11 client libraries provided by the system and installs its own copy. This allows for more consistent support for older machines which are not as up to date (especially Tiger which doesn't have a pkg-config compatible X11 SDK). Most X11 packages in MacPorts are newer than those shipped by Apple and usually reflect the latest work from the ​XQuartz Project.
+Don't be scared away, MacPorts built applications are still compatible with the X11 server provided by the system, and any other X11 applications built against the /usr/X11 libraries will work with the MacPorts X11 servers (xorg-server and xorg-server-devel).
+What does 'Xlib: extension "RANDR" missing on display "/tmp/launch-XXXXXX/:0"' mean?
+Many X11 programs try to use the RANDR extension, and print this warning when it is not available. The RANDR extension is not available in the Apple-provided X11 server in Snow Leopard and earlier. It is supported in ​XQuartz 2.6.0 as well as the MacPorts X11 servers.
+Unless you have a specific need for RandR functionality, this warning can be safely ignored.
+Will MacPorts link to system libraries rather than its own?
+No, MacPorts maintains its own versions of libraries. See the next question for the reason why.
+You may find some ports that link with some system libraries. Some of these are intentional, such as in cases where the MacPorts version is missing some crucial functionality (e.g. ports that need Kerberos support use the Mac OS X-supplied library, not the MacPorts one). In other cases these are bugs in the relevant ports, and tickets should be filed so it can be corrected.
+Why is MacPorts using its own libraries?
+There are several reasons why MacPorts uses its own libraries. It makes ports more consistent across different versions of Mac OS X. For example, if we can rely on openssl 1.0.0 from MacPorts, we don't have to test every port that needs ssl for every available openssl installation. Apple's software tends to break from time to time (e.g. openssl refuses to build with an old zlib, but for awhile Apple shipped the old headers of the vulnerable zlib version). Even if Apple's versions aren't broken, they're rarely up-to-date. Apple has a habit of not updating the libraries in Mac OS X until absolutely necessitated by a security vulnerability.
+The drawbacks of this policy are minimal: Wasting a few megabytes for e.g. a Python installation is next to nothing if you have a multi-gigabyte hard disk, and the time required to build the additional ports decreases as computers get faster.
+GNOME has an empty menu
+See the GNOME section of this Wiki for more information.
+Why do the python ports have so many dependencies?
+Earlier versions of the python ports either used variants (python23) or split some modules out from the base port (python24) in order to reduce the number of dependencies for the port. Using variants is bad as that requires a complete rebuild of the port in order to add a given module (like readline support); also, dependencies can't specify variants currently (see ticket #126).
+Using separate ports for these modules (like py-readline) avoids the need to completely rebuild the base port, and can be used as a dependency, but ends up having other issues. One is that these modules are installed using the standard distutils method for python, which causes them to be installed in a different location than where they would be when installed normally (see ticket #12369). The other is that many python developers have expectations when they install python, and installing python24 simply does not match that.
+When should I use the force option (-f)
+Use of the force option (-f) is rarely necessary, but some suggestions in the past have recommended its use quite frequently. The most common need for -f now is when you run into a stray file in your MacPorts prefix, not owned by a port, but blocks the install of one. This is seen with an error message from port similar to
+Error: Activating some-port @1.0_0 failed: Image error: /opt/local/path/to/stray/file already exists and does not belong to a registered port. Unable to activate port some-port.
+Unless you know the source of that file and that you need to keep it, this is a good use of force. However, don't use it with install but with activate:
+sudo port -f activate some-port
+Prior to MacPorts 1.8, -f was also used to force an upgrade of a port to add new variants. This has now been replaced with the --enforce-variants option to upgrade:
+sudo port upgrade --enforce-variants curl +ssl
+This will install the curl port again, adding the +ssl variant.
+Using build_arch
+MacPorts 1.8 introduced a new option to macports.conf: build_arch. This allows you to control the architecture targeted by builds. For example, you can use this to build 64bit on 10.5 (where 32bit is the default) or 32bit on 10.6 (where 64bit is usually the default).
+Another use case is when authoring a port on an Intel based Mac one can use the following command to do a checksum for arm64:
+sudo port -d checksum <portname> build_arch=arm64
+Documentation on this feature can be found in the man page for macports.conf, and also in the Guide.
+There are two issues to note before you try and use build_arch:
+many ports ignore the -arch flag to select the architecture, and will most likely fail to build at all (if you encounter such a problem, please file a ticket so it can be fixed)
+you must set build_arch prior to building any ports (must be done on a new, clean install), otherwise you will have major issues due to some ports being of one architecture, and some the other (if you want to switch architectures and have already installed ports, you can uninstall all ports with "sudo port -f uninstall installed" and then reinstall ports, or consult the Migration document for an automated script)
+How can I get a list of all dependencies for a port?
+As of MacPorts 1.9.0, you can just run:
+port rdeps <portname>
+There is also a ​script in the contrib section of the repository that will generate a diagram of the dependencies of a port using graphviz.
+Why can't I install both the "-devel" and non-"-devel" versions of a package?
+MacPorts does not split up its development headers into separate packages like some Linux distributions do. Instead, in MacPorts, "-devel" versions tend to be pre-release (i.e. alpha or beta) versions of the main package.
+Why am I getting an error about the wrong C++ runtime or libc++ or libstdc++?
+Apple ships g++ based on the old libstdc++ runtime in pre-5.x versions of Xcode and on pre-10.9 OS X. Starting with Xcode 5 and OS X 10.9, Apple is using clang and its C++11 compliant libc++. The C++11 runtime is not compatible with the older C++ runtime.
+It is entirely possible to build the C++11 runtime on pre-10.9 by itself. The problem is that it is never actually by itself; it exists in an ecosystem whose contents are defined by Apple. On 10.8 and earlier that ecosystem is not C++11, and while you can build a C++11 ecosystem of your own, it will not be compatible with anything else. In particular, it will not be compatible with any C++ libraries provided by Apple as part of the base system or Xcode, and if you ever try to use an Apple-compatible C++ library with it, you will get link errors or possibly crashes.
+After playing whack-a-mole for a while trying to get stuff to coexist, MacPorts has given up and acknowledged that the only thing that works reliably is to go with what is compatible with Apple libraries; that means only older LLVM/clang that uses pre-C++11 interfaces (provided by libstdc++ or an Apple-sourced compatible libc++) on 10.8 and earlier and only newer LLVM/clang that uses C++11 interfaces (provided by modern libc++ but not the libc++ shipped on older OS X) on 10.9 and later. Any other combination might work if you are lucky, but is not guaranteed in any way and has led to many port build failures, and MacPorts no longer attempts to support it.
+Why am I getting a message, "Warning… indications of -Wimplicit-function-declaration"?
+When you build a port, you may see a message like, "Warning: Configuration logfiles contain indications of -Wimplicit-function-declaration; check that features were not accidentally disabled" in the configuration log. 
+This is a warning for the upstream developers of the port's source code. Each occurrence must be investigated and handled individually. As the user of a port, we encourage you to file bug reports about each such message in each port where you observe it. ​Filing a MacPorts ticket against the port, including the specific message you see, is a helpful first step. This lets the other people who use and maintain the port track the problem. Diagnosing what the port's configuration code is trying to do is even more helpful. Most helpful of all is to file a bug report against the upstream project which supplies the source code. That is where the problem needs to be fixed ultimately. Then the fix will flow downstream to MacPorts. The problem will be solved. The message will no longer appear.
+See WimplicitFunctionDeclaration for more detailed information about this message, its causes, and what to do about it.
+ 
+Portfile Development and Maintenance Questions
+Is it possible to have a dependency on a specific variant of another port? E.g. "postgresql8 +server"?
+No. This is ticket #126. The dependency engine is currently unable to handle specifying anything beyond "port X requires port Y" or "port X requires file Z which can be provided by port Y." There have been discussions on revamping the engine (see the mailing list archives) but nothing concrete as yet. This is why the most useful variants really shouldn't be variants at all but rolled into the port itself. It can also sometimes be useful to break variants out into subports or separate ports (e.g. the postgresql83-doc and postgresql83-server ports, instead of having +doc or +server variants of the postgresql83 port).
+Why won't portindex work? I have a local repository set up
+Your local repository needs the ports to be nested within a category for portindex to work, as explained in the relevant ​documentation.
+What is the process for becoming a committer?
+The process is pretty much the same as for any other open source project. See the relevant ​documentation and the New commiters guide for what commit access to MacPorts entails.
+Why Tcl?
+These mailing list posts by Landon Fuller and Jordan K. Hubbard, two of the original authors of MacPorts, explain why they chose to use Tcl for MacPorts:
+​http://opendarwin.org/pipermail/darwinports/2002-October/015387.html
+​http://opendarwin.org/pipermail/darwinports/2005-January/023888.html
+​https://lists.macports.org/pipermail/macports-dev/2013-June/023077.html
+Runtime Errors
+I try to disable a variant, but it just informs me of the proper usage for the port command
+When using
+port <command> <portname> -<variant>
+the dash in the command is going to be interpreted as an option, hence getting the usage message. It needs to be escaped away with a double-dash:
+port <command> <portname> -- -<variant>
+GitHub Migration
+What changed with the migration to GitHub in fall 2016?
+See GitHubMigration.
+Information security and the integrity of the MacPorts base sofware and individual packages
+What measures are in place to ensure that MacPorts is not tainted with malicious contributions and that the port scripts are not installing other than what it says on a Portfile?
+For the integrity of the base software:
+the MacPorts .pkg installer is signed by one of the project members, so that ensures the integrity of the initial installation.
+the selfupdate process also uses signed tarballs that are checked against a public key that is part of the installation.
+MacPorts only gives commit access to people who have a considerable history of good contributions.
+Everyone else has to open pull requests which are reviewed by committers before being merged.
+For the integrity of the ports tree:
+the distributed ports tree is also signed and the signature is verified when syncing the Portfiles.
+the Portfiles come from the GitHub git repository, so the whole ports tree can be identified by a commit hash.
+It's not impossible that a committer could begin acting maliciously (though that would probably be noticed), or that software could be packaged that was compromised upstream.
+For the integrity of the Portfiles:
+that relies on what is merged into the ports tree, which are developed on GitHub with Pull Requests and reviews by project members.
+the Portfiles also contain checksums to verify the upstream sources used for building the software.
+all downloaded files have to be the same for all users (also a requirement in order to mirror these distfiles correctly).
+The base code, ports tree, and most upstream software has source readily available, so it would be possible and advisable to audit all components before using them for anything critical.
+How can the integrity of a MacPorts installation be verified?
+You could in principle compare an existing installation of the software to a signed tarball.
+Currently, there is no tooling for that.
+Also, some ports will be built locally, so there won't be a single "canonical" signed tarball for everything available.
+What capabilities does MacPorts offer for auditing of installations?
+Being open source, MacPorts is inherently more auditable than proprietary binaries, but the drawback is the responsibility for this falls on the user.
+The MacPorts project is not in a position to make any guarantees and has to disclaim all liability.
+Integrity of MacPorts files on disk relies on appropriate filesystem permissions. By default, files are owned by root and cannot be modified by other users.
+If you wish to check whether files have been modified since installation, a number of third party file integrity checkers are available and should work well with MacPorts.
+ 
+ 
+ Last modified 3 weeks ago
+ Last modified on Jan 9, 2026, 6:33:34 PM
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ Download in other formats:
+ 
+ 
+ Plain Text
+ 
+ 
+ 
+ 
+ 
+ 
+ 

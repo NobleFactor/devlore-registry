@@ -1,0 +1,394 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: SSPL-1.0
+# Copyright (c) 2025-2026 Noble Factor. All rights reserved.
+#
+# Compare-MigrationProviders - Compare migration analysis across LLM providers
+#
+# This script runs the same migration analysis prompt against multiple providers
+# and saves the results for comparison.
+#
+# Usage:
+#   ./scripts/Compare-MigrationProviders <source-root> [--providers <list>] [--output-dir <dir>]
+#
+# Options:
+#   --providers     Comma-separated list: ollama,gemini,anthropic (default: all)
+#   --output-dir    Directory for results (default: ./comparison-results)
+#   --ollama-model  Ollama model to use (default: uses generated Modelfile)
+#   --skip-gather   Skip input gathering, use existing input.json
+#
+# Required Environment Variables:
+#   GEMINI_API_KEY    - For Gemini provider
+#   ANTHROPIC_API_KEY - For Anthropic provider
+#
+# Example:
+#   export GEMINI_API_KEY="..."
+#   export ANTHROPIC_API_KEY="..."
+#   ./scripts/Compare-MigrationProviders ~/Workspace/Personal
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+KNOWLEDGE_DIR="$REPO_ROOT/knowledge/migration"
+
+# Defaults
+SOURCE_ROOT=""
+PROVIDERS="ollama,gemini,anthropic"
+OUTPUT_DIR="$REPO_ROOT/comparison-results"
+OLLAMA_MODEL=""
+SKIP_GATHER=false
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --providers)
+            PROVIDERS="$2"
+            shift 2
+            ;;
+        --output-dir)
+            OUTPUT_DIR="$2"
+            shift 2
+            ;;
+        --ollama-model)
+            OLLAMA_MODEL="$2"
+            shift 2
+            ;;
+        --skip-gather)
+            SKIP_GATHER=true
+            shift
+            ;;
+        -h|--help)
+            sed -n '2,/^$/p' "$0" | sed 's/^# //' | sed 's/^#//'
+            exit 0
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            exit 1
+            ;;
+        *)
+            if [[ -z "$SOURCE_ROOT" ]]; then
+                SOURCE_ROOT="$1"
+            else
+                echo "Unexpected argument: $1" >&2
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [[ -z "$SOURCE_ROOT" ]]; then
+    echo "Error: source-root required" >&2
+    exit 1
+fi
+
+# Create output directory
+mkdir -p "$OUTPUT_DIR"
+TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+RUN_DIR="$OUTPUT_DIR/$TIMESTAMP"
+mkdir -p "$RUN_DIR"
+
+echo "=== Migration Provider Comparison ==="
+echo "Source: $SOURCE_ROOT"
+echo "Output: $RUN_DIR"
+echo "Providers: $PROVIDERS"
+echo ""
+
+# Step 1: Gather inputs
+INPUT_FILE="$RUN_DIR/input.json"
+if $SKIP_GATHER && [[ -f "$OUTPUT_DIR/input.json" ]]; then
+    echo "[1/4] Using existing input.json"
+    cp "$OUTPUT_DIR/input.json" "$INPUT_FILE"
+else
+    echo "[1/4] Gathering inputs from $SOURCE_ROOT..."
+    "$SCRIPT_DIR/Gather-MigrationInput" "$SOURCE_ROOT" --output "$INPUT_FILE"
+fi
+
+# Step 2: Build prompt
+echo "[2/4] Building prompt with knowledge base..."
+
+PROMPT_FILE="$RUN_DIR/prompt.txt"
+{
+    # Include main prompt
+    cat "$KNOWLEDGE_DIR/prompts/migrate-to-writ.txt"
+    echo ""
+    echo "# === CONCEPTS ==="
+    echo ""
+    for f in "$KNOWLEDGE_DIR/concepts"/*.yaml; do
+        [[ -f "$f" ]] || continue
+        echo "## $(basename "$f" .yaml)"
+        echo '```yaml'
+        cat "$f"
+        echo '```'
+        echo ""
+    done
+
+    echo "# === DETECTION SIGNATURES ==="
+    echo ""
+    for f in "$KNOWLEDGE_DIR/signatures"/*.yaml; do
+        [[ -f "$f" ]] || continue
+        echo "## $(basename "$f" .yaml)"
+        echo '```yaml'
+        cat "$f"
+        echo '```'
+        echo ""
+    done
+
+    echo "# === OUTPUT SCHEMA ==="
+    echo ""
+    echo "Respond with valid JSON matching this schema:"
+    echo '```json'
+    cat "$KNOWLEDGE_DIR/schemas/migration-plan.json"
+    echo '```'
+    echo ""
+
+    echo "# === INPUT TO ANALYZE ==="
+    echo ""
+    echo "Analyze this repository and generate a migration plan:"
+    echo '```json'
+    cat "$INPUT_FILE"
+    echo '```'
+} > "$PROMPT_FILE"
+
+PROMPT_LINES=$(wc -l < "$PROMPT_FILE" | tr -d ' ')
+echo "   Prompt: $PROMPT_LINES lines"
+
+# Step 3: Run providers
+echo "[3/4] Running analysis..."
+
+run_ollama() {
+    local output_file="$1"
+    echo "   Running Ollama..."
+
+    # Generate Modelfile if not using custom model
+    if [[ -z "$OLLAMA_MODEL" ]]; then
+        local modelfile="$RUN_DIR/devlore-migrate.Modelfile"
+        "$SCRIPT_DIR/Generate-Modelfile" --output "$modelfile" 2>/dev/null
+
+        # Create the model
+        ollama create devlore-migrate -f "$modelfile" 2>/dev/null || true
+        OLLAMA_MODEL="devlore-migrate"
+    fi
+
+    # Run with the input
+    local user_prompt
+    user_prompt=$(cat <<EOF
+Analyze this repository and generate a migration plan as JSON:
+
+$(cat "$INPUT_FILE")
+EOF
+)
+
+    local start_time=$(date +%s)
+
+    if ollama run "$OLLAMA_MODEL" "$user_prompt" > "$output_file" 2>"$RUN_DIR/ollama-stderr.txt"; then
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        echo "   Ollama completed in ${duration}s"
+        echo "$duration" > "$RUN_DIR/ollama-duration.txt"
+    else
+        echo "   Ollama FAILED"
+        echo "FAILED" > "$output_file"
+    fi
+}
+
+run_gemini() {
+    local output_file="$1"
+    echo "   Running Gemini..."
+
+    if [[ -z "${GEMINI_API_KEY:-}" ]]; then
+        echo "   Gemini SKIPPED (no GEMINI_API_KEY)"
+        echo "SKIPPED: No GEMINI_API_KEY" > "$output_file"
+        return
+    fi
+
+    local start_time=$(date +%s)
+
+    # Build request
+    local request_file="$RUN_DIR/gemini-request.json"
+    jq -n --rawfile prompt "$PROMPT_FILE" '{
+        "contents": [{
+            "parts": [{"text": $prompt}]
+        }],
+        "generationConfig": {
+            "temperature": 0.1,
+            "maxOutputTokens": 65536
+        }
+    }' > "$request_file"
+
+    # Call Gemini API (using gemini-2.0-flash, current as of 2026)
+    local response
+    if response=$(curl -s -X POST \
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$GEMINI_API_KEY" \
+        -H "Content-Type: application/json" \
+        -d @"$request_file" 2>"$RUN_DIR/gemini-stderr.txt"); then
+
+        # Extract text from response
+        echo "$response" > "$RUN_DIR/gemini-raw.json"
+        echo "$response" | jq -r '.candidates[0].content.parts[0].text // "ERROR: No content"' > "$output_file"
+
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        echo "   Gemini completed in ${duration}s"
+        echo "$duration" > "$RUN_DIR/gemini-duration.txt"
+    else
+        echo "   Gemini FAILED"
+        echo "FAILED: API error" > "$output_file"
+    fi
+}
+
+run_anthropic() {
+    local output_file="$1"
+    echo "   Running Anthropic..."
+
+    if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
+        echo "   Anthropic SKIPPED (no ANTHROPIC_API_KEY)"
+        echo "SKIPPED: No ANTHROPIC_API_KEY" > "$output_file"
+        return
+    fi
+
+    local start_time=$(date +%s)
+
+    # Build request
+    local request_file="$RUN_DIR/anthropic-request.json"
+    local system_prompt
+    system_prompt=$(sed -n '1,/^# === INPUT TO ANALYZE ===/p' "$PROMPT_FILE" | head -n -2)
+
+    local user_prompt
+    user_prompt=$(cat <<EOF
+Analyze this repository and generate a migration plan as JSON:
+
+$(cat "$INPUT_FILE")
+EOF
+)
+
+    jq -n \
+        --arg system "$system_prompt" \
+        --arg user "$user_prompt" \
+        '{
+            "model": "claude-sonnet-4-20250514",
+            "max_tokens": 8192,
+            "system": $system,
+            "messages": [{"role": "user", "content": $user}]
+        }' > "$request_file"
+
+    # Call Anthropic API
+    local response
+    if response=$(curl -s -X POST \
+        "https://api.anthropic.com/v1/messages" \
+        -H "Content-Type: application/json" \
+        -H "x-api-key: $ANTHROPIC_API_KEY" \
+        -H "anthropic-version: 2023-06-01" \
+        -d @"$request_file" 2>"$RUN_DIR/anthropic-stderr.txt"); then
+
+        # Extract text from response
+        echo "$response" > "$RUN_DIR/anthropic-raw.json"
+        echo "$response" | jq -r '.content[0].text // "ERROR: No content"' > "$output_file"
+
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        echo "   Anthropic completed in ${duration}s"
+        echo "$duration" > "$RUN_DIR/anthropic-duration.txt"
+    else
+        echo "   Anthropic FAILED"
+        echo "FAILED: API error" > "$output_file"
+    fi
+}
+
+# Run selected providers
+IFS=',' read -ra PROVIDER_LIST <<< "$PROVIDERS"
+for provider in "${PROVIDER_LIST[@]}"; do
+    case "$provider" in
+        ollama)
+            run_ollama "$RUN_DIR/ollama-output.txt"
+            ;;
+        gemini)
+            run_gemini "$RUN_DIR/gemini-output.txt"
+            ;;
+        anthropic)
+            run_anthropic "$RUN_DIR/anthropic-output.txt"
+            ;;
+        *)
+            echo "   Unknown provider: $provider"
+            ;;
+    esac
+done
+
+# Step 4: Generate comparison report
+echo "[4/4] Generating comparison report..."
+
+REPORT_FILE="$RUN_DIR/comparison-report.md"
+{
+    echo "# Migration Provider Comparison"
+    echo ""
+    echo "**Source:** $SOURCE_ROOT"
+    echo "**Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+    echo "**Providers:** $PROVIDERS"
+    echo ""
+
+    echo "## Summary"
+    echo ""
+    echo "| Provider | Duration | Output Size | Valid JSON |"
+    echo "|----------|----------|-------------|------------|"
+
+    for provider in "${PROVIDER_LIST[@]}"; do
+        output_file="$RUN_DIR/${provider}-output.txt"
+        duration_file="$RUN_DIR/${provider}-duration.txt"
+
+        if [[ -f "$output_file" ]]; then
+            size=$(wc -c < "$output_file" | tr -d ' ')
+            duration="N/A"
+            [[ -f "$duration_file" ]] && duration="$(cat "$duration_file")s"
+
+            # Check if valid JSON
+            if head -c 100000 "$output_file" | jq . >/dev/null 2>&1; then
+                valid_json="✅ Yes"
+            elif grep -q "^SKIPPED" "$output_file"; then
+                valid_json="⏭️ Skipped"
+            elif grep -q "^FAILED" "$output_file"; then
+                valid_json="❌ Failed"
+            else
+                valid_json="❌ No"
+            fi
+
+            echo "| $provider | $duration | $size bytes | $valid_json |"
+        else
+            echo "| $provider | - | - | ❌ No output |"
+        fi
+    done
+
+    echo ""
+    echo "## Outputs"
+    echo ""
+
+    for provider in "${PROVIDER_LIST[@]}"; do
+        output_file="$RUN_DIR/${provider}-output.txt"
+        echo "### $provider"
+        echo ""
+        if [[ -f "$output_file" ]]; then
+            echo '```json'
+            head -c 50000 "$output_file"
+            if [[ $(wc -c < "$output_file" | tr -d ' ') -gt 50000 ]]; then
+                echo ""
+                echo "... (truncated)"
+            fi
+            echo '```'
+        else
+            echo "No output"
+        fi
+        echo ""
+    done
+
+    echo "## Baseline Reference"
+    echo ""
+    echo "See: knowledge/migration/examples/baseline-personal.json"
+
+} > "$REPORT_FILE"
+
+echo ""
+echo "=== Complete ==="
+echo "Results: $RUN_DIR"
+echo "Report:  $REPORT_FILE"
+echo ""
+echo "Files:"
+ls -la "$RUN_DIR"

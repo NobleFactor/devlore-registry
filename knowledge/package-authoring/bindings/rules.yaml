@@ -1,0 +1,893 @@
+binding_coverage:
+    archive:
+        create:
+            binding: plan.archive.create
+            replaces:
+                - tar cf
+                - zip -r
+                - Compress-Archive
+            status: proposed
+        extract:
+            binding: plan.archive.extract
+            replaces:
+                - tar xf
+                - tar xzf
+                - tar xjf
+                - unzip
+                - gunzip
+                - Expand-Archive
+            status: implemented
+    build:
+        cmake:
+            binding: plan.build.cmake
+            replaces:
+                - cmake
+            status: proposed
+        configure:
+            binding: plan.build.configure
+            replaces:
+                - ./configure
+            status: proposed
+        make:
+            binding: plan.build.make
+            replaces:
+                - make
+                - make install
+            status: proposed
+    depends_on:
+        binding: plan.depends_on
+        note: Declares execution order dependencies
+        replaces: []
+        status: implemented
+    docker:
+        build:
+            binding: docker.build
+            replaces: []
+            status: implemented
+        compose_down:
+            binding: docker.compose_down
+            replaces: []
+            status: implemented
+        compose_ps:
+            binding: docker.compose_ps
+            replaces: []
+            status: implemented
+        compose_up:
+            binding: docker.compose_up
+            replaces: []
+            status: implemented
+        exec:
+            binding: docker.exec
+            replaces: []
+            status: implemented
+        image_exists:
+            binding: docker.image_exists
+            replaces: []
+            status: implemented
+        images:
+            binding: docker.images
+            replaces: []
+            status: implemented
+        inspect:
+            binding: docker.inspect
+            replaces: []
+            status: implemented
+        installed:
+            binding: docker.installed
+            replaces: []
+            status: implemented
+        login:
+            binding: docker.login
+            replaces: []
+            status: implemented
+        ps:
+            binding: docker.ps
+            replaces: []
+            status: implemented
+        pull:
+            binding: docker.pull
+            replaces: []
+            status: implemented
+        push:
+            binding: docker.push
+            replaces: []
+            status: implemented
+        rm:
+            binding: docker.rm
+            replaces: []
+            status: implemented
+        rmi:
+            binding: docker.rmi
+            replaces: []
+            status: implemented
+        run:
+            binding: docker.run
+            replaces: []
+            status: implemented
+        running:
+            binding: docker.running
+            replaces: []
+            status: implemented
+        start:
+            binding: docker.start
+            replaces: []
+            status: implemented
+        stop:
+            binding: docker.stop
+            replaces: []
+            status: implemented
+        tag:
+            binding: docker.tag
+            replaces: []
+            status: implemented
+        version:
+            binding: docker.version
+            replaces: []
+            status: implemented
+    download:
+        binding: plan.download
+        replaces:
+            - curl -o
+            - curl -O
+            - wget -O
+            - wget -P
+            - Invoke-WebRequest
+        status: implemented
+    env:
+        expand:
+            binding: env.expand
+            replaces: []
+            status: implemented
+        get:
+            binding: env.get
+            replaces: []
+            status: implemented
+        set:
+            binding: env.set
+            replaces: []
+            status: implemented
+    file:
+        chmod:
+            binding: plan.file.chmod
+            platform_note: No-op on Windows, numeric mode on Unix
+            replaces:
+                - chmod
+            status: proposed
+        chown:
+            binding: plan.file.chown
+            platform_note: Different semantics on Windows
+            replaces:
+                - chown
+                - chown -R
+            status: proposed
+        configure:
+            binding: plan.file.configure
+            replaces:
+                - envsubst
+                - sed template
+                - erb
+            status: implemented
+        copy:
+            binding: plan.file.copy
+            replaces:
+                - cp
+                - cp -r
+                - Copy-Item
+            status: implemented
+        link:
+            binding: plan.file.link
+            replaces:
+                - ln -s
+                - ln -sf
+                - New-Item -ItemType SymbolicLink
+            status: implemented
+        mkdir:
+            binding: plan.file.mkdir
+            replaces:
+                - mkdir -p
+                - mkdir
+                - New-Item -ItemType Directory
+            status: implemented
+        move:
+            binding: plan.file.move
+            replaces:
+                - mv
+                - Move-Item
+            status: proposed
+        remove:
+            binding: plan.file.remove
+            replaces:
+                - rm
+                - rm -rf
+                - Remove-Item
+            status: implemented
+        write:
+            binding: plan.file.write
+            replaces:
+                - echo >
+                - cat >
+                - printf >
+                - Set-Content
+            status: implemented
+    fs:
+        basename:
+            binding: fs.basename
+            replaces: []
+            status: implemented
+        chmod:
+            binding: fs.chmod
+            replaces: []
+            status: implemented
+        copy:
+            binding: fs.copy
+            replaces: []
+            status: implemented
+        dirname:
+            binding: fs.dirname
+            replaces: []
+            status: implemented
+        exists:
+            binding: fs.exists
+            replaces: []
+            status: implemented
+        home:
+            binding: fs.home
+            replaces: []
+            status: implemented
+        is_dir:
+            binding: fs.is_dir
+            replaces: []
+            status: implemented
+        join:
+            binding: fs.join
+            replaces: []
+            status: implemented
+        mkdir:
+            binding: fs.mkdir
+            replaces: []
+            status: implemented
+        move:
+            binding: fs.move
+            replaces: []
+            status: implemented
+        read:
+            binding: fs.read
+            replaces: []
+            status: implemented
+        remove:
+            binding: fs.remove
+            replaces: []
+            status: implemented
+        symlink:
+            binding: fs.symlink
+            replaces: []
+            status: implemented
+        which:
+            binding: fs.which
+            replaces: []
+            status: implemented
+        write:
+            binding: fs.write
+            replaces: []
+            status: implemented
+    git:
+        add:
+            binding: git.add
+            replaces: []
+            status: implemented
+        branch:
+            binding: git.branch
+            replaces: []
+            status: implemented
+        checkout:
+            binding: plan.git.checkout
+            replaces:
+                - git checkout
+            status: implemented
+        clone:
+            binding: plan.git.clone
+            replaces:
+                - git clone
+            status: implemented
+        commit:
+            binding: git.commit
+            replaces: []
+            status: implemented
+        commit_hash:
+            binding: git.commit_hash
+            replaces: []
+            status: implemented
+        config_get:
+            binding: git.config_get
+            replaces: []
+            status: implemented
+        config_set:
+            binding: git.config_set
+            replaces: []
+            status: implemented
+        current_branch:
+            binding: git.current_branch
+            replaces: []
+            status: implemented
+        diff:
+            binding: git.diff
+            replaces: []
+            status: implemented
+        fetch:
+            binding: git.fetch
+            replaces: []
+            status: implemented
+        installed:
+            binding: git.installed
+            replaces: []
+            status: implemented
+        is_clean:
+            binding: git.is_clean
+            replaces: []
+            status: implemented
+        latest_tag:
+            binding: git.latest_tag
+            replaces: []
+            status: implemented
+        log:
+            binding: git.log
+            replaces: []
+            status: implemented
+        merge:
+            binding: git.merge
+            replaces: []
+            status: implemented
+        pull:
+            binding: plan.git.pull
+            replaces:
+                - git pull
+            status: implemented
+        push:
+            binding: git.push
+            replaces: []
+            status: implemented
+        rebase:
+            binding: git.rebase
+            replaces: []
+            status: implemented
+        remote:
+            binding: git.remote
+            replaces: []
+            status: implemented
+        remote_url:
+            binding: git.remote_url
+            replaces: []
+            status: implemented
+        repo_root:
+            binding: git.repo_root
+            replaces: []
+            status: implemented
+        reset:
+            binding: git.reset
+            replaces: []
+            status: implemented
+        stash:
+            binding: git.stash
+            replaces: []
+            status: implemented
+        status:
+            binding: git.status
+            replaces: []
+            status: implemented
+        tag:
+            binding: git.tag
+            replaces: []
+            status: implemented
+        version:
+            binding: git.version
+            replaces: []
+            status: implemented
+    http:
+        download:
+            binding: http.download
+            replaces: []
+            status: implemented
+        get:
+            binding: http.get
+            replaces: []
+            status: implemented
+    log:
+        error:
+            binding: log.error
+            replaces: []
+            status: implemented
+        info:
+            binding: log.info
+            replaces: []
+            status: implemented
+        warn:
+            binding: log.warn
+            replaces: []
+            status: implemented
+    npm:
+        audit:
+            binding: npm.audit
+            replaces: []
+            status: implemented
+        cache:
+            binding: npm.cache
+            replaces: []
+            status: implemented
+        ci:
+            binding: npm.ci
+            replaces: []
+            status: implemented
+        config:
+            binding: npm.config
+            replaces: []
+            status: implemented
+        exec:
+            binding: npm.exec
+            replaces: []
+            status: implemented
+        init:
+            binding: npm.init
+            replaces: []
+            status: implemented
+        install:
+            binding: npm.install
+            replaces: []
+            status: implemented
+        installed:
+            binding: npm.installed
+            replaces: []
+            status: implemented
+        link:
+            binding: npm.link
+            replaces: []
+            status: implemented
+        list_global:
+            binding: npm.list_global
+            replaces: []
+            status: implemented
+        pack:
+            binding: npm.pack
+            replaces: []
+            status: implemented
+        prefix:
+            binding: npm.prefix
+            replaces: []
+            status: implemented
+        publish:
+            binding: npm.publish
+            replaces: []
+            status: implemented
+        run:
+            binding: npm.run
+            replaces: []
+            status: implemented
+        uninstall:
+            binding: npm.uninstall
+            replaces: []
+            status: implemented
+        update:
+            binding: npm.update
+            replaces: []
+            status: implemented
+        version:
+            binding: npm.version
+            replaces: []
+            status: implemented
+    package:
+        feature:
+            binding: package.feature
+            replaces: []
+            status: implemented
+        install:
+            binding: plan.package.install
+            replaces:
+                - apt install
+                - yum install
+                - dnf install
+                - brew install
+                - port install
+                - pacman -S
+                - choco install
+            status: implemented
+        install_pkg:
+            binding: plan.package.install_pkg
+            platform: Darwin
+            replaces:
+                - installer -pkg
+            status: proposed
+        installed:
+            binding: package.installed
+            replaces: []
+            status: implemented
+        manager:
+            binding: package.manager
+            replaces: []
+            status: implemented
+        remove:
+            binding: plan.package.remove
+            replaces:
+                - apt remove
+                - yum remove
+                - brew uninstall
+                - port uninstall
+            status: implemented
+        update:
+            binding: plan.package.update
+            replaces:
+                - apt update
+                - brew update
+                - port selfupdate
+            status: implemented
+        upgrade:
+            binding: plan.package.upgrade
+            replaces:
+                - apt upgrade
+                - brew upgrade
+                - port upgrade
+            status: implemented
+        version:
+            binding: package.version
+            replaces: []
+            status: implemented
+    plan:
+        download:
+            binding: plan.download
+            replaces: []
+            status: implemented
+        pull:
+            binding: plan.git.pull
+            replaces: []
+            status: implemented
+    service:
+        actions:
+            - start
+            - stop
+            - restart
+            - enable
+            - disable
+        binding: plan.service
+        disable:
+            binding: service.disable
+            replaces: []
+            status: implemented
+        enable:
+            binding: service.enable
+            replaces: []
+            status: implemented
+        exists:
+            binding: service.exists
+            replaces: []
+            status: implemented
+        replaces:
+            - systemctl
+            - service
+            - launchctl
+            - sc.exe
+        start:
+            binding: service.start
+            replaces: []
+            status: implemented
+        status: implemented
+        stop:
+            binding: service.stop
+            replaces: []
+            status: implemented
+    shell:
+        binding: plan.shell
+        exec:
+            binding: shell.exec
+            replaces: []
+            status: implemented
+        note: Escape hatch - use sparingly
+        replaces: []
+        run:
+            binding: shell.run
+            replaces: []
+            status: implemented
+        status: implemented
+        which:
+            binding: shell.which
+            replaces: []
+            status: implemented
+    system:
+        current_branch:
+            binding: system.git.current_branch
+            replaces: []
+            status: implemented
+        enabled:
+            binding: system.service.enabled
+            replaces: []
+            status: implemented
+        exists:
+            binding: system.fs.exists
+            replaces: []
+            status: implemented
+        home:
+            binding: system.fs.home
+            replaces: []
+            status: implemented
+        installed:
+            binding: system.git.installed
+            replaces: []
+            status: implemented
+        is_clean:
+            binding: system.git.is_clean
+            replaces: []
+            status: implemented
+        is_dir:
+            binding: system.fs.is_dir
+            replaces: []
+            status: implemented
+        manager:
+            binding: system.package.manager
+            replaces: []
+            status: implemented
+        repo_root:
+            binding: system.git.repo_root
+            replaces: []
+            status: implemented
+        running:
+            binding: system.service.running
+            replaces: []
+            status: implemented
+        version:
+            binding: system.git.version
+            replaces: []
+            status: implemented
+        which:
+            binding: system.fs.which
+            replaces: []
+            status: implemented
+generator_rules:
+    - action: Use plan.download(url, target) instead
+      id: no-curl-wget
+      rule: NEVER generate plan.shell() with curl or wget
+    - action: Use plan.archive.extract(archive, target) instead
+      id: no-tar-unzip
+      rule: NEVER generate plan.shell() with tar, unzip, gunzip
+    - action: Use plan.file.* methods instead
+      id: no-file-ops
+      rule: NEVER generate plan.shell() with rm, mkdir, cp, ln, cat, echo
+    - action: Use plan.package.* methods instead
+      id: no-pkg-managers
+      rule: NEVER generate plan.shell() with apt, yum, dnf, brew, port, pacman
+    - action: Use plan.git.* methods instead
+      id: no-git
+      rule: NEVER generate plan.shell() with git clone, git checkout, git pull
+    - action: Use plan.service(name, action) instead
+      id: no-service
+      rule: NEVER generate plan.shell() with systemctl, service, launchctl
+    - action: Include shell_audit section with all shell commands and their status
+      id: audit-all-shell
+      rule: For every plan.shell() in output, add to binding_proposals if pattern matches
+    - action: Comment should state what binding would be needed
+      id: document-necessary-shell
+      rule: When plan.shell() is truly necessary, add comment explaining why
+principles:
+    - explanation: |
+        A Darwin/Deploy/install.star and Linux/Deploy/install.star may have
+        different implementations, but both should use the same API:
+        - plan.download() not plan.shell("curl ...")
+        - plan.package.install() not plan.shell("apt install ...")
+        - plan.file.chmod() not plan.shell("chmod ...")
+      id: one-api-many-platforms
+      rule: Binding APIs are cross-platform. Steps may vary by platform, but API calls do not.
+    - explanation: |
+        Every plan.shell() call should be scrutinized:
+        1. Is there an existing binding for this operation?
+        2. If not, should there be?
+        3. If shell is truly necessary, document why in a comment.
+
+        When reviewing generated packages, shell usage is a code smell that
+        indicates either:
+        - Developer oversight (should use existing binding)
+        - Binding gap (we need a new binding)
+      id: shell-is-escape-hatch
+      rule: plan.shell() is a last resort. Its use signals a potential binding gap.
+    - explanation: |
+        In the binding_proposals output, include an entry for each shell
+        command that represents a common pattern. This creates a feedback
+        loop where package generation identifies binding gaps.
+      id: warn-on-shell
+      rule: When plan.shell() is necessary, warn about it and propose a binding.
+    - explanation: |
+        Declarative methods:
+        - Are type-safe and validated
+        - Can be optimized by the execution engine
+        - Have consistent error handling
+        - Support dry-run introspection
+
+        Shell commands:
+        - Are opaque strings
+        - Platform-specific
+        - Error-prone
+        - Hard to reason about
+      id: prefer-declarative
+      rule: Prefer declarative plan.* methods over imperative shell commands.
+shell_antipatterns:
+    - correct_binding: plan.download
+      message: Use plan.download() instead of curl
+      pattern: curl -.*-o
+      severity: error
+    - correct_binding: plan.download
+      message: Use plan.download() instead of wget
+      pattern: wget -O
+      severity: error
+    - correct_binding: plan.download
+      message: Use plan.download() and plan.archive.extract() separately
+      pattern: curl.*|.*tar
+      severity: error
+    - correct_binding: plan.file.remove
+      message: Use plan.file.remove() instead of rm
+      pattern: rm -rf?\s
+      severity: error
+    - correct_binding: plan.file.mkdir
+      message: Use plan.file.mkdir() instead of mkdir
+      pattern: mkdir -p
+      severity: error
+    - correct_binding: plan.file.copy
+      message: Use plan.file.copy() instead of cp
+      pattern: cp\s.*\s
+      severity: error
+    - correct_binding: plan.file.move
+      message: Use plan.file.move() instead of mv
+      pattern: mv\s.*\s
+      proposed_binding:
+        name: plan.file.move
+        signature: 'move(source: string, target: string) -> node'
+      severity: warning
+    - correct_binding: plan.file.link
+      message: Use plan.file.link() instead of ln -s
+      pattern: ln -s
+      severity: error
+    - correct_binding: plan.file.chmod
+      message: Use plan.file.chmod() instead of chmod
+      pattern: chmod\s
+      proposed_binding:
+        name: plan.file.chmod
+        signature: 'chmod(path: string, mode: string) -> node'
+      severity: warning
+    - correct_binding: plan.file.chown
+      message: Use plan.file.chown() instead of chown
+      pattern: chown\s
+      proposed_binding:
+        name: plan.file.chown
+        signature: 'chown(path: string, owner: string, group: string = '''') -> node'
+      severity: warning
+    - correct_binding: plan.file.write
+      message: Use plan.file.write() instead of cat/echo redirection
+      pattern: cat\s.*>\s
+      severity: error
+    - correct_binding: plan.file.write
+      message: Use plan.file.write() instead of echo redirection
+      pattern: echo\s.*>\s
+      severity: error
+    - correct_binding: plan.file.edit
+      message: Consider plan.file.edit() for in-place modifications
+      pattern: sed -i
+      proposed_binding:
+        name: plan.file.edit
+        signature: 'edit(path: string, pattern: string, replacement: string) -> node'
+      severity: warning
+    - correct_binding: plan.archive.extract
+      message: Use plan.archive.extract() instead of tar
+      pattern: tar\s.*-?[xz]
+      severity: error
+    - correct_binding: plan.archive.extract
+      message: Use plan.archive.extract() instead of unzip
+      pattern: unzip\s
+      severity: error
+    - correct_binding: plan.archive.extract
+      message: Use plan.archive.extract() instead of gunzip
+      pattern: gunzip\s
+      severity: error
+    - correct_binding: plan.git.clone
+      message: Use plan.git.clone() instead of git clone
+      pattern: git clone
+      severity: error
+    - correct_binding: plan.git.checkout
+      message: Use plan.git.checkout() instead of git checkout
+      pattern: git checkout
+      severity: error
+    - correct_binding: plan.git.pull
+      message: Use plan.git.pull() instead of git pull
+      pattern: git pull
+      severity: error
+    - correct_binding: plan.package.install
+      message: Use plan.package.install() - it auto-detects package manager
+      pattern: apt(-get)?\s+install
+      severity: error
+    - correct_binding: plan.package.install
+      message: Use plan.package.install() - it auto-detects package manager
+      pattern: yum\s+install
+      severity: error
+    - correct_binding: plan.package.install
+      message: Use plan.package.install() - it auto-detects package manager
+      pattern: dnf\s+install
+      severity: error
+    - correct_binding: plan.package.install
+      message: Use plan.package.install() - it auto-detects package manager
+      pattern: brew\s+install
+      severity: error
+    - correct_binding: plan.package.install
+      message: Use plan.package.install() - it auto-detects package manager
+      pattern: port\s+install
+      severity: error
+    - correct_binding: plan.package.install
+      message: Use plan.package.install() - it auto-detects package manager
+      pattern: pacman\s+-S
+      severity: error
+    - correct_binding: plan.package.install_pkg
+      message: Consider plan.package.install_pkg() for .pkg installers
+      pattern: installer\s+-pkg
+      proposed_binding:
+        name: plan.package.install_pkg
+        platform: Darwin
+        signature: 'install_pkg(path: string, target: string = ''/'') -> node'
+      severity: warning
+    - correct_binding: plan.package.forget_pkg
+      message: Consider plan.package.forget_pkg() for package receipt removal
+      pattern: pkgutil\s+--forget
+      proposed_binding:
+        name: plan.package.forget_pkg
+        platform: Darwin
+        signature: 'forget_pkg(identifier: string) -> node'
+      severity: warning
+    - correct_binding: plan.user.remove
+      message: Consider plan.user.remove() or plan.group.remove()
+      pattern: dscl\s+.*-delete
+      proposed_binding:
+        name: plan.user.remove
+        signature: 'remove(name: string) -> node'
+      severity: warning
+    - correct_binding: plan.service
+      message: Use plan.service() - it works across init systems
+      pattern: systemctl\s+(start|stop|restart|enable|disable)
+      severity: error
+    - correct_binding: plan.service
+      message: Use plan.service() - it works across init systems
+      pattern: service\s+\w+\s+(start|stop|restart)
+      severity: error
+    - correct_binding: plan.service
+      message: Use plan.service() - it works across init systems
+      pattern: launchctl\s+(load|unload|start|stop)
+      severity: error
+    - correct_binding: plan.env.set
+      message: Consider plan.env.set() for environment variables
+      pattern: export\s+\w+=
+      proposed_binding:
+        name: plan.env.set
+        signature: 'set(key: string, value: string, persist: bool = false) -> node'
+      severity: warning
+    - correct_binding: plan.build.configure
+      message: Consider plan.build.configure() for autoconf builds
+      pattern: \./configure
+      proposed_binding:
+        name: plan.build.configure
+        signature: 'configure(dir: string, options: dict = {}) -> node'
+      severity: info
+    - correct_binding: plan.build.make
+      message: Consider plan.build.make() for make builds
+      pattern: make\s*(install)?$
+      proposed_binding:
+        name: plan.build.make
+        signature: 'make(dir: string, target: string = '''', jobs: int = 0) -> node'
+      severity: info
+valid_shell_uses:
+    - category: One-off commands
+      description: Commands unique to a specific package with no general utility
+      example: plan.shell('sudo /opt/local/bin/port selfupdate')
+      note: Package-specific commands that don't generalize
+    - category: Version checking
+      description: Checking command output for version verification
+      example: plan.shell('port version | grep -q {version}')
+      note: Could be abstracted to plan.verify.command_output()
+    - category: Complex pipelines
+      description: Shell pipelines that combine multiple operations
+      example: plan.shell('command | filter | transform')
+      note: Break into discrete steps when possible
+    - category: Interactive installers
+      description: Installers that require specific flags or environment
+      example: plan.shell('DEBIAN_FRONTEND=noninteractive apt-get install -y pkg')
+      note: Package manager bindings should support these flags
+version: "1.0"

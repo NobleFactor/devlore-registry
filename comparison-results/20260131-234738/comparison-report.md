@@ -1,0 +1,1204 @@
+# Migration Provider Comparison
+
+**Source:** /Users/david-noble/Workspace/Personal
+**Date:** 2026-02-01 07:51:22 UTC
+**Providers:** gemini,anthropic
+
+## Summary
+
+| Provider | Duration | Output Size | Valid JSON |
+|----------|----------|-------------|------------|
+| gemini | 174s | 53380 bytes | ❌ No |
+| anthropic | 48s | 13062 bytes | ❌ No |
+
+## Outputs
+
+### gemini
+
+```json
+```json
+{
+  "source_system": "tuckr",
+  "repo_layer": "personal",
+  "source_location": "/Users/david-noble/Workspace/Personal",
+  "target_location": "~/dotfiles",
+  "projects": [
+    {
+      "name": "all",
+      "description": "Core configurations for all platforms",
+      "source_groups": ["all"],
+      "always_deploy": true
+    },
+    {
+      "name": "microsoft",
+      "description": "Microsoft-related configurations",
+      "source_groups": ["microsoft"]
+    },
+    {
+      "name": "noblefactor",
+      "description": "Noble Factor specific configurations",
+      "source_groups": ["noblefactor"]
+    },
+    {
+      "name": "thenobles",
+      "description": "The Nobles specific configurations",
+      "source_groups": ["thenobles"]
+    }
+  ],
+  "segments": [
+    {
+      "directory": "all.Darwin",
+      "condition": "macOS",
+      "source_equivalent": "all-Darwin"
+    },
+    {
+      "directory": "all.Debian",
+      "condition": "Debian-based Linux",
+      "source_equivalent": "all-Debian"
+    },
+    {
+      "directory": "all.Linux",
+      "condition": "Linux",
+      "source_equivalent": "all-Linux"
+    },
+    {
+      "directory": "all.Unix",
+      "condition": "macOS or Linux",
+      "source_equivalent": "all-Unix"
+    },
+    {
+      "directory": "all.Windows",
+      "condition": "Windows",
+      "source_equivalent": "all-Windows"
+    },
+    {
+      "directory": "microsoft.Unix",
+      "condition": "macOS or Linux (Microsoft-related)",
+      "source_equivalent": "microsoft-Unix"
+    },
+    {
+      "directory": "microsoft.Windows",
+      "condition": "Windows (Microsoft-related)",
+      "source_equivalent": "microsoft-Windows"
+    },
+    {
+      "directory": "noblefactor.Unix",
+      "condition": "macOS or Linux (Noble Factor-related)",
+      "source_equivalent": "noblefactor-Unix"
+    },
+    {
+      "directory": "thenobles.Darwin",
+      "condition": "macOS (The Nobles-related)",
+      "source_equivalent": "thenobles-Darwin"
+    },
+    {
+      "directory": "System/Darwin",
+      "condition": "macOS (System-level)",
+      "source_equivalent": "Tools/Darwin"
+    },
+    {
+      "directory": "System/Debian",
+      "condition": "Debian-based Linux (System-level)",
+      "source_equivalent": "Tools/Debian"
+    },
+    {
+      "directory": "System/RHEL",
+      "condition": "RHEL-based Linux (System-level)",
+      "source_equivalent": "Tools/RHEL"
+    },
+    {
+      "directory": "System/Windows",
+      "condition": "Windows (System-level)",
+      "source_equivalent": "Tools/Windows"
+    }
+  ],
+  "template_conversions": [
+    {
+      "source_path": "Home/Configs/all/local/bin/Declare-BashScript",
+      "target_path": "scripts/Declare-BashScript",
+      "source_engine": "custom",
+      "syntax_changes": ["This script is a helper and will be moved to a 'scripts/' directory outside the writ source root. Its functionality should be reviewed for integration into lifecycle.yaml if needed."]
+    },
+    {
+      "source_path": "Install-UnixUserConfiguration",
+      "target_path": "scripts/Install-UnixUserConfiguration",
+      "source_engine": "custom",
+      "syntax_changes": ["This script's logic for generating .gitconfig, .gitconfig.local, and .ssh/config will be replaced by writ .template files. The script itself will be moved to a 'scripts/' directory outside the writ source root."]
+    },
+    {
+      "source_path": "Install-WindowsUserConfiguration.ps1",
+      "target_path": "scripts/Install-WindowsUserConfiguration.ps1",
+      "source_engine": "custom",
+      "syntax_changes": ["This script's logic for generating .gitconfig, .gitconfig.local, and .ssh/config will be replaced by writ .template files. The script itself will be moved to a 'scripts/' directory outside the writ source root."]
+    },
+    {
+      "source_path": "Tools/Darwin/Initialize-Darwin",
+      "target_path": "System/Darwin/lifecycle.yaml",
+      "source_engine": "custom",
+      "syntax_changes": ["The system initialization logic will be converted to a lifecycle.yaml file. Manual review is required to translate shell commands to declarative YAML steps."]
+    },
+    {
+      "source_path": "Tools/Debian/Initialize-Debian",
+      "target_path": "System/Debian/lifecycle.yaml",
+      "source_engine": "custom",
+      "syntax_changes": ["The system initialization logic will be converted to a lifecycle.yaml file. Manual review is required to translate shell commands to declarative YAML steps."]
+    },
+    {
+      "source_path": "Tools/RHEL/Initialize-RHEL",
+      "target_path": "System/RHEL/lifecycle.yaml",
+      "source_engine": "custom",
+      "syntax_changes": ["The system initialization logic will be converted to a lifecycle.yaml file. Manual review is required to translate shell commands to declarative YAML steps."]
+    },
+    {
+      "source_path": "Tools/Windows/Initialize-Windows.ps1",
+      "target_path": "System/Windows/lifecycle.yaml",
+      "source_engine": "custom",
+      "syntax_changes": ["The system initialization logic will be converted to a lifecycle.yaml file. Manual review is required to translate PowerShell commands to declarative YAML steps."]
+    },
+    {
+      "source_path": "Tools/Windows/Install-ApacheMaven.ps1",
+      "target_path": "System/Windows/packages.manifest",
+      "source_engine": "custom",
+      "syntax_changes": ["The package installation logic will be absorbed into packages.manifest. The script itself will be removed."]
+    },
+    {
+      "source_path": "Tools/Windows/FixUp-Acls.ps1",
+      "target_path": "System/Windows/lifecycle.yaml",
+      "source_engine": "custom",
+      "syntax_changes": ["The ACL fixing logic will be absorbed into lifecycle.yaml. The script itself will be removed."]
+    },
+    {
+      "source_path": "Tools/Windows/FixUp-Path.ps1",
+      "target_path": "System/Windows/lifecycle.yaml",
+      "source_engine": "custom",
+      "syntax_changes": ["The PATH fixing logic will be absorbed into lifecycle.yaml. The script itself will be removed."]
+    },
+    {
+      "source_path": "Home/Configs/all/.Personal-secrets/gnupg/Import-GnuPg.ps1",
+      "target_path": "System/Windows/lifecycle.yaml",
+      "source_engine": "custom",
+      "syntax_changes": ["The GPG key import logic will be absorbed into lifecycle.yaml. The script itself will be removed."]
+    },
+    {
+      "source_path": "Sync-CommonBuildTools",
+      "target_path": "scripts/Sync-CommonBuildTools",
+      "source_engine": "custom",
+      "syntax_changes": ["This utility script will be moved to a 'scripts/' directory outside the writ source root. Its functionality is external to writ's core dotfile management."]
+    }
+  ],
+  "encryption_conversions": [],
+  "unencrypted_secrets": [
+    {
+      "path": "Deployments/homebridge/US-WA/certificate-request.env",
+      "reason": "Filename signal: '.env' files often contain sensitive environment variables.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/homebridge/US-WA/ssl/certificate.pem",
+      "reason": "Filename signal: '*.pem' files often contain certificates or keys.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/homebridge/US-WA/ssl/private-key.pem",
+      "reason": "Filename signal: '*.pem' and 'private-key' in name, indicates a private key.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/homebridge/US-WA/ssl/self-signed.csr",
+      "reason": "Filename signal: '*.csr' files often contain certificate signing requests, which can be sensitive.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/homebridge/rclone.conf",
+      "reason": "Filename signal: 'rclone.conf' typically contains cloud storage credentials.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/webhook/us-wa/certificate-request.env",
+      "reason": "Filename signal: '.env' files often contain sensitive environment variables.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/webhook/us-wa/hooks.env",
+      "reason": "Filename signal: '.env' files often contain sensitive environment variables.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/webhook/us-wa/service.env",
+      "reason": "Filename signal: '.env' files often contain sensitive environment variables.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/webhook/us-wa/ssh/id_rsa",
+      "reason": "Filename signal: 'id_rsa' is a private SSH key.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/webhook/us-wa/ssl-certificates/certificate.pem",
+      "reason": "Filename signal: '*.pem' files often contain certificates or keys.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/webhook/us-wa/ssl-certificates/private-key.pem",
+      "reason": "Filename signal: '*.pem' and 'private-key' in name, indicates a private key.",
+      "recommendation": "Encrypt with .sops extension."
+    },
+    {
+      "path": "Deployments/webhook/us-wa/ssl-certificates/self-signed.csr",
+      "reason": "Filename signal: '*.csr' files often contain certificate signing requests, which can be sensitive.",
+      "recommendation": "Encrypt with .sops extension."
+    }
+  ],
+  "script_conversions": [
+    {
+      "source_path": "Build-DarwinInitializationPackage",
+      "packages_extracted": [
+        "port:cargo", "port:pre-commit", "brew:Homebrew", "brew:arduino-cli", "brew:azure-cli", "brew:brotli", "brew:c-ares", "brew:ca-certificates", "brew:git-crypt", "brew:icu4c@78", "brew:jwt-cli", "brew:libnghttp2", "brew:libnghttp3", "brew:libngtcp2", "brew:libsodium", "brew:libuv", "brew:libyaml", "brew:lz4", "brew:mongosh", "brew:moreutils", "brew:mpdecimal", "brew:node", "brew:openssl@3", "brew:podman", "brew:python@3.11", "brew:python@3.13", "brew:readline", "brew:redis", "brew:simdjson", "brew:sqlite", "brew:uvwasi", "brew:xz", "brew:zsh-completions", "brew:zstd", "brew:dotnet-sdk", "cask:font-cascadia-code", "cask:font-fira-code", "cask:fuse-t", "cask:jetbrains-toolbox", "cask:orbstack", "cask:powershell", "cask:visual-studio-code", "port:ansifilter", "port:arping", "port:bash-completion", "port:codespell", "port:coreutils", "port:curl", "port:diffutils", "port:dos2unix", "port:expect", "port:findutils", "port:gawk", "port:gh", "port:git", "port:git-lfs", "port:gmake", "port:go", "port:gradle", "port:gradle-completion", "port:grep", "port:grepcidr", "port:gsed", "port:ipcalc", "port:iperf3", "port:jenv", "port:jq", "port:jwt-cli", "port:kubectl-1.27", "port:maven3", "port:moreutils", "port:mosh", "port:nmap", "port:openjdk21-zulu", "port:openjdk23-zulu", "port:py311-pip", "port:py312-pip", "port:py312-setuptools", "port:py313-pip", "port:python313", "port:rust", "port:scala_select", "port:shellcheck", "port:shfmt", "port:stow", "port:tmux", "port:tree", "port:util-linux", "port:zlib", "port:zsh-completions"
+      ],
+      "non_package_commands": [
+        "Complex GPG encryption and self-extracting archive creation logic.",
+        "Installation of Command Line Tools for Xcode and MacPorts via .pkg installers.",
+        "Git repository cloning and `git crypt` operations.",
+        "Pre-commit hook installation.",
+        "Calling `Install-UnixUserConfiguration`."
+      ]
+    },
+    {
+      "source_path": "Build-DebianInitializationPackage",
+      "packages_extracted": [
+        "apt:dirmngr", "apt:aptitude", "apt:apt-transport-https", "apt:ca-certificates", "apt:gnupg", "apt:wget", "apt:zsh", "apt:apparmor-utils", "apt:bash-completion", "apt:curl", "apt:expect", "apt:gh", "apt:git", "apt:git-credential-oauth", "apt:git-crypt", "apt:jq", "apt:mosh", "apt:nmap", "apt:openssh-server", "apt:pre-commit", "apt:rclone", "apt:shellcheck", "apt:shfmt", "apt:tmux", "apt:tree", "apt:vim", "apt:code", "apt:meld", "apt:xrdp", "apt:adduser", "apt:apt-listchanges", "apt:apt-utils", "apt:avahi-daemon", "apt:base-files", "apt:base-passwd", "apt:bash", "apt:bluez-firmware", "apt:bluez", "apt:bsdutils", "apt:build-essential", "apt:cifs-utils", "apt:cloud-init", "apt:containerd.io", "apt:coreutils", "apt:cpio", "apt:cron-daemon-common", "apt:cron", "apt:dash", "apt:debconf-i18n", "apt:debconf-utils", "apt:debconf", "apt:debian-archive-keyring", "apt:debianutils", "apt:dhcpcd-base", "apt:diffutils", "apt:dmidecode", "apt:docker-buildx-plugin", "apt:docker-ce-cli", "apt:docker-ce", "apt:docker-compose-plugin", "apt:dosfstools", "apt:dpkg", "apt:e2fsprogs", "apt:ed", "apt:ethtool", "apt:fbset", "apt:fdisk", "apt:file", "apt:findutils", "apt:firmware-atheros", "apt:firmware-brcm80211", "apt:firmware-libertas", "apt:firmware-mediatek", "apt:firmware-realtek", "apt:gcc-14-base", "apt:gdb", "apt:git-filter-repo", "apt:gpiod", "apt:grep", "apt:gzip", "apt:hostname", "apt:htop", "apt:init-system-helpers", "apt:init", "apt:initramfs-tools", "apt:iproute2", "apt:iputils-ping", "apt:keyboard-configuration", "apt:kmod", "apt:kms++-utils", "apt:less", "apt:libacl1", "apt:libapparmor1", "apt:libapt-pkg7.0", "apt:libattr1", "apt:libaudit-common", "apt:libaudit1", "apt:libblkid1", "apt:libbpf1", "apt:libbsd0", "apt:libbz2-1.0", "apt:libc-bin", "apt:libc6", "apt:libcap-ng0", "apt:libcap2-bin", "apt:libcap2", "apt:libcom-err2", "apt:libcrypt1", "apt:libdb5.3t64", "apt:libdebconfclient0", "apt:libedit2", "apt:libelf1t64", "apt:libext2fs2t64", "apt:libfdisk1", "apt:libgcc-s1", "apt:libgmp10", "apt:libgssapi-krb5-2", "apt:libhogweed6t64", "apt:libidn2-0", "apt:libjansson4", "apt:libk5crypto3", "apt:libkeyutils1", "apt:libkmod2", "apt:libkrb5-3", "apt:libkrb5support0", "apt:liblastlog2-2", "apt:liblocale-gettext-perl", "apt:liblz4-1", "apt:liblzma5", "apt:libmd0", "apt:libmnl0", "apt:libmount1", "apt:libmtp-runtime", "apt:libncursesw6", "apt:libnettle8t64", "apt:libnewt0.52", "apt:libnftables1", "apt:libnftnl11", "apt:libpam-chksshpwd", "apt:libpam-modules-bin", "apt:libpam-modules", "apt:libpam-runtime", "apt:libpam0g", "apt:libpcre2-8-0", "apt:libpopt0", "apt:libproc2-0", "apt:libreadline8t64", "apt:libseccomp2", "apt:libselinux1", "apt:libsemanage-common", "apt:libsemanage2", "apt:libsepol2", "apt:libslang2", "apt:libsmartcols1", "apt:libsqlite3-0", "apt:libss2", "apt:libssl3t64", "apt:libstdc++6", "apt:libsystemd-shared", "apt:libsystemd0", "apt:libtext-charwidth-perl", "apt:libtext-iconv-perl", "apt:libtext-wrapi18n-perl", "apt:libtinfo6", "apt:libtirpc-common", "apt:libtirpc3t64", "apt:libudev1", "apt:libunistring5", "apt:libuuid1", "apt:libxtables12", "apt:libxxhash0", "apt:libzstd1", "apt:linux-headers-rpi-2712", "apt:linux-headers-rpi-v8", "apt:linux-image-rpi-2712", "apt:linux-image-rpi-v8", "apt:linux-sysctl-defaults", "apt:locales", "apt:login.defs", "apt:login", "apt:logrotate", "apt:logsave", "apt:lsb-release", "apt:lshw", "apt:lua5.1", "apt:luajit", "apt:man-db", "apt:manpages-dev", "apt:mawk", "apt:mkvtoolnix", "apt:mosh", "apt:mount", "apt:nano", "apt:ncdu", "apt:ncurses-base", "apt:ncurses-bin", "apt:net-tools", "apt:netbase", "apt:network-manager", "apt:nftables", "apt:nmap", "apt:ntfs-3g", "apt:openssh-server", "apt:openssl-provider-legacy", "apt:openssl", "apt:p7zip-full", "apt:parted", "apt:passwd", "apt:pciutils", "apt:perl-base", "apt:pkg-config", "apt:procps", "apt:psmisc", "apt:python-is-python3", "apt:python3-gpiozero", "apt:python3-libgpiod", "apt:python3-rpi-lgpio", "apt:python3-smbus2", "apt:python3-spidev", "apt:python3-venv", "apt:raspberrypi-archive-keyring", "apt:raspberrypi-net-mods", "apt:raspberrypi-sys-mods", "apt:raspi-config", "apt:raspi-firmware", "apt:raspi-utils", "apt:rclone", "apt:readline-common", "apt:rpi-eeprom", "apt:rpi-keyboard-config", "apt:rpi-keyboard-fw-update", "apt:rpi-loop-utils", "apt:rpi-swap", "apt:rpi-update", "apt:rpicam-apps-lite", "apt:rsync", "apt:sed", "apt:sensible-utils", "apt:sqv", "apt:ssh-import-id", "apt:ssh", "apt:stow", "apt:strace", "apt:sudo", "apt:systemd-sysv", "apt:systemd-timesyncd", "apt:systemd", "apt:sysvinit-utils", "apt:tar", "apt:tmux", "apt:tree", "apt:tzdata", "apt:udev", "apt:udisks2", "apt:unzip", "apt:usb-modeswitch", "apt:usbutils", "apt:userconf-pi", "apt:util-linux", "apt:v4l-utils", "apt:vim-common", "apt:vim-tiny", "apt:vim", "apt:wget", "apt:whiptail", "apt:wireless-tools", "apt:wpasupplicant", "apt:zip", "apt:zlib1g", "apt:zsh",
+        "curl:claude", "powershell", "dotnet-sdk", "jetbrains-toolbox"
+      ],
+      "non_package_commands": [
+        "Complex GPG encryption and self-extracting archive creation logic.",
+        "System environment configuration (locales, PATH, /etc/profile.d, /etc/ssh/sshd_config.d, /etc/sudoers.d, /etc/zsh/zshenv).",
+        "Adding third-party APT repositories (Azul, Docker, GitHub CLI, Microsoft, PostgreSQL).",
+        "Git repository cloning and `git crypt` operations.",
+        "Pre-commit hook installation.",
+        "User account info update (`usermod`).",
+        "Calling `Install-UnixUserConfiguration`.",
+        "Graphical development tools installation and configuration (`dconf load`)."
+      ]
+    },
+    {
+      "source_path": "Build-RHELInitializationPackage",
+      "packages_extracted": [
+        "dnf:ca-certificates", "dnf:gnupg", "dnf:wget", "dnf:zsh", "dnf:bash-completion", "dnf:curl", "dnf:expect", "dnf:gh", "dnf:git", "dnf:git-credential-oauth", "dnf:git-crypt", "dnf:jq", "dnf:mosh", "dnf:nmap", "dnf:openssh-server", "dnf:pre-commit", "dnf:rclone", "dnf:shellcheck", "dnf:shfmt", "dnf:tmux", "dnf:tree", "dnf:vim-enhanced", "dnf:wget", "dnf:zsh", "dnf:code", "dnf:meld", "dnf:xrdp",
+        "curl:claude", "powershell", "dotnet-sdk", "jetbrains-toolbox"
+      ],
+      "non_package_commands": [
+        "Complex GPG encryption and self-extracting archive creation logic.",
+        "System environment configuration (dnf clean/upgrade, PATH, /etc/profile.d, /etc/ssh/sshd_config.d, /etc/sudoers.d, /etc/zshenv).",
+        "Adding third-party DNF/RPM repositories (CRB, EPEL, Azul, Docker, Microsoft, GitHub CLI, PostgreSQL).",
+        "Git repository cloning and `git crypt` operations.",
+        "Pre-commit hook installation.",
+        "User account info update (`usermod`).",
+        "Calling `Install-UnixUserConfiguration`.",
+        "Graphical development tools installation and configuration (`dconf load`)."
+      ]
+    },
+    {
+      "source_path": "Build-WindowsInitializationPackage",
+      "packages_extracted": [
+        "winget:Git.Git", "winget:GnuPG.GnuPG", "winget:Azul.Zulu.25.JDK", "winget:GitHub.cli", "winget:GoLang.Go", "winget:Insecure.Nmap", "winget:JetBrains.Toolbox", "winget:Microsoft.AzureCLI", "winget:Microsoft.DotNet.SDK.10", "winget:Microsoft.VisualStudioCode", "winget:OpenJS.NodeJS.LTS", "winget:PostgreSQL.PostgreSQL.17", "winget:Python.Python.3.14", "winget:Rclone.Rclone", "winget:Rustlang.Rustup", "winget:vim.vim", "winget:Docker.DockerDesktop", "winget:Hashicorp.Terraform", "winget:Slack.Slack",
+        "pip:pre-commit", "powershell_module:Az", "powershell_module:posh-git", "powershell_module:PSReadLine", "wsl:Ubuntu", "git-crypt", "winget:Apache.Maven"
+      ],
+      "non_package_commands": [
+        "Complex GPG encryption and self-extracting PowerShell script creation logic.",
+        "Winget source update.",
+        "Manual git-crypt download and installation.",
+        "Enabling long paths and Developer Mode.",
+        "Git repository cloning and `git crypt` operations.",
+        "Pre-commit hook installation.",
+        "Calling `Install-WindowsUserConfiguration.ps1`.",
+        "Calling `FixUp-Acls.ps1` and `FixUp-Path.ps1`."
+      ]
+    }
+  ],
+  "execution_graph": {
+    "nodes": [
+      {
+        "id": "mkdir-dotfiles",
+        "op": "mkdir",
+        "target": ".",
+        "reason": "Create writ source root"
+      },
+      {
+        "id": "mkdir-home",
+        "op": "mkdir",
+        "target": "Home",
+        "reason": "Create Home directory for user-level configs",
+        "depends_on": ["mkdir-dotfiles"]
+      },
+      {
+        "id": "mkdir-system",
+        "op": "mkdir",
+        "target": "System",
+        "reason": "Create System directory for system-level configs",
+        "depends_on": ["mkdir-dotfiles"]
+      },
+      {
+        "id": "mkdir-scripts",
+        "op": "mkdir",
+        "target": "scripts",
+        "reason": "Create scripts directory for external build/utility scripts",
+        "depends_on": ["mkdir-dotfiles"]
+      },
+      {
+        "id": "rename-home-configs-all",
+        "op": "rename",
+        "source": "Home/Configs/all",
+        "target": "Home/all",
+        "project": "all",
+        "reason": "Flatten Configs directory and normalize project name"
+      },
+      {
+        "id": "rename-home-configs-all-darwin",
+        "op": "rename",
+        "source": "Home/Configs/all-Darwin",
+        "target": "Home/all.Darwin",
+        "project": "all",
+        "reason": "Flatten Configs directory and convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-home-configs-all-debian",
+        "op": "rename",
+        "source": "Home/Configs/all-Debian",
+        "target": "Home/all.Debian",
+        "project": "all",
+        "reason": "Flatten Configs directory and convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-home-configs-all-linux",
+        "op": "rename",
+        "source": "Home/Configs/all-Linux",
+        "target": "Home/all.Linux",
+        "project": "all",
+        "reason": "Flatten Configs directory and convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-home-configs-all-unix",
+        "op": "rename",
+        "source": "Home/Configs/all-Unix",
+        "target": "Home/all.Unix",
+        "project": "all",
+        "reason": "Flatten Configs directory and convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-home-configs-all-windows",
+        "op": "rename",
+        "source": "Home/Configs/all-Windows",
+        "target": "Home/all.Windows",
+        "project": "all",
+        "reason": "Flatten Configs directory and convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-home-configs-microsoft",
+        "op": "rename",
+        "source": "Home/Configs/microsoft",
+        "target": "Home/microsoft",
+        "project": "microsoft",
+        "reason": "Flatten Configs directory"
+      },
+      {
+        "id": "rename-home-configs-microsoft-unix",
+        "op": "rename",
+        "source": "Home/Configs/microsoft-Unix",
+        "target": "Home/microsoft.Unix",
+        "project": "microsoft",
+        "reason": "Flatten Configs directory and convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-home-configs-microsoft-windows",
+        "op": "rename",
+        "source": "Home/Configs/microsoft-Windows",
+        "target": "Home/microsoft.Windows",
+        "project": "microsoft",
+        "reason": "Flatten Configs directory and convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-home-configs-noblefactor",
+        "op": "rename",
+        "source": "Home/Configs/noblefactor",
+        "target": "Home/noblefactor",
+        "project": "noblefactor",
+        "reason": "Flatten Configs directory"
+      },
+      {
+        "id": "rename-home-configs-noblefactor-unix",
+        "op": "rename",
+        "source": "Home/Configs/noblefactor-Unix",
+        "target": "Home/noblefactor.Unix",
+        "project": "noblefactor",
+        "reason": "Flatten Configs directory and convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-home-configs-thenobles",
+        "op": "rename",
+        "source": "Home/Configs/thenobles",
+        "target": "Home/thenobles",
+        "project": "thenobles",
+        "reason": "Flatten Configs directory"
+      },
+      {
+        "id": "rename-home-configs-thenobles-darwin",
+        "op": "rename",
+        "source": "Home/Configs/thenobles-Darwin",
+        "target": "Home/thenobles.Darwin",
+        "project": "thenobles",
+        "reason": "Flatten Configs directory and convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "remove-home-configs-dir",
+        "op": "remove",
+        "source": "Home/Configs",
+        "reason": "Remove now empty intermediate Configs directory",
+        "depends_on": [
+          "rename-home-configs-all", "rename-home-configs-all-darwin", "rename-home-configs-all-debian", "rename-home-configs-all-linux", "rename-home-configs-all-unix", "rename-home-configs-all-windows",
+          "rename-home-configs-microsoft", "rename-home-configs-microsoft-unix", "rename-home-configs-microsoft-windows",
+          "rename-home-configs-noblefactor", "rename-home-configs-noblefactor-unix",
+          "rename-home-configs-thenobles", "rename-home-configs-thenobles-darwin"
+        ]
+      },
+      {
+        "id": "rename-tools-darwin",
+        "op": "rename",
+        "source": "Tools/Darwin",
+        "target": "System/Darwin",
+        "reason": "Move system-level configurations to System directory",
+        "depends_on": ["mkdir-system"]
+      },
+      {
+        "id": "rename-tools-debian",
+        "op": "rename",
+        "source": "Tools/Debian",
+        "target": "System/Debian",
+        "reason": "Move system-level configurations to System directory",
+        "depends_on": ["mkdir-system"]
+      },
+      {
+        "id": "rename-tools-rhel",
+        "op": "rename",
+        "source": "Tools/RHEL",
+        "target": "System/RHEL",
+        "reason": "Move system-level configurations to System directory",
+        "depends_on": ["mkdir-system"]
+      },
+      {
+        "id": "rename-tools-windows",
+        "op": "rename",
+        "source": "Tools/Windows",
+        "target": "System/Windows",
+        "reason": "Move system-level configurations to System directory",
+        "depends_on": ["mkdir-system"]
+      },
+      {
+        "id": "remove-tools-dir",
+        "op": "remove",
+        "source": "Tools",
+        "reason": "Remove now empty Tools directory",
+        "depends_on": [
+          "rename-tools-darwin", "rename-tools-debian", "rename-tools-rhel", "rename-tools-windows"
+        ]
+      },
+      {
+        "id": "move-deployments",
+        "op": "rename",
+        "source": "Deployments",
+        "target": "../scripts/Deployments",
+        "reason": "Move deployment-specific configurations outside writ source root as they are not dotfiles."
+      },
+      {
+        "id": "move-build-darwin-init-package",
+        "op": "rename",
+        "source": "Build-DarwinInitializationPackage",
+        "target": "scripts/Build-DarwinInitializationPackage",
+        "reason": "Move complex build script outside writ source root."
+      },
+      {
+        "id": "move-build-debian-init-package",
+        "op": "rename",
+        "source": "Build-DebianInitializationPackage",
+        "target": "scripts/Build-DebianInitializationPackage",
+        "reason": "Move complex build script outside writ source root."
+      },
+      {
+        "id": "move-build-rhel-init-package",
+        "op": "rename",
+        "source": "Build-RHELInitializationPackage",
+        "target": "scripts/Build-RHELInitializationPackage",
+        "reason": "Move complex build script outside writ source root."
+      },
+      {
+        "id": "move-build-windows-init-package",
+        "op": "rename",
+        "source": "Build-WindowsInitializationPackage",
+        "target": "scripts/Build-WindowsInitializationPackage",
+        "reason": "Move complex build script outside writ source root."
+      },
+      {
+        "id": "move-install-unix-user-config",
+        "op": "rename",
+        "source": "Install-UnixUserConfiguration",
+        "target": "scripts/Install-UnixUserConfiguration",
+        "reason": "Move main user configuration script outside writ source root, its logic will be absorbed by writ."
+      },
+      {
+        "id": "move-install-windows-user-config",
+        "op": "rename",
+        "source": "Install-WindowsUserConfiguration.ps1",
+        "target": "scripts/Install-WindowsUserConfiguration.ps1",
+        "reason": "Move main user configuration script outside writ source root, its logic will be absorbed by writ."
+      },
+      {
+        "id": "move-declare-bash-script",
+        "op": "rename",
+        "source": "Home/Configs/all/local/bin/Declare-BashScript",
+        "target": "scripts/Declare-BashScript",
+        "reason": "Move helper script outside writ source root."
+      },
+      {
+        "id": "move-sync-common-build-tools",
+        "op": "rename",
+        "source": "Sync-CommonBuildTools",
+        "target": "scripts/Sync-CommonBuildTools",
+        "reason": "Move utility script outside writ source root."
+      },
+      {
+        "id": "mkdir-scripts-share-bash-completion",
+        "op": "mkdir",
+        "target": "scripts/share/bash-completion/completions",
+        "reason": "Create directory for moved completion scripts",
+        "depends_on": ["mkdir-scripts"]
+      },
+      {
+        "id": "mkdir-scripts-share-man",
+        "op": "mkdir",
+        "target": "scripts/share/man/man1",
+        "reason": "Create directory for moved man pages",
+        "depends_on": ["mkdir-scripts"]
+      },
+      {
+        "id": "mkdir-scripts-share-zsh",
+        "op": "mkdir",
+        "target": "scripts/share/zsh/site-functions",
+        "reason": "Create directory for moved zsh functions",
+        "depends_on": ["mkdir-scripts"]
+      },
+      {
+        "id": "move-bash-completions",
+        "op": "rename",
+        "source": "share/bash-completion/completions",
+        "target": "scripts/share/bash-completion/completions",
+        "reason": "Move shell completion files for external scripts",
+        "depends_on": ["mkdir-scripts-share-bash-completion"]
+      },
+      {
+        "id": "move-man-pages",
+        "op": "rename",
+        "source": "share/man/man1",
+        "target": "scripts/share/man/man1",
+        "reason": "Move man pages for external scripts",
+        "depends_on": ["mkdir-scripts-share-man"]
+      },
+      {
+        "id": "move-zsh-functions",
+        "op": "rename",
+        "source": "share/zsh/site-functions",
+        "target": "scripts/share/zsh/site-functions",
+        "reason": "Move zsh function files for external scripts",
+        "depends_on": ["mkdir-scripts-share-zsh"]
+      },
+      {
+        "id": "remove-share-dir",
+        "op": "remove",
+        "source": "share",
+        "reason": "Remove now empty share directory",
+        "depends_on": ["move-bash-completions", "move-man-pages", "move-zsh-functions"]
+      },
+      {
+        "id": "remove-inventory-dir",
+        "op": "remove",
+        "source": "Inventory",
+        "reason": "Remove Inventory directory as it contains lists of installed packages, not source dotfiles."
+      },
+      {
+        "id": "remove-build-dir",
+        "op": "remove",
+        "source": "build",
+        "reason": "Remove build directory as it contains build artifacts, not source dotfiles."
+      },
+      {
+        "id": "generate-home-all-unix-gitconfig-template",
+        "op": "generate",
+        "target": "Home/all.Unix/.config/git/config.template",
+        "project": "all",
+        "reason": "Convert generated git config to writ template. Manual Go template conversion required.",
+        "content": "# Generated by writ migration\n[include]\n    path = ./config.all\n    path = ./config.os\n    path = ./config.local\n"
+      },
+      {
+        "id": "generate-home-all-unix-gitconfig-local-template",
+        "op": "generate",
+        "target": "Home/all.Unix/.config/git/config.local.template",
+        "project": "all",
+        "reason": "Convert generated git config.local to writ template. Manual Go template conversion required.",
+        "content": "# Generated by writ migration\n[user]\n    name = {{ .User.Name }}\n    email = {{ .User.Email }}\n"
+      },
+      {
+        "id": "generate-home-all-unix-ssh-config-template",
+        "op": "generate",
+        "target": "Home/all.Unix/.ssh/config.template",
+        "project": "all",
+        "reason": "Convert generated SSH config to writ template. Manual Go template conversion required.",
+        "content": "# Generated by writ migration\nInclude ./config.d/*\n"
+      },
+      {
+        "id": "generate-home-all-windows-gitconfig-template",
+        "op": "generate",
+        "target": "Home/all.Windows/.config/git/config.template",
+        "project": "all",
+        "reason": "Convert generated git config to writ template. Manual Go template conversion required.",
+        "content": "# Generated by writ migration\n[include]\n    path = ./config.all\n    path = ./config.os\n    path = ./config.local\n"
+      },
+      {
+        "id": "generate-home-all-windows-gitconfig-local-template",
+        "op": "generate",
+        "target": "Home/all.Windows/.config/git/config.local.template",
+        "project": "all",
+        "reason": "Convert generated git config.local to writ template. Manual Go template conversion required.",
+        "content": "# Generated by writ migration\n[user]\n    name = {{ .User.Name }}\n    email = {{ .User.Email }}\n"
+      },
+      {
+        "id": "generate-home-all-windows-ssh-config-template",
+        "op": "generate",
+        "target": "Home/all.Windows/.ssh/config.template",
+        "project": "all",
+        "reason": "Convert generated SSH config to writ template. Manual Go template conversion required.",
+        "content": "# Generated by writ migration\nInclude ./config.d/*\n"
+      },
+      {
+        "id": "generate-system-darwin-packages-manifest",
+        "op": "generate",
+        "target": "System/Darwin/packages.manifest",
+        "reason": "Generate packages.manifest for Darwin from extracted package lists.",
+        "content": "# Generated by writ migration from Initialize-Darwin and Inventory files\nport:cargo\nport:pre-commit\nbrew:Homebrew\nbrew:arduino-cli\nbrew:azure-cli\nbrew:brotli\nbrew:c-ares\nbrew:ca-certificates\nbrew:git-crypt\nbrew:icu4c@78\nbrew:jwt-cli\nbrew:libnghttp2\nbrew:libnghttp3\nbrew:libngtcp2\nbrew:libsodium\nbrew:libuv\nbrew:libyaml\nbrew:lz4\nbrew:mongosh\nbrew:moreutils\nbrew:mpdecimal\nbrew:node\nbrew:openssl@3\nbrew:podman\nbrew:python@3.11\nbrew:python@3.13\nbrew:readline\nbrew:redis\nbrew:simdjson\nbrew:sqlite\nbrew:uvwasi\nbrew:xz\nbrew:zsh-completions\nbrew:zstd\nbrew:dotnet-sdk\ncask:font-cascadia-code\ncask:font-fira-code\ncask:fuse-t\ncask:jetbrains-toolbox\ncask:orbstack\ncask:powershell\ncask:visual-studio-code\nport:ansifilter\nport:arping\nport:bash-completion\nport:codespell\nport:coreutils\nport:curl\nport:diffutils\nport:dos2unix\nport:expect\nport:findutils\nport:gawk\nport:gh\nport:git\nport:git-lfs\nport:gmake\nport:go\nport:gradle\nport:gradle-completion\nport:grep\nport:grepcidr\nport:gsed\nport:ipcalc\nport:iperf3\nport:jenv\nport:jq\nport:jwt-cli\nport:kubectl-1.27\nport:maven3\nport:moreutils\nport:mosh\nport:nmap\nport:openjdk21-zulu\nport:openjdk23-zulu\nport:py311-pip\nport:py312-pip\nport:py312-setuptools\nport:py313-pip\nport:python313\nport:rust\nport:scala_select\nport:shellcheck\nport:shfmt\nport:stow\nport:tmux\nport:tree\nport:util-linux\nport:zlib\nport:zsh-completions\n"
+      },
+      {
+        "id": "generate-system-darwin-lifecycle-yaml",
+        "op": "generate",
+        "target": "System/Darwin/lifecycle.yaml",
+        "reason": "Generate lifecycle.yaml for Darwin from Initialize-Darwin script. Manual conversion required.",
+        "content": "# Generated by writ migration from Initialize-Darwin\n# Manual conversion of complex shell logic to declarative YAML steps is required.\n# This includes:\n# - Installation of Command Line Tools for Xcode and MacPorts via .pkg installers.\n# - Updating /etc files (e.g., paths, sudoers, sshd_config).\n# - Git repository cloning and `git crypt` operations (replace with SOPS setup).\n# - Pre-commit hook installation.\n# - User identity resolution (replace with writ config).\n# - Calling `Install-UnixUserConfiguration` (replace with `writ add` for user projects).\n"
+      },
+      {
+        "id": "generate-system-debian-packages-manifest",
+        "op": "generate",
+        "target": "System/Debian/packages.manifest",
+        "reason": "Generate packages.manifest for Debian from extracted package lists.",
+        "content": "# Generated by writ migration from Initialize-Debian and Inventory files\napt:dirmngr\napt:aptitude\napt:apt-transport-https\napt:ca-certificates\napt:gnupg\napt:wget\napt:zsh\napt:apparmor-utils\napt:bash-completion\napt:curl\napt:expect\napt:gh\napt:git\napt:git-credential-oauth\napt:git-crypt\napt:jq\napt:mosh\napt:nmap\napt:openssh-server\napt:pre-commit\napt:rclone\napt:shellcheck\napt:shfmt\napt:tmux\napt:tree\napt:vim\napt:code\napt:meld\napt:xrdp\napt:adduser\napt:apt-listchanges\napt:apt-utils\napt:avahi-daemon\napt:base-files\napt:base-passwd\napt:bash\napt:bluez-firmware\napt:bluez\napt:bsdutils\napt:build-essential\napt:cifs-utils\napt:cloud-init\napt:containerd.io\napt:coreutils\napt:cpio\napt:cron-daemon-common\napt:cron\napt:dash\napt:debconf-i18n\napt:debconf-utils\napt:debconf\napt:debian-archive-keyring\napt:debianutils\napt:dhcpcd-base\napt:diffutils\napt:dmidecode\napt:docker-buildx-plugin\napt:docker-ce-cli\napt:docker-ce\napt:docker-compose-plugin\napt:dosfstools\napt:dpkg\napt:e2fsprogs\napt:ed\napt:ethtool\napt:expect\napt:fbset\napt:fdisk\napt:file\napt:findutils\napt:firmware-atheros\napt:firmware-brcm80211\napt:firmware-libertas\napt:firmware-mediatek\napt:firmware-realtek\napt:gcc-14-base\napt:gdb\napt:git-filter-repo\napt:gpiod\napt:grep\napt:gzip\napt:hostname\napt:htop\napt:init-system-helpers\napt:init\napt:initramfs-tools\napt:iproute2\napt:iputils-ping\napt:keyboard-configuration\napt:kmod\napt:kms++-utils\napt:less\napt:libacl1\napt:libapparmor1\napt:libapt-pkg7.0\napt:libattr1\napt:libaudit-common\napt:libaudit1\napt:libblkid1\napt:libbpf1\napt:libbsd0\napt:libbz2-1.0\napt:libc-bin\napt:libc6\napt:libcap-ng0\napt:libcap2-bin\napt:libcap2\napt:libcom-err2\napt:libcrypt1\napt:libdb5.3t64\napt:libdebconfclient0\napt:libedit2\napt:libelf1t64\napt:libext2fs2t64\napt:libfdisk1\napt:libgcc-s1\napt:libgmp10\napt:libgssapi-krb5-2\napt:libhogweed6t64\napt:libidn2-0\napt:libjansson4\napt:libk5crypto3\napt:libkeyutils1\napt:libkmod2\napt:libkrb5-3\napt:libkrb5support0\napt:liblastlog2-2\napt:liblocale-gettext-perl\napt:liblz4-1\napt:liblzma5\napt:libmd0\napt:libmnl0\napt:libmount1\napt:libmtp-runtime\napt:libncursesw6\napt:libnettle8t64\napt:libnewt0.52\napt:libnftables1\napt:libnftnl11\napt:libpam-chksshpwd\napt:libpam-modules-bin\napt:libpam-modules\napt:libpam-runtime\napt:libpam0g\napt:libpcre2-8-0\napt:libpopt0\napt:libproc2-0\napt:libreadline8t64\napt:libseccomp2\napt:libselinux1\napt:libsemanage-common\napt:libsemanage2\napt:libsepol2\napt:libslang2\napt:libsmartcols1\napt:libsqlite3-0\napt:libss2\napt:libssl3t64\napt:libstdc++6\napt:libsystemd-shared\napt:libsystemd0\napt:libtext-charwidth-perl\napt:libtext-iconv-perl\napt:libtext-wrapi18n-perl\napt:libtinfo6\napt:libtirpc-common\napt:libtirpc3t64\napt:libudev1\napt:libunistring5\napt:libuuid1\napt:libxtables12\napt:libxxhash0\napt:libzstd1\napt:linux-headers-rpi-2712\napt:linux-headers-rpi-v8\napt:linux-image-rpi-2712\napt:linux-image-rpi-v8\napt:linux-sysctl-defaults\napt:locales\napt:login.defs\napt:login\napt:logrotate\napt:logsave\napt:lsb-release\napt:lshw\napt:lua5.1\napt:luajit\napt:man-db\napt:manpages-dev\napt:mawk\napt:mkvtoolnix\napt:mosh\napt:mount\napt:nano\napt:ncdu\napt:ncurses-base\napt:ncurses-bin\napt:net-tools\napt:netbase\napt:network-manager\napt:nftables\napt:nmap\napt:ntfs-3g\napt:openssh-server\napt:openssl-provider-legacy\napt:openssl\napt:p7zip-full\napt:parted\napt:passwd\napt:pciutils\napt:perl-base\napt:pkg-config\napt:procps\napt:psmisc\napt:python-is-python3\napt:python3-gpiozero\napt:python3-libgpiod\napt:python3-rpi-lgpio\napt:python3-smbus2\napt:python3-spidev\napt:python3-venv\napt:raspberrypi-archive-keyring\napt:raspberrypi-net-mods\napt:raspberrypi-sys-mods\napt:raspi-config\napt:raspi-firmware\napt:raspi-utils\napt:rclone\napt:readline-common\napt:rpi-eeprom\napt:rpi-keyboard-config\napt:rpi-keyboard-fw-update\napt:rpi-loop-utils\napt:rpi-swap\napt:rpi-update\napt:rpicam-apps-lite\napt:rsync\napt:sed\napt:sensible-utils\napt:sqv\napt:ssh-import-id\napt:ssh\napt:stow\napt:strace\napt:sudo\napt:systemd-sysv\napt:systemd-timesyncd\napt:systemd\napt:sysvinit-utils\napt:tar\napt:tmux\napt:tree\napt:tzdata\napt:udev\napt:udisks2\napt:unzip\napt:usb-modeswitch\napt:usbutils\napt:userconf-pi\napt:util-linux\napt:v4l-utils\napt:vim-common\napt:vim-tiny\napt:vim\napt:wget\napt:whiptail\napt:wireless-tools\napt:wpasupplicant\napt:zip\napt:zlib1g\napt:zsh\ncurl:claude\npowershell\ndotnet-sdk\njetbrains-toolbox\n"
+      },
+      {
+        "id": "generate-system-debian-lifecycle-yaml",
+        "op": "generate",
+        "target": "System/Debian/lifecycle.yaml",
+        "reason": "Generate lifecycle.yaml for Debian from Initialize-Debian script. Manual conversion required.",
+        "content": "# Generated by writ migration from Initialize-Debian\n# Manual conversion of complex shell logic to declarative YAML steps is required.\n# This includes:\n# - System environment configuration (locales, PATH, /etc/profile.d, /etc/ssh/sshd_config.d, /etc/sudoers.d, /etc/zsh/zshenv).\n# - Adding third-party APT repositories (Azul, Docker, GitHub CLI, Microsoft, PostgreSQL).\n# - Git repository cloning and `git crypt` operations (replace with SOPS setup).\n# - Pre-commit hook installation.\n# - User account info update (`usermod`).\n# - Calling `Install-UnixUserConfiguration` (replace with `writ add` for user projects).\n# - Graphical development tools installation and configuration (`dconf load`).\n"
+      },
+      {
+        "id": "generate-system-rhel-packages-manifest",
+        "op": "generate",
+        "target": "System/RHEL/packages.manifest",
+        "reason": "Generate packages.manifest for RHEL from extracted package lists.",
+        "content": "# Generated by writ migration from Initialize-RHEL\ndnf:ca-certificates\ndnf:gnupg\ndnf:wget\ndnf:zsh\ndnf:bash-completion\ndnf:curl\ndnf:expect\ndnf:gh\ndnf:git\ndnf:git-credential-oauth\ndnf:git-crypt\ndnf:jq\ndnf:mosh\ndnf:nmap\ndnf:openssh-server\ndnf:pre-commit\ndnf:rclone\ndnf:shellcheck\ndnf:shfmt\ndnf:tmux\ndnf:tree\ndnf:vim-enhanced\ndnf:wget\ndnf:zsh\ndnf:code\ndnf:meld\ndnf:xrdp\ncurl:claude\npowershell\ndotnet-sdk\njetbrains-toolbox\n"
+      },
+      {
+        "id": "generate-system-rhel-lifecycle-yaml",
+        "op": "generate",
+        "target": "System/RHEL/lifecycle.yaml",
+        "reason": "Generate lifecycle.yaml for RHEL from Initialize-RHEL script. Manual conversion required.",
+        "content": "# Generated by writ migration from Initialize-RHEL\n# Manual conversion of complex shell logic to declarative YAML steps is required.\n# This includes:\n# - System environment configuration (dnf clean/upgrade, PATH, /etc/profile.d, /etc/ssh/sshd_config.d, /etc/sudoers.d, /etc/zshenv).\n# - Adding third-party DNF/RPM repositories (CRB, EPEL, Azul, Docker, Microsoft, GitHub CLI, PostgreSQL).\n# - Git repository cloning and `git crypt` operations (replace with SOPS setup).\n# - Pre-commit hook installation.\n# - User account info update (`usermod`).\n# - Calling `Install-UnixUserConfiguration` (replace with `writ add` for user projects).\n# - Graphical development tools installation and configuration (`dconf load`).\n"
+      },
+      {
+        "id": "generate-system-windows-packages-manifest",
+        "op": "generate",
+        "target": "System/Windows/packages.manifest",
+        "reason": "Generate packages.manifest for Windows from Initialize-Windows.ps1 script.",
+        "content": "# Generated by writ migration from Initialize-Windows.ps1\nwinget:Git.Git\nwinget:GnuPG.GnuPG\nwinget:Azul.Zulu.25.JDK\nwinget:GitHub.cli\nwinget:GoLang.Go\nwinget:Insecure.Nmap\nwinget:JetBrains.Toolbox\nwinget:Microsoft.AzureCLI\nwinget:Microsoft.DotNet.SDK.10\nwinget:Microsoft.VisualStudioCode\nwinget:OpenJS.NodeJS.LTS\nwinget:PostgreSQL.PostgreSQL.17\nwinget:Python.Python.3.14\nwinget:Rclone.Rclone\nwinget:Rustlang.Rustup\nwinget:vim.vim\nwinget:Docker.DockerDesktop\nwinget:Hashicorp.Terraform\nwinget:Slack.Slack\npip:pre-commit\npowershell_module:Az\npowershell_module:posh-git\npowershell_module:PSReadLine\nwsl:Ubuntu\ngit-crypt\nwinget:Apache.Maven\n"
+      },
+      {
+        "id": "generate-system-windows-lifecycle-yaml",
+        "op": "generate",
+        "target": "System/Windows/lifecycle.yaml",
+        "reason": "Generate lifecycle.yaml for Windows from Initialize-Windows.ps1 script. Manual conversion required.",
+        "content": "# Generated by writ migration from Initialize-Windows.ps1\n# Manual conversion of complex PowerShell logic to declarative YAML steps is required.\n# This includes:\n# - Winget source update.\n# - Manual git-crypt download and installation (replace with SOPS setup).\n# - Enabling long paths and Developer Mode.\n# - Git repository cloning and `git crypt` operations (replace with SOPS setup).\n# - Pre-commit hook installation.\n# - Calling `Install-WindowsUserConfiguration.ps1` (replace with `writ add` for user projects).\n# - Calling `FixUp-Acls.ps1` and `FixUp-Path.ps1` (absorb logic into lifecycle.yaml).\n"
+      },
+      {
+        "id": "generate-sops-config",
+        "op": "generate",
+        "target": ".sops.yaml",
+        "reason": "Generate SOPS configuration for encrypted files previously managed by git-crypt.",
+        "content": "# Generated by writ migration\ncreation_rules:\n  - path_regex: Home/all/\\.Personal-secrets/.*\\.sops$\n    encrypted_regex: ^(data|stringData)$\n    # Add your SOPS keys here, e.g., age:\n    # age:\n    #   - age1...\n  - path_regex: Home/all/\\.ssh/.*\\.sops$\n    encrypted_regex: ^(data|stringData)$\n    # age:\n    #   - age1...\n"
+      }
+    ],
+    "edges": [
+      {"from": "mkdir-dotfiles", "to": "mkdir-home"},
+      {"from": "mkdir-dotfiles", "to": "mkdir-system"},
+      {"from": "mkdir-dotfiles", "to": "mkdir-scripts"},
+      {"from": "mkdir-home", "to": "rename-home-configs-all"},
+      {"from": "mkdir-home", "to": "rename-home-configs-all-darwin"},
+      {"from": "mkdir-home", "to": "rename-home-configs-all-debian"},
+      {"from": "mkdir-home", "to": "rename-home-configs-all-linux"},
+      {"from": "mkdir-home", "to": "rename-home-configs-all-unix"},
+      {"from": "mkdir-home", "to": "rename-home-configs-all-windows"},
+      {"from": "mkdir-home", "to": "rename-home-configs-microsoft"},
+      {"from": "mkdir-home", "to": "rename-home-configs-microsoft-unix"},
+      {"from": "mkdir-home", "to": "rename-home-configs-microsoft-windows"},
+      {"from": "mkdir-home", "to": "rename-home-configs-noblefactor"},
+      {"from": "mkdir-home", "to": "rename-home-configs-noblefactor-unix"},
+      {"from": "mkdir-home", "to": "rename-home-configs-thenobles"},
+      {"from": "mkdir-home", "to": "rename-home-configs-thenobles-darwin"},
+      {"from": "mkdir-system", "to": "rename-tools-darwin"},
+      {"from": "mkdir-system", "to": "rename-tools-debian"},
+      {"from": "mkdir-system", "to": "rename-tools-rhel"},
+      {"from": "mkdir-system", "to": "rename-tools-windows"},
+      {"from": "rename-home-configs-thenobles-darwin", "to": "remove-home-configs-dir"},
+      {"from": "rename-tools-windows", "to": "remove-tools-dir"},
+      {"from": "mkdir-scripts", "to": "mkdir-scripts-share-bash-completion"},
+      {"from": "mkdir-scripts", "to": "mkdir-scripts-share-man"},
+      {"from": "mkdir-scripts", "to": "mkdir-scripts-share-zsh"},
+      {"from": "mkdir-scripts-share-bash-completion", "to": "move-bash-completions"},
+      {"from": "mkdir-scripts-share-man", "to": "move-man-pages"},
+      {"from": "mkdir-scripts-share-zsh", "to": "move-zsh-functions"},
+      {"from": "move-zsh-functions", "to": "remove-share-dir"}
+    ]
+  },
+  "warnings": [
+    {
+      "message": "The 'Deployments/' directory contains deployment-specific configurations and secrets. These are not typically managed by writ as dotfiles. It has been moved to a 'scripts/' directory outside the writ source root. Review its contents and decide if they should be managed by a different system or if specific files should be brought into writ and encrypted with SOPS.",
+      "severity": "info",
+      "mitigation": "Manually review the contents of `scripts/Deployments/`. Encrypt any sensitive files with SOPS if they are to be managed by writ, or move them to a secure external location if not."
+    },
+    {
+      "message": "The 'Inventory/' directory contains lists of already installed packages. These files are not source dotfiles and have been removed. The package information has been extracted for generating `packages.manifest` files.",
+      "severity": "info",
+      "mitigation": "No action required, information has been extracted."
+    },
+    {
+      "message": "The 'build/' directory contains build artifacts (e.g., GPG-encrypted tarballs). These are not source dotfiles and have been removed. If any of these artifacts contain secrets, ensure the original source of those secrets is encrypted with SOPS.",
+      "severity": "info",
+      "mitigation": "No action required, artifacts have been removed. Ensure original secrets are managed with SOPS."
+    },
+    {
+      "message": "The original setup used `git-crypt` for encryption, particularly for `.Personal-secrets` and `.ssh` directories. Writ uses SOPS for encryption. You will need to manually decrypt your `git-crypt` files and then re-encrypt them with SOPS, adding the `.sops` extension to each encrypted file. A `.sops.yaml` file has been generated to configure SOPS for these paths.",
+      "severity": "breaking",
+      "mitigation": "1. Unlock your git-crypt repository (`git crypt unlock`). 2. For each sensitiv
+... (truncated)
+```
+
+### anthropic
+
+```json
+```json
+{
+  "source_system": "custom",
+  "repo_layer": "personal",
+  "source_location": "/Users/david-noble/Workspace/Personal",
+  "target_location": "/Users/david-noble/Workspace/Personal",
+  "projects": [
+    {
+      "name": "all",
+      "description": "Core configs deployed on every machine",
+      "source_groups": ["all"],
+      "always_deploy": true
+    },
+    {
+      "name": "microsoft",
+      "description": "Microsoft work-specific configs",
+      "source_groups": ["microsoft"],
+      "always_deploy": false
+    },
+    {
+      "name": "noblefactor",
+      "description": "Noble Factor organization configs",
+      "source_groups": ["noblefactor"],
+      "always_deploy": false
+    },
+    {
+      "name": "thenobles",
+      "description": "Personal family organization configs",
+      "source_groups": ["thenobles"],
+      "always_deploy": false
+    }
+  ],
+  "segments": [
+    {
+      "directory": "all.Darwin",
+      "condition": "macOS systems",
+      "source_equivalent": "all-Darwin"
+    },
+    {
+      "directory": "all.Debian",
+      "condition": "Debian-based Linux distributions",
+      "source_equivalent": "all-Debian"
+    },
+    {
+      "directory": "all.Linux",
+      "condition": "Linux systems",
+      "source_equivalent": "all-Linux"
+    },
+    {
+      "directory": "all.Unix",
+      "condition": "Unix-like systems (Darwin and Linux)",
+      "source_equivalent": "all-Unix"
+    },
+    {
+      "directory": "all.Windows",
+      "condition": "Windows systems",
+      "source_equivalent": "all-Windows"
+    },
+    {
+      "directory": "microsoft.Unix",
+      "condition": "Unix-like systems with Microsoft project",
+      "source_equivalent": "microsoft-Unix"
+    },
+    {
+      "directory": "microsoft.Windows",
+      "condition": "Windows systems with Microsoft project",
+      "source_equivalent": "microsoft-Windows"
+    },
+    {
+      "directory": "noblefactor.Unix",
+      "condition": "Unix-like systems with Noble Factor project",
+      "source_equivalent": "noblefactor-Unix"
+    },
+    {
+      "directory": "thenobles.Darwin",
+      "condition": "macOS systems with thenobles project",
+      "source_equivalent": "thenobles-Darwin"
+    }
+  ],
+  "template_conversions": [],
+  "encryption_conversions": [
+    {
+      "source_path": "build/debian-initialization.2025-10-13.20a94c04.tar.gz.gpg",
+      "target_path": "build/debian-initialization.2025-10-13.20a94c04.tar.gz.sops",
+      "source_method": "gpg",
+      "target_method": "sops"
+    }
+  ],
+  "unencrypted_secrets": [
+    {
+      "path": "Deployments/homebridge/US-WA/certificate-request.env",
+      "reason": "Filename contains 'certificate' and extension '.env' suggests environment file with secrets",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "high"
+    },
+    {
+      "path": "Deployments/homebridge/US-WA/ssl/private-key.pem",
+      "reason": "Filename 'private-key.pem' matches private key pattern",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "critical"
+    },
+    {
+      "path": "Deployments/homebridge/US-WA/ssl/certificate.pem",
+      "reason": "File in ssl/ directory, certificate files may contain sensitive data",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "medium"
+    },
+    {
+      "path": "Deployments/webhook/us-wa/certificate-request.env",
+      "reason": "Filename contains 'certificate' and extension '.env' suggests environment file with secrets",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "high"
+    },
+    {
+      "path": "Deployments/webhook/us-wa/hooks.env",
+      "reason": "Extension '.env' suggests environment file with secrets",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "high"
+    },
+    {
+      "path": "Deployments/webhook/us-wa/service.env",
+      "reason": "Extension '.env' suggests environment file with secrets",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "high"
+    },
+    {
+      "path": "Deployments/webhook/us-wa/ssh/id_rsa",
+      "reason": "Filename 'id_rsa' matches private SSH key pattern",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "critical"
+    },
+    {
+      "path": "Deployments/webhook/us-wa/ssl-certificates/private-key.pem",
+      "reason": "Filename 'private-key.pem' matches private key pattern",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "critical"
+    },
+    {
+      "path": "Deployments/webhook/us-wa/ssl-certificates/certificate.pem",
+      "reason": "File in ssl-certificates/ directory, certificate files may contain sensitive data",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "medium"
+    },
+    {
+      "path": "Deployments/homebridge/rclone.conf",
+      "reason": "rclone.conf typically contains API keys and credentials for cloud storage",
+      "recommendation": "Encrypt with .sops extension",
+      "severity": "high"
+    }
+  ],
+  "script_conversions": [
+    {
+      "source_path": "Build-DarwinInitializationPackage",
+      "packages_extracted": [],
+      "non_package_commands": [
+        "build system initialization",
+        "package creation and encryption"
+      ]
+    },
+    {
+      "source_path": "Build-DebianInitializationPackage",
+      "packages_extracted": [],
+      "non_package_commands": [
+        "build system initialization",
+        "package creation and encryption"
+      ]
+    },
+    {
+      "source_path": "Build-RHELInitializationPackage",
+      "packages_extracted": [],
+      "non_package_commands": [
+        "build system initialization",
+        "package creation and encryption"
+      ]
+    },
+    {
+      "source_path": "Build-WindowsInitializationPackage",
+      "packages_extracted": [],
+      "non_package_commands": [
+        "build system initialization",
+        "package creation and encryption"
+      ]
+    },
+    {
+      "source_path": "Install-UnixUserConfiguration",
+      "packages_extracted": [],
+      "non_package_commands": [
+        "tuckr deployment",
+        "dotfiles management"
+      ]
+    },
+    {
+      "source_path": "Install-WindowsUserConfiguration.ps1",
+      "packages_extracted": [],
+      "non_package_commands": [
+        "tuckr deployment",
+        "dotfiles management"
+      ]
+    }
+  ],
+  "execution_graph": {
+    "nodes": [
+      {
+        "id": "mkdir-001",
+        "op": "mkdir",
+        "target": "Home/all",
+        "project": "all",
+        "reason": "Ensure all project directory exists"
+      },
+      {
+        "id": "rename-001",
+        "op": "rename",
+        "source": "Home/Configs/all-Darwin",
+        "target": "Home/all.Darwin",
+        "project": "all",
+        "reason": "Convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-002",
+        "op": "rename",
+        "source": "Home/Configs/all-Debian",
+        "target": "Home/all.Debian",
+        "project": "all",
+        "reason": "Convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-003",
+        "op": "rename",
+        "source": "Home/Configs/all-Linux",
+        "target": "Home/all.Linux",
+        "project": "all",
+        "reason": "Convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-004",
+        "op": "rename",
+        "source": "Home/Configs/all-Unix",
+        "target": "Home/all.Unix",
+        "project": "all",
+        "reason": "Convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-005",
+        "op": "rename",
+        "source": "Home/Configs/all-Windows",
+        "target": "Home/all.Windows",
+        "project": "all",
+        "reason": "Convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-006",
+        "op": "rename",
+        "source": "Home/Configs/all",
+        "target": "Home/all",
+        "project": "all",
+        "reason": "Move base project out of Configs subdirectory"
+      },
+      {
+        "id": "rename-007",
+        "op": "rename",
+        "source": "Home/Configs/microsoft-Unix",
+        "target": "Home/microsoft.Unix",
+        "project": "microsoft",
+        "reason": "Convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-008",
+        "op": "rename",
+        "source": "Home/Configs/microsoft-Windows",
+        "target": "Home/microsoft.Windows",
+        "project": "microsoft",
+        "reason": "Convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-009",
+        "op": "rename",
+        "source": "Home/Configs/microsoft",
+        "target": "Home/microsoft",
+        "project": "microsoft",
+        "reason": "Move base project out of Configs subdirectory"
+      },
+      {
+        "id": "rename-010",
+        "op": "rename",
+        "source": "Home/Configs/noblefactor-Unix",
+        "target": "Home/noblefactor.Unix",
+        "project": "noblefactor",
+        "reason": "Convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-011",
+        "op": "rename",
+        "source": "Home/Configs/noblefactor",
+        "target": "Home/noblefactor",
+        "project": "noblefactor",
+        "reason": "Move base project out of Configs subdirectory"
+      },
+      {
+        "id": "rename-012",
+        "op": "rename",
+        "source": "Home/Configs/thenobles-Darwin",
+        "target": "Home/thenobles.Darwin",
+        "project": "thenobles",
+        "reason": "Convert platform segment naming from dash to dot"
+      },
+      {
+        "id": "rename-013",
+        "op": "rename",
+        "source": "Home/Configs/thenobles",
+        "target": "Home/thenobles",
+        "project": "thenobles",
+        "reason": "Move base project out of Configs subdirectory"
+      },
+      {
+        "id": "remove-001",
+        "op": "remove",
+        "source": "Home/Configs",
+        "reason": "Remove now-empty Configs directory"
+      },
+      {
+        "id": "rename-014",
+        "op": "rename",
+        "source": "Tools/Darwin",
+        "target": "System/Darwin",
+        "reason": "Move system configs to System directory"
+      },
+      {
+        "id": "rename-015",
+        "op": "rename",
+        "source": "Tools/Debian",
+        "target": "System/Debian",
+        "reason": "Move system configs to System directory"
+      },
+      {
+        "id": "rename-016",
+        "op": "rename",
+        "source": "Tools/RHEL",
+        "target": "System/RHEL",
+        "reason": "Move system configs to System directory"
+      },
+      {
+        "id": "rename-017",
+        "op": "rename",
+        "source": "Tools/Windows",
+        "target": "System/Windows",
+        "reason": "Move system configs to System directory"
+      },
+      {
+        "id": "remove-002",
+        "op": "remove",
+        "source": "Tools",
+        "reason": "Remove now-empty Tools directory"
+      }
+    ],
+    "edges": [
+      {"from": "mkdir-001", "to": "rename-006"},
+      {"from": "rename-001", "to": "remove-001"},
+      {"from": "rename-002", "to": "remove-001"},
+      {"from": "rename-003", "to": "remove-001"},
+      {"from": "rename-004", "to": "remove-001"},
+      {"from": "rename-005", "to": "remove-001"},
+      {"from": "rename-006", "to": "remove-001"},
+      {"from": "rename-007", "to": "remove-001"},
+      {"from": "rename-008", "to": "remove-001"},
+      {"from": "rename-009", "to": "remove-001"},
+      {"from": "rename-010", "to": "remove-001"},
+      {"from": "rename-011", "to": "remove-001"},
+      {"from": "rename-012", "to": "remove-001"},
+      {"from": "rename-013", "to": "remove-001"},
+      {"from": "rename-014", "to": "remove-002"},
+      {"from": "rename-015", "to": "remove-002"},
+      {"from": "rename-016", "to": "remove-002"},
+      {"from": "rename-017", "to": "remove-002"}
+    ]
+  },
+  "warnings": [
+    {
+      "message": "This appears to be a custom dotfile management system with Tuckr-style organization but using a Configs/ subdirectory. The migration will flatten this structure to match standard writ conventions.",
+      "severity": "info",
+      "mitigation": "Review the flattened structure and update any hardcoded paths in scripts"
+    },
+    {
+      "message": "Multiple unencrypted secrets detected in Deployments/ directory. These should be encrypted before committing to version control.",
+      "severity": "breaking",
+      "mitigation": "Encrypt sensitive files with SOPS before proceeding with the migration"
+    },
+    {
+      "message": "Build scripts contain complex initialization logic that cannot be automatically converted to packages.manifest. Manual review required.",
+      "severity": "warning",
+      "mitigation": "Review build and install scripts to determine if any package installation logic should be extracted to packages.manifest files"
+    },
+    {
+      "message": "GPG-encrypted build artifact detected. Consider migrating encryption to SOPS for consistency.",
+      "severity": "info",
+      "mitigation": "Decrypt and re-encrypt with SOPS if this file needs to be version controlled"
+    }
+  ]
+}
+```
+```
+
+## Baseline Reference
+
+See: knowledge/migration/examples/baseline-personal.json

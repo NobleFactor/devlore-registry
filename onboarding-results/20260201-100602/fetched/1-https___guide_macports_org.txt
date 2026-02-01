@@ -1,0 +1,538 @@
+
+MacPorts Guide
+					Single Page
+				
+					Chunked
+				MacPorts GuideMark DulingDr. Michael A MaibaumWill BartonClemens LangCopyright © 2007–2025 The MacPorts ProjectCopyright © 2002–2004 The OpenDarwin Project1. Introduction2. Installing MacPorts2.1. Install Xcode2.2. Install MacPorts2.3. Upgrade MacPorts2.4. Uninstall MacPorts2.5. MacPorts and the Shell3. Using MacPorts3.1. The port Command3.2. Port Variants3.3. Common Tasks3.4. Port Binaries4. Portfile Development4.1. Portfile Introduction4.2. Creating a Portfile4.3. Example Portfiles4.4. Port Variants4.5. Subports4.6. Patch Files4.7. Local Portfile Repositories4.8. Portfile Best Practices4.9. MacPorts' buildbot5. Portfile Reference5.1. Global Keywords5.2. Global Variables5.3. Port Phases5.4. Dependencies5.5. Variants5.6. Subports5.7. Tcl Extensions & Useful Tcl Commands5.8. StartupItems5.9. Livecheck / Distcheck5.10. PortGroups6. MacPorts Internals6.1. File Hierarchy6.2. Configuration Files6.3. Port Images6.4. APIs and Libs6.5. The MacPorts Registry6.6. Tests7. MacPorts Project7.1. Using Trac for Tickets7.2. Using Git and GitHub7.3. Contributing to MacPorts7.4. Port Update Policies7.5. Updating Documentation7.6. MacPorts Membership7.7. The PortMgr Team8. MacPorts Guide GlossaryGlossaryChapter 1. IntroductionMacPorts is an easy to use system for compiling, installing, and managing open source software. MacPorts may
+ be conceptually divided into two main parts: the infrastructure, known as MacPorts base, and the set of
+ available ports. A MacPorts port is a set of specifications contained in a Portfile that defines an application, its characteristics, and any
+ files or special instructions required to install it. This allows you to use a single command to tell MacPorts
+ to automatically download, compile, and install applications and libraries. But using MacPorts to manage your
+ open source software provides several other significant advantages. For example, MacPorts:Installs automatically any required support software, known as dependencies, for a given port.Provides for uninstalls and upgrades for installed ports.Confines ported software to a private “sandbox” that keeps it from intermingling with
+ your operating system and its vendor-supplied software to prevent them from becoming corrupted.Allows you to create pre-compiled binary installers of ported applications to quickly install software
+ on remote computers without compiling from source code.MacPorts is developed on macOS, though it is designed to be portable so it can work on other Unix-like systems,
+ especially those descended from the Berkeley Software Distribution (BSD). In practice, installing ports only
+ works on macOS. MacPorts base can be compiled on Linux (and possibly other POSIX-compatible systems) where it is
+ mainly used to set up mirrors and generate support files for installations on macOS.The following notational conventions are used in the MacPorts Guide to distinguish between terminal
+ input/output, file text, and other special text types.Terminal I/O and file text.$ Commands to be typed into a terminal window.Command output to a terminal window.File text.Other special text types.A hyperlink: spontaneous
+ combustion.A file: /var/log/system.log.A command: ifconfig.An option: port installChapter 2. Installing MacPorts2.1. Install Xcode2.2. Install MacPorts2.3. Upgrade MacPorts2.4. Uninstall MacPorts2.5. MacPorts and the ShellThis chapter shows you how to install MacPorts and its prerequisites step-by-step. Note that the section about
+ installing Xcode is macOS-specific. If you wish to install MacPorts on
+ another platform, first make sure you have a working C compiler installed, skip ahead to installing MacPorts from source, and continue to the end of the
+ chapter.2.1. Install Xcode2.1.1. Install Xcode on OS X 10.9 or Later2.1.2. Install Xcode on OS X 10.7 Lion or OS X 10.8 Mountain Lion2.1.3. Install Xcode on Mac OS X 10.6 Snow Leopard2.1.4. Install Xcode on Older Releases of Mac OS XXcode is a package provided by Apple containing
+ compilers, libraries and additional tools required to develop applications for macOS.NoteAlways make sure to install the latest available version of Xcode for your macOS release; using
+ outdated versions of Xcode may cause port install failures. Also note that Xcode is not updated via OS
+ X's Software Update utility on OS versions prior to 10.6, and is updated via the Mac App Store starting
+ with 10.7.Follow the instructions for your version of macOS:2.1.1. Install Xcode on OS X 10.9 or Later(Optional) Download the latest version of Xcode from the Apple developer website or
+ get it using the Mac App
+ Store.A few ports require a full Xcode installation to use, but most don’t 
+ (read the description of the use_xcode keyword for specifics).
+ If you are OK with being unable to use these ports, you do not need to install Xcode.Next, open a terminal, run xcode-select --install, and
+ click the Install button to install the required command line developer tools. Don't worry if you see
+ a message telling you the software cannot be installed because it is not currently available from the
+ Software Update Server. This usually means you already have the latest version installed. You can also
+ get the command line tools from the
+ Apple developer website.2.1.2. Install Xcode on OS X 10.7 Lion or OS X 10.8 Mountain LionDownload the latest version of Xcode from the Apple developer website or
+ get it using the Mac App
+ Store.2.1.2.1. Xcode 4.3 and LaterXcode 4.3 and later do not automatically install the command line tools, but MacPorts requires
+ them. To install them, open the Xcode application, go to the Preferences window, to the Downloads
+ section, and click the Install button next to Command Line Tools. Be sure to return to this window
+ after every Xcode upgrade to ensure that the command line tools are also upgraded.If you wish to create Installer packages with port pkg, you will also need
+ to install PackageMaker, which is in the “Auxiliary Tools for Xcode” package as of
+ Xcode 4.3. The download page for this package can be opened via the Xcode -> Open Developer Tool ->
+ More Developer Tools... menu item. After downloading and mounting the disk image, drag the
+ PackageMaker application to your /Applications directory.2.1.3. Install Xcode on Mac OS X 10.6 Snow LeopardIf you are using Mac OS X 10.6, there are two branches of Xcode which could be considered to be the
+ latest, 3.2.x and 4.x. Xcode 4 costs money, but Xcode 3 is still available free of charge. There are two
+ options for downloading it:Xcode 3.2 - smaller download, but you will need to run Software Update after installing to
+ get the latest version. Note that Apple might at some point discontinue providing these
+ updates via their update servers.Xcode 3.2.6 and iOS SDK 4.3 - includes the iOS SDK which is not needed for
+ MacPorts.Both are available from the Apple
+ developer website. You may also be able to install Xcode 3.2 from your Mac OS X 10.6 DVD and
+ then run Software Update to get the latest version.Ensure that those of the following options that are available in the installer for your version of
+ Xcode are selected:UNIX DevelopmentSystem ToolsX11 SDKCommand Line Support2.1.4. Install Xcode on Older Releases of Mac OS XIf you have an earlier release of Mac OS X, you may download the latest version of Xcode for Mac OS X 10.5
+ (Xcode 3.0 and Xcode 3.1 Developer Tools) or 10.4 (Xcode 2.4.1 and Xcode 2.5 Developer Tools) from the
+ Apple developer website.Ensure that those of the following options that are available in the installer for your version of
+ Xcode are selected:UNIX DevelopmentSystem ToolsX11 SDKCommand Line Support2.2. Install MacPorts2.2.1. macOS Package Install2.2.2. Source Install2.2.3. Git Install2.2.4. Install Multiple MacPorts CopiesIf you are using macOS, you should install MacPorts using the macOS package installer unless you do not wish
+ to install it to /opt/local/, the default MacPorts location, or if you wish to install
+ a pre-release version of MacPorts base. However, if you wish to install multiple copies of MacPorts or install
+ MacPorts on another OS platform, you must install MacPorts from
+ the source code.2.2.1. macOS Package InstallThe macOS package installer automatically installs MacPorts, sets the
+ shell environment, and runs a selfupdate
+ operation to update the ports tree and MacPorts base with the latest release.Download the latest
+ MacPorts-2.11.6-....pkg installer from the releases
+ on GitHub. Here
+ are direct links for the latest versions of macOS:
+ macOS 15 Sequoia:
+ MacPorts-2.11.6-15-Sequoia.pkg
+ macOS 14 Sonoma:
+ MacPorts-2.11.6-14-Sonoma.pkg
+ macOS 13 Ventura:
+ MacPorts-2.11.6-13-Ventura.pkg
+ macOS 12 Monterey:
+ MacPorts-2.11.6-12-Monterey.pkg
+ macOS 11 Big Sur:
+ MacPorts-2.11.6-11-BigSur.pkg
+ macOS 10.15 Catalina:
+ MacPorts-2.11.6-10.15-Catalina.pkg
+ macOS 10.14 Mojave:
+ MacPorts-2.11.6-10.14-Mojave.pkg
+ macOS 10.13 High Sierra:
+ MacPorts-2.11.6-10.13-HighSierra.pkg
+ macOS 10.12 Sierra:
+ MacPorts-2.11.6-10.12-Sierra.pkgDouble-click the downloaded package installer to perform the default “easy”
+ install.After this step you are done already, MacPorts is now installed and your shell environment was
+ set up automatically by the installer. To confirm the installation is working as expected, now
+ try using port in a new terminal
+ window.$ port versionVersion: 2.11.6In case of problems such as “command not found”, make sure that you opened a new
+ terminal window or consult Section 2.5, “MacPorts and the Shell”. Otherwise, please skip the
+ remainder of this chapter and continue with Chapter 3, Using MacPorts in this guide.2.2.2. Source InstallIf you installed MacPorts using the package installer, skip this section. To install MacPorts from the
+ source code, follow the steps below.Download and extract the MacPorts
+ 2.11.6 tarball. Either do so using your browser and the Finder, or use
+ the given commands in a terminal window.$ curl -O https://distfiles.macports.org/MacPorts/MacPorts-2.11.6.tar.bz2
+$ tar xf MacPorts-2.11.6.tar.bz2Afterwards, perform the commands shown in the terminal window. If you wish to use a path other
+ than /opt/local, follow the instructions for installing multiple copies of MacPorts
+ instead.$ cd MacPorts-2.11.6/
+$ ./configure
+$ make
+$ sudo make installPlease continue with Section 2.5, “MacPorts and the Shell” to set up your shell
+ environment.2.2.3. Git InstallIf you installed MacPorts using the package installer, skip this section.There are times when some may want to run MacPorts from a version newer than the current stable
+ release. Maybe there's a new feature that you'd like to use, or it fixes an issue you've encountered, or
+ you just like to be on the cutting edge. These steps explain how to setup MacPorts for developers,
+ using only Git to keep MacPorts up to date.Though a distinction is made between pre-release and release versions of MacPorts base, the ports
+ collection supports no such distinction or versioning. The selfupdate
+ command installs the latest ports tree, and updates MacPorts base to the latest released version.Check out MacPorts sourcePick a location to store a working copy of the MacPorts code. For this example,
+ /opt/mports will be used, but you can put the source anywhere. This example
+ will create /opt/mports/macports-base containing everything needed for
+ MacPorts.$ mkdir -p /opt/mports
+$ cd /opt/mports
+$ git clone https://github.com/macports/macports-base.git
+$ cd macports-base
+$ git checkout v2.11.6 # skip this if you want to use the development versionBuild and Install MacPortsMacPorts uses autoconf and makefiles for installation. These commands will build and install
+ MacPorts to /opt/local. You can add --prefix to
+ ./configure to relocate MacPorts to another directory if needed.$ cd /opt/mports/macports-base
+$ ./configure --enable-readline
+$ make
+$ sudo make install
+$ make distclean(Optional) Configure MacPorts to use port information from GitThis step is useful if you want to do port development. Check out the ports tree from git:$ cd /opt/mports
+$ git clone https://github.com/macports/macports-ports.gitThen open
+ /opt/local/etc/macports/sources.conf in a text editor. The last line
+ should look like this:rsync://rsync.macports.org/macports/release/tarballs/ports.tar [default]Change it to point to the working copy you checked out:file:///opt/mports/macports-ports [default]Now MacPorts will look for portfiles in the working copy and use Git instead of rsync
+ to update your ports tree.EnvironmentYou should setup your PATH and other environment options according to Section 2.5, “MacPorts and the Shell”.2.2.4. Install Multiple MacPorts CopiesOccasionally a MacPorts developer may wish to install more than one MacPorts instance on the same
+ host. Only one copy of MacPorts may use the default prefix /opt/local, so for
+ additional installations use the option --prefix as shown below. It's also recommended
+ to change the applications dir using --with-applications-dir to avoid conflicts in
+ /Applications/MacPorts.
+ Use --without-startupitems to automatically set startupitem_install no
+ in the new macports.conf, which is required to avoid conflicts in
+ /Library/LaunchAgents or /Library/LaunchDaemons.
+ NoteThe first command temporarily removes the standard MacPorts binary paths because they must not be
+ present while installing a second instance.$ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+$ MP_PREFIX=/opt/macports-test
+$ ./configure --prefix=$MP_PREFIX --with-applications-dir=$MP_PREFIX/Applications --without-startupitems
+$ make
+$ sudo make install2.3. Upgrade MacPortsMacPorts base upgrades are performed automatically (when a newer release is available) during a selfupdate operation. To upgrade a copy of MacPorts that was
+ installed from source to the newer release of the source code, simply repeat the source install with the newer version of the MacPorts source
+ code.2.4. Uninstall MacPorts2.4.1. Uninstall All Ports2.4.2. Remove Users and Groups2.4.3. Remove the Rest of MacPortsUninstalling MacPorts is a drastic step and, depending on the issue you are experiencing, you may not need
+ to do so. If you are unsure, ask on the macports-users mailing
+ list first. If you are sure you want to uninstall, read on.2.4.1. Uninstall All PortsIf you want to uninstall MacPorts and the port command is functioning, first
+ uninstall all the installed ports by running this command in the Terminal:$ sudo port -fp uninstall installedAll that will be left in your installation prefix now will be files that were not registered to any
+ port. This includes configuration files, databases, any files which MacPorts renamed in order to allow a
+ forced installation or upgrade, and the base MacPorts software itself. You may wish to save your
+ configuration files (most are in $prefix/etc), databases, or any other unique data
+ by moving it aside.If the port command is not functioning, you can proceed on to the next steps, but
+ if you had installed any ports that install files to nonstandard locations, those files might not be
+ removed.2.4.2. Remove Users and GroupsWhen MacPorts is installed, a macports macOS user and group are created for
+ privilege separation. If you want to remove them, you can use these commands from an account that has
+ admin privileges:$ sudo dscl . -delete /Users/macports
+$ sudo dscl . -delete /Groups/macportsIf you configured MacPorts to use a different user or group name, then specify that instead of
+ macports.Individual ports may create users and groups as well; you can remove them with the same commands, but
+ replacing macports with the user or group name you wish to delete.2.4.3. Remove the Rest of MacPortsIf you want to remove all remaining traces of MacPorts, run the following command in the Terminal. If
+ you have changed prefix, applications_dir or
+ frameworks_dir from their default values, then replace
+ /opt/local with your prefix, replace
+ /Applications/MacPorts with your applications_dir, and/or add
+ your frameworks_dir to the list, respectively.If you are running macOS 10.15 Catalina or later and have not disabled System Integrity Protection
+ (SIP), you will need to remove the
+ macports user first.$ sudo rm -rf \
+ /opt/local \
+ /Applications/DarwinPorts \
+ /Applications/MacPorts \
+ /Library/LaunchDaemons/org.macports.* \
+ /Library/Receipts/DarwinPorts*.pkg \
+ /Library/Receipts/MacPorts*.pkg \
+ /Library/StartupItems/DarwinPortsStartup \
+ /Library/Tcl/darwinports1.0 \
+ /Library/Tcl/macports1.0 \
+ ~/.macportsIf you use a shell other than bash (perhaps tcsh), you may need to adjust the above to fit your
+ shell's syntax.Depending on which version of MacPorts you have and which ports you have installed, not all of the
+ above paths will exist on your system; this is OK.2.5. MacPorts and the Shell2.5.1. The Postflight Script2.5.2. Verify the Configuration File2.5.3. Optional Editor VariablesMacPorts requires that some environment variables be set in the shell. When MacPorts is installed using
+ the macOS package installer, a “postflight” script is run after installation that automatically
+ adds or modifies a shell configuration file in your home directory, ensuring that it defines variables
+ according to the rules described in the following section. Those installing MacPorts from source code must modify their
+ environment manually using the rules as a guide.Depending on your shell and which configuration files already exist, the installer may use
+ .zprofile, .profile, .bash_login, 
+ .bash_profile, .tcshrc, or .cshrc.2.5.1. The Postflight ScriptThe postflight script automatically sets the PATH variable, and optionally the
+ MANPATH and DISPLAY variables according to the rules described
+ below. If a current shell configuration file exists at installation time it is renamed to
+ “mpsaved_$timestamp”. Those installing MacPorts
+ from source code must modify their environment manually using the rules as a guide.Required: PATH variableThis variable is set by the postflight script to prepend the MacPorts executable paths to the
+ current path as shown. This puts the MacPorts paths at the front of PATH
+ so that the MacPorts binaries will take precedence over vendor-supplied binaries.export PATH=/opt/local/bin:/opt/local/sbin:$PATHNoteThe user environment's $PATH is not in effect while ports are being installed, because the
+ $PATH is scrubbed before ports are installed, and restored afterwards. To change the search
+ path for locating system executables (rsync, tar, etc.) during port installation, see the
+ macports.conf file
+ variable binpath. But changing this variable is for advanced users only,
+ and is not generally needed or recommended.Optional: MANPATH variableCondition: If prior to MacPorts installation a MANPATH variable exists in
+ a current .profile that contains neither the value
+ ${prefix}/share/man, nor any empty items separated by a colon, the
+ postflight script sets the MANPATH variable as shown below. Otherwise, the
+ MANPATH variable is omitted.export MANPATH=/opt/local/share/man:$MANPATHOptional: DISPLAY variableCondition: If installing on a Mac OS X version earlier than 10.5 (Leopard), and if a shell
+ configuration file exists at time of MacPorts installation without a DISPLAY
+ variable, the postflight script sets a DISPLAY variable as shown below. The
+ DISPLAY variable is always omitted on Mac OS X 10.5 or higher.export DISPLAY=:0.02.5.2. Verify the Configuration FileTo verify that the file containing the MacPorts variables is in effect, type env in
+ the terminal to verify the current environment settings after the file has been created. Example output
+ for env is shown below.NoteChanges to shell configuration files do not take effect until a new terminal session is
+ opened.MANPATH=
+TERM_PROGRAM=Apple_Terminal
+TERM=xterm-color
+SHELL=/bin/bash
+TERM_PROGRAM_VERSION=237
+USER=joebob
+__CF_USER_TEXT_ENCODING=0x1FC:0:0
+PATH=/opt/local/bin:/opt/local/sbin:/bin:/sbin:/usr/bin:/usr/sbin
+PWD=/Users/joebob
+EDITOR=/usr/bin/pico
+SHLVL=1
+HOME=/Users/joebob
+LOGNAME=joebob
+DISPLAY=:0.0
+SECURITYSESSIONID=b0cea0
+_=/usr/bin/env2.5.3. Optional Editor VariablesYou can set an environment variable in order to use your favorite text editor with the port edit
+ command.MacPorts will check MP_EDITOR, VISUAL and
+ EDITOR in this order, allowing you to either use a default editor shared with other
+ programs (VISUAL and EDITOR) or a MacPorts-specific one
+ (MP_EDITOR).For example, to use the nano editor, add this line to your bash config:export EDITOR=/usr/bin/nanoTo use the user-friendly GUI editor BBEdit (installation required),
+ add this line:export EDITOR=/Applications/BBEdit.app/Contents/Helpers/bbedit_toolTo keep a command-line text editor as default while using BBEdit with portfiles, add
+ this:export EDITOR=/usr/bin/vi
+export MP_EDITOR=/Applications/BBEdit.app/Contents/Helpers/bbedit_toolChapter 3. Using MacPorts3.1. The port Command3.2. Port Variants3.3. Common Tasks3.4. Port BinariesThis chapter describes using port, port variants, common tasks and port
+ binaries.3.1. The port Command3.1.1. port help3.1.2. port selfupdate3.1.3. port sync3.1.4. port diagnose3.1.5. port reclaim3.1.6. port list3.1.7. port search3.1.8. port info3.1.9. port deps3.1.10. port rdeps3.1.11. port variants3.1.12. port install3.1.13. port notes3.1.14. port clean3.1.15. port uninstall3.1.16. port contents3.1.17. port installed3.1.18. port outdated3.1.19. port upgrade3.1.20. port dependents3.1.21. port livecheck3.1.22. port lint3.1.23. port load3.1.24. port unloadport is the main utility used to interact with MacPorts. It is
+ used to update Portfiles and the MacPorts infrastructure, and install and manage
+ ports. Note that not all actions are listed here; see port(1) for the full list.3.1.1. port helpThe help action shows some brief information about the specified action, or if no
+ action is specified, shows basic usage information for port in general.$ port help selfupdate
+Usage: selfupdate --no-sync
+Upgrade MacPorts itself and run the sync target
+--no-sync Do not run the sync target, i.e., do not update the ports tree.
+ Only checks for (and installs, if available) new versions of
+ MacPorts.3.1.2. port selfupdateThe selfupdate action should be used regularly to update the local ports tree with
+ the global MacPorts ports repository so you will have the latest versions of software packages
+ available. It also checks for new releases of MacPorts itself, and upgrades it when necessary.$ sudo port selfupdate
+---> Updating MacPorts base sources using rsync
+MacPorts base version 2.11.6 installed,
+MacPorts base version 2.11.6 downloaded.
+---> Updating the ports tree
+---> MacPorts base is already the latest versionIf selfupdate detects that a newer version of MacPorts is available, it automatically
+ updates the installed copy of MacPorts base to the latest released version. In that case, you will see
+ this message:
+---> Updating MacPorts base sources using rsync
+MacPorts base version 2.11.5 installed,
+MacPorts base version 2.11.6 downloaded.
+---> Updating the ports tree
+---> MacPorts base is outdated, installing new version 2.11.6
+Installing new MacPorts release in /opt/local as root:admin; permissions 755If the selfupdate procedure fails you'll see a message like this:Error installing new MacPorts base: command execution failedAs always, you can use the debug flag -d to enable verbose output. If your
+ selfupdate failed, re-run it with debug output enabled to see all output generated by
+ the build system.$ sudo port -d selfupdateThe output may give you an idea why the build failed. Look for the first occurrences of
+ “error”. If you cannot figure out what's wrong yourself, feel free to ask on the
+ <macports-users@lists.macports.org> mailing list and attach the output generated by
+ sudo port -d selfupdate.selfupdate accepts a single switch:--no-syncOnly update MacPorts itself, do not update the tree of Portfiles.3.1.3. port syncThe sync action performs a subset of selfupdate. It synchronizes the
+ ports tree, as does selfupdate, but it does not check for MacPorts upgrades. On macOS,
+ unless there is a special reason not to do so, run selfupdate instead.sync does not accept any switches.3.1.4. port diagnoseThe diagnose action checks for common issues in the user's environment and reports all
+ issues it finds to the user, along with possible fixes for said problem.diagnose accepts a single switch:--quietOnly displays warnings and errors, rather than the status of all tests run.3.1.5. port reclaimThe reclaim action attempts to reclaim space by uninstalling inactive ports, and
+ removing unnecessary files that were downloaded during the installation process. reclaim accepts switches to configure automatic reminders.
+ If passed, the reclaim process will not be run.--enable-remindersEnable regular reminders to run port reclaim.--disable-remindersDisable regular reminders to run port reclaim.3.1.6. port listThe list action lists the currently available version of the specified ports, or if
+ no ports are specified, displays a list of all available ports. The list of available ports is very
+ long, so use search if you are looking for a specific
+ port.$ port listNoteport list always lists the most recent version available in MacPorts, which is
+ not necessarily the version you have installed. For this reason, port list
+ installed likely produces unexpected output. In most cases where you would
+ list, using installed or echo is the better
+ choice instead. Both port installed and port echo installed
+ would produce the output you might expect from the command, port list installed
+ will not (and, to make matters worse, will be slow).You will hardly need port list at all to work with MacPorts. When searching,
+ port search is the better choice and when trying to list ports, port
+ installed and port echo are much more useful.3.1.7. port searchThe search action allows finding ports by partial matches of the name or description.
+ Other fields can be matched against, and matched in different ways, by using options. port
+ search is the tool of choice if you are looking for a specific software in MacPorts. We
+ recommend you read up on some of its flags to improve your efficiency when searching for ports. Run
+ port help search for an exhaustive list of possible switches.Suppose you are looking for PHP in MacPorts. You might start with port search php
+ and notice your query produces a lot of output. In fact, at the time of writing this, this search
+ produces 661 matches. By default, port search searches both name and description of
+ a port. While we're looking for PHP, we can reduce the number of hits by using the
+ --name flag. Furthermore, we only want ports whose name starts with “php”,
+ so we add the --glob flag (actually, we could leave it out because it is the default)
+ and modify the search term to php*:$ port search --name --glob 'php*'Furthermore, we can enable compact output by using the --line switch. This causes only
+ a single line to be printed for each match:$ port search --name --line --glob 'php*'Among a large number of PHP modules you will find the main PHP ports, which are named
+ php<version>. Choose one to install.If you know regex and know about the format of the PHP versions, you can further reduce the output of
+ port search:$ port search --name --line --regex '^php\d*$'php 5.5 lang www PHP: Hypertext Preprocessor
+php4 4.4.9 lang www PHP: Hypertext Preprocessor
+php5 5.3.28 lang www PHP: Hypertext Preprocessor
+php52 5.2.17 lang www PHP: Hypertext Preprocessor
+php53 5.3.28 lang www PHP: Hypertext Preprocessor
+php54 5.4.31 lang www PHP: Hypertext Preprocessor
+php55 5.5.15 lang www PHP: Hypertext Preprocessor
+php56 5.6.0RC2 lang www PHP: Hypertext PreprocessorLet us look at another example that is less complicated. Assuming you are looking for
+ rrdtool, a popular system to store and graph time-series data, the simple search
+ approach works well:$ port search rrd
+cacti @0.8.8b (net)
+ Cacti is a complete RRDtool network graphing solution.
+jrrd @1.0.4 (java)
+ Java interface to RRDTool
+netmrg @0.20 (net)
+ An RRDtool frontend for network monitoring, reporting, and graphing that generates day/week/month
+ MRTG style graphs.
+network-weathermap @0.97c (net)
+ Weathermap is a network visualisation tool, to take graphs you already have and display an
+ overview of your network as a map. It supports RRD, MRTG (RRD and old log-format), and
+ tab-delimited text files. Other sources are via plugins or external scripts.
+php-rrd @1.1.3 (php, net, devel)
+ PHP rrdtool extension
+php5-rrd @1.1.3 (php, net, devel)
+ PHP rrdtool extension
+php5-rrdtool @1.0.5 (php, net, devel)
+ this port is only a stub and has been made obsolete by php5-rrd
+php53-rrd @1.1.3 (php, net, devel)
+ PHP rrdtool extension
+php54-rrd @1.1.3 (php, net, devel)
+ PHP rrdtool extension
+php55-rrd @1.1.3 (php, net, devel)
+ PHP rrdtool extension
+rrdtool @1.4.7_5 (net)
+ Round Robin Database
+Found 11 ports.The possible switches to search and their meaning are:--case-sensitiveMatch the search string in a case-sensitive manner.--exactMatch the literal search string exactly.--globTreat the given search string as glob search string (i.e., expand wildcards
+ *, ?, and [chars]).
+ This is the default behavior.--regexTreat the given search string as regular expression.--fieldTest the search string against <field>. Can be specified multiple
+ times to test against multiple fields. The default is --name --description.
+ Possible values for <field> are--category, --categoriesSearch for ports in a given category.
+ --depends,
+ --depends_build,
+ --depends_extract,
+ --depends_fetch,
+ --depends_lib,
+ --depends_runSearch for ports that depend on the port given as search string. The
+ --depends is an alias for all other --depends_
+ options combined. Note that only dependencies specified in default variants will
+ be found.--description, --long_descriptionTest the search string against ports' descriptions.--homepageTest the search string against the homepage field of all ports.--maintainer, --maintainersSearch for ports maintained by a specific maintainer.--nameSearch only ports' names.--portdirTest the search string against the path of the directory that contains the port.--variant, --variantsSearch for variant names.3.1.8. port infoThe info action is used to get information about a port: name, version, description,
+ variants, homepage, dependencies, license, and maintainers.$ port info yubico-pam
+yubico-pam @2.16 (security)
+Variants: universal
+Description: The Yubico PAM module provides an easy way to integrate the YubiKey into your
+ existing user authentication infrastructure. The module can be configured to
+ validate YubiKeys against Yubico's YubiCloud infrastructure, a custom YubiKey
+ validation server or it can be used for offline authentication with newer
+ YubiKeys supporting a challenge-response protocol.
+Homepage: https://github.com/Yubico/yubico-pam
+Build Dependencies: pkgconfig, autoconf, automake, libtool
+Library Dependencies: ykpers, yubico-c-client
+Platforms: darwin
+License: BSD
+Maintainers: cal@macports.org3.1.9. port depsThe deps action lists the dependencies of a port. Dependencies are the packages
+ required by a port at runtime (library and runtime dependencies) or required to build it (build,
+ fetch, extract, and patch dependencies), or required to run its test suite (test dependencies).$ port deps apache2Full Name: apache2 @2.2.27_0+preforkmpm
+Library Dependencies: apr, apr-util, expat, openssl, pcre, perl5, zlibNote that the list of dependencies might depend on the variants you chose. For example, choosing the
+ +openldap variant of apache2 adds a dependency on
+ openldap:$ port deps apache2 +openldapFull Name: apache2 @2.2.27_0+openldap+preforkmpm
+Library Dependencies: apr, apr-util, expat, openssl, pcre, perl5, zlib, openldapdeps accepts three switches:--indexDo not read the Portfile to determine dependencies. Instead, rely on
+ the information cached in the port index. Note that (despite specifying them), this option
+ will ignore any effects of variants. It is, however, much faster.--no-buildExclude dependencies only required at build time, i.e., fetch, extract, patch,
+ and build dependencies.--no-testExclude test dependencies.3.1.10. port rdepsThe rdeps action is like deps, but operates recursively.
+ That is, each of the ports that the given port depends on is listed, and then for each of those
+ ports, its dependencies are listed, and so on. Unlike deps, the output is also
+ not split into sections for each dependency type, each port is simply listed on its own line
+ with a level of indentation indicating how many levels deep the dependency occurs.$ port rdeps gettextThe following ports are dependencies of gettext @0.22.5_0:
+ ncurses
+ gettext-tools-libs
+ libiconv
+ gperf
+ libtextstyle
+ gettext-runtimerdeps accepts four switches:--fullNormally, each distinct port is only shown in the output once. This option
+ instead prints a line for every dependency encountered in a full traversal of
+ the dependency graph. Beware, this can produce extremely large amounts of
+ output for some ports.--indexDo not read the Portfile to determine dependencies. Instead, rely on
+ the information cached in the port index. Note that (despite specifying them), this option
+ will ignore any effects of variants. It is, however, much faster.--no-buildExclude dependencies only required at build time, i.e., fetch, extract, patch,
+ and build dependencies.--no-testExclude test dependencies.3.1.11. port variantsThe variants action allows you to check what variations of a port are available
+ before you install it. Variants are a way for port authors to provide options you can use to customize
+ your build at install time. See Invoking Port Variants
+ below to install ports that have variants.$ port variants apache2 +universal
+apache2 has the variants:
+ eventmpm: Use event MPM (experimental)
+ * conflicts with preforkmpm workermpm
+ openldap: Enable LDAP support through OpenLDAP
+[+]preforkmpm: Use prefork MPM
+ * conflicts with eventmpm workermpm
+ +universal: Build for multiple architectures
+ workermpm: Use worker MPM
+ * conflicts with eventmpm preforkmpmThis output lists all variants followed by their description. If a variant depends on or conflicts
+ with other variants, a line detailing that follows. A variant name prefixed by +
+ indicates that it has been enabled (on the command line), while a prefix - indicates
+ that it has been disabled. When bracketed, a prefix + means that the variant is enabled
+ by default.
+ Any [] are derived from the Portfile.
+ While () are derived from the variants.conf.
+ See Section 6.2.3, “variants.conf” for more information on
+ variants.conf.3.1.12. port installThe action install is used to install a port. Once you determined the name of a port
+ you want (possibly using port search), you
+ can install it using this command. See Section 3.2.1, “Invoking Variants” on how to choose
+ variants when installing a new port. For example,$ sudo port install apache2 -preforkmpm +workermpminstalls the apache2 port without the preforkmpm, but with the
+ workermpm variant.If the installation of a port fails, you can enable verbose or debug output by giving the
+ -v or -d flag to port:$ sudo port -v install apache2All debug information is also kept in main.log for the port you
+ installed. Its path will be printed automatically if the installation fails. You can manually get the
+ path using port logfile portname. Note that logfiles will
+ automatically be deleted on successful installation.If the installation of a port fails, you should always clean and try again, i.e., run$ sudo port clean portnameand re-execute the command you ran before.You might also want to try enabling trace mode, which can prevent conflicts caused by files installed
+ by other ports or in common system locations, such as /usr/local. To do that,
+ re-run the installation with the -t flag, i.e.,$ sudo port -t install portnameIf the port still fails to install after you have followed these steps, please file a ticket and attach the main.log of
+ a clean attempt.NoteThe installation of a single port consists of multiple phases. These phases are fetch, extract,
+ patch, configure, build, destroot, archive, and finally install. You may break up a port's
+ installation into smaller steps for troubleshooting by using the name of one of these phases as
+ action rather than install. For example$ sudo port destroot apache2will run the installation of apache2 until the destroot phase. See Section 5.3, “Port Phases” for a complete list of phases and a detailed description.install takes the following switches:--no-rev-upgradeBy default, a binary sanity check called rev-upgrade is run automatically
+ after each successful installation. Pass this flag, if you want to avoid running this step,
+ for example if you want to run it explicitly later after a number of installations using
+ sudo port rev-upgrade, or if you know it will detect problems but want to
+ defer dealing with them.--unrequestedBy default, each port you install using the install explicitly (contrary to ports
+ installed as a dependency of a different port) is marked as “requested”.
+ If you want MacPorts to treat a port you installed manually as if it was automatically installed
+ as a dependency (e.g., if a dependency failed to build and you re-tried installing the dependency only),
+ pass this flag.3.1.13. port notesThe notes action is used to display any notes that a port's author
+ included. These can contain anything, but by convention are brief, and typically contain quick
+ start steps for configuring and using the port, pitfalls to watch out for, or other
+ information that users should be aware of. These same notes are also displayed after installing a port.
+ Many ports have no notes. More extensive documentation can often be found at a port's
+ homepage, or in its installed files.$ port notes xinit
+---> xinit has the following notes:
+ To use MacPorts' X11 as the default server, install xorg-server, log out, and
+ log back in.3.1.14. port cleanThe action clean deletes intermediate files created by MacPorts while installing
+ a port. A port clean is often necessary when builds fail and should be the first
+ thing to try after a failed installation attempt.$ sudo port clean portnameport clean can also be used to remove corrupted downloads after a failed
+ fetch phase, by specifying the --dist flag:$ sudo port clean --dist portnamedeletes all files that have been downloaded for the given port.clean accepts the following options:--archiveRemove temporary archives.--distRemove downloaded files.--logsRemove log files.--workRemove the work directory, i.e., the directory used by MacPorts to
+ build a software. This removes all traces of an attempted build and is the default
+ operation.--allAll of the above combined.3.1.15. port uninstallThe uninstall action will remove an installed port. It is one of the actions you will
+ use fairly often in MacPorts.$ sudo port uninstall portnameMacPorts will refuse to uninstall ports that are still needed by other ports. For example:$ sudo port uninstall libcomerr
+---> Unable to uninstall libcomerr @1.42.9_0, the following ports depend on it:
+---> kerberos5 @1.11.3_0
+---> subversion @1.8.9_0
+---> subversion-perlbindings-5.16 @1.8.9_0
+Error: port uninstall failed: Please uninstall the ports that depend on libcomerr first.You can recursively uninstall all ports that depend on the given port before uninstalling the port
+ itself to work around this. To do that, use the --follow-dependents flag.$ sudo port uninstall --follow-dependents libcomerrYou can also override this safety check using the -f (force) flag. Since
+ this will obviously break the dependents you shouldn't do this unless you know what you are
+ doing.$ sudo port -f uninstall libcomerrUninstalling a port will not uninstall ports that have been automatically installed as dependencies of
+ the uninstalled port and are otherwise unused. You can trigger this behavior by passing the
+ --follow-dependencies flag. Ports that were manually installed (i.e., are marked as
+ “requested”) or have other dependents will not be removed. You can manually uninstall the
+ unneeded ports later using the leaves pseudo-port, e.g., using sudo port
+ uninstall leaves.uninstall supports the following switches:--follow-dependentsRecursively uninstall ports that depend on the specified port before uninstalling the port
+ itself. See also the textual description above.--follow-dependenciesAlso uninstall ports that were automatically installed as dependencies of the removed port
+ and are no longer needed.--no-execAvoid running any uninstall hooks, such as commands that update cache files.3.1.16. port contentsThe contents action displays a list of all files that have been installed by a given
+ port. You can only use contents for ports you installed.$ port contents xorg-renderproto
+Port xorg-renderproto contains:
+ /opt/local/include/X11/extensions/render.h
+ /opt/local/include/X11/extensions/renderproto.h
+ /opt/local/lib/pkgconfig/renderproto.pc
+ /opt/local/share/doc/renderproto/renderproto.txtCommon uses for contents are finding the location of a port's executable after
+ installing it. The following line is usually helpful in this case:$ port -q contents portname | grep -E '/s?bin/'The -q (quiet) flag suppresses the header line in this case, but is not strictly necessary.contents accepts:--sizePrints a human-readable representation of the files' sizes.--units UNITUsed in conjunction with --size to choose the unit of the file size.
+ Valid parameters for UNIT areBList sizes in bytes.K, Ki, or KiBList sizes in KiB, i.e., 1024 bytes.Mi, or MiBList sizes in MiB, i.e., 1024 * 1024 bytes.Gi, or GiBList sizes in GiB, i.e., 1024 * 1024 * 1024 bytes.k, or kBList sizes in kB, i.e., 1000 bytes.M, or MBList sizes in MB, i.e., 1000 * 1000 bytes.G, or GBList sizes in GB, i.e., 1000 * 1000 * 1000 bytes.3.1.17. port installedThe installed action displays the installed versions and variants of the specified
+ ports, or if no ports are specified, all installed ports. It also displays whether a port is
+ “active”, i.e., whether the files belonging to this port are currently present on disk or
+ inactive, i.e., stashed away in a compressed tarball.$ port installed
+The following ports are currently installed:
+ a52dec @0.7.4_0 (active)
+ adns @1.4_0 (active)
+ apache2 @2.2.27_0+preforkmpm (active)
+ apr @1.5.1_0 (active)
+ apr-util @1.5.3_0 (active)
+ aquaterm @1.1.1_0 (active)
+ asciidoc @8.6.9_1+python27 (active)
+ …
+ XviD @1.3.3_0 (active)
+ xz @5.0.5_0 (active)
+ yasm @1.2.0_0 (active)
+ ykpers @1.12.0_0 (active)
+ youtube-dl @2014.07.25.1_0+python27 (active)
+ yubico-c-client @2.12_0 (active)
+ yubico-pam @2.16_0 (active)
+ zlib @1.2.8_0 (active)Use -v to also display the platform and CPU architecture(s) for which the
+ ports were built, and any variants which were explicitly negated.$ port -v installed libsdl
+The following ports are currently installed:
+ libsdl @1.2.15_3-x11 (active) platform='darwin 13' archs='x86_64'3.1.18. port outdatedThe outdated action checks your installed ports against the current ports tree to see
+ they have been updated since you installed them. Note that you will only get new versions by updating
+ your ports tree using selfupdate (or
+ sync).$ port outdated
+The following installed ports are outdated:
+gnupg 1.4.16_0 < 1.4.18_0
+gnupg2 2.0.22_2 < 2.0.25_0
+gpg-agent 2.0.22_1 < 2.0.25_0
+gpgme 1.5.0_0 < 1.5.1_0
+HexFiend 2.1.2_1 < 2.3.0_0
+libksba 1.0.8_0 < 1.3.0_0
+p5.16-class-methodmaker 2.180.0_1 < 2.210.0_0
+p5.16-gnupg-interface 0.330.0_3 < 0.500.0_1
+p5.16-ipc-run 0.910.0_1 < 0.920.0_0port outdated lists the ports for which an upgrade is available and on the second
+ column, why MacPorts thinks the port needs an upgrade. In most cases, this will be an increase in the
+ version number. If it isn't, more details will be given.3.1.19. port upgradeThe upgrade action upgrades installed ports and their dependencies to the latest
+ version available in MacPorts. In most cases, you will run$ sudo port upgrade outdatedto update all ports that have an upgrade available. You can, however, selectively upgrade ports if you
+ want to delay other upgrades until later. This is not recommended unless you know what you are doing,
+ since you might experience software errors for the ports that have not yet been upgraded. To upgrade
+ individual ports, specify the name(s) of the port(s) to upgrade:$ sudo port upgrade gnupg2Note that MacPorts may decide to upgrade other dependent ports before upgrading the port you requested
+ to be updated. Do not attempt to prevent this, since it will very likely lead to problems later.Noteupgrade does not uninstall the old version of a port. Instead, it deactivates it,
+ i.e., it stashes the files belonging to the older version away in a tarball. This allows you to go
+ back to the older version if there happens to be a problem with the updated one. To do that,
+ run$ port installed portnameto determine the version number of the old version you want to re-activate, and run$ sudo port activate portname @old-versionto go back to the old version.If you do not want to keep the old versions around while upgrading, you can pass
+ -u when upgrading:$ sudo port -u upgrade outdatedHowever, we instead recommend keeping the older versions around for a while and running$ sudo port uninstall inactiveonce in a while.upgrade accepts a number of switches:--forceAlways consider the given ports outdated, regardless of whether they actually are.--enforce-variantsIf the installed variants do not match those requested, upgrade (and change variants) even
+ if the port is not outdated. You can use this to switch the variant selection on an
+ installed port, e.g., using$ sudo port upgrade --enforce-variants apache2 -preforkmpm +workermpmNote that --enforce-variants will also enforce your variant selection in
+ all dependencies. If you know this is not necessary, you can avoid processing dependencies
+ using the global -n flag:$ sudo port -n upgrade --enforce-variants apache2 -preforkmpm +workermpm--no-replaceDo not automatically install replacement ports for a port that you have installed, but was
+ replaced with a different one.3.1.20. port dependentsThe dependents action reports what ports depend upon a given (installed) port, if
+ any.$ port dependents opensslapache2 depends on openssl
+curl depends on openssl
+cyrus-sasl2 depends on openssl
+git depends on openssl
+kerberos5 depends on openssl
+lftp depends on openssl
+libssh depends on openssl
+mosh depends on openssl
+openldap depends on openssl
+p5.16-net-ssleay depends on openssl
+python27 depends on openssl
+python32 depends on openssl
+qt4-mac depends on openssl
+ruby19 depends on openssl
+serf1 depends on openssl
+textmate2 depends on openssl
+wireshark depends on opensslNote that dependents does not work for ports that are not installed on your system.
+ If you want to find out, which ports depend on a port that you have not installed, you can use$ port echo depends:portnameThis command will, however, not cover dependencies that are only present in non-default variants.3.1.21. port livecheckThe livecheck action checks to see if the application corresponding to a given port
+ has been updated at the developer's download site. This action is mostly useful for port maintainers to
+ determine whether their port needs to be updated, but other may also wish to see if a port packages the
+ latest available version. See Section 5.9, “Livecheck / Distcheck” for more information on
+ livecheck.$ port livecheck rb19-sassrb19-sass seems to have been updated (port version: 3.3.10, new version: 3.3.14)NoteIf livecheck finds no higher version at the port's download site, it prints
+ nothing. The option -d (debug) may be used for detailed livecheck processing
+ information.3.1.22. port lintThe lint action checks if the Portfile conforms to the MacPorts standards
+ specified in Portfile Development. You should use this if you
+ modified a Portfile before submitting patches back to MacPorts.If a Portfile validates fine the following message is shown.$ port lint rb19-sass
+---> Verifying Portfile for rb19-sass
+---> 0 errors and 0 warnings found.Otherwise the warnings and errors are listed.$ port lint abiword
+---> Verifying Portfile for abiword
+Warning: Variant use_binary does not have a description
+Warning: Variant use_source does not have a description
+Warning: no license set
+---> 0 errors and 3 warnings found.lint has the following flag:--nitpickEnables additional checks that are mostly whitespace-related and best practices.3.1.23. port loadSome ports install software that is meant to run as a daemon. Or in other words, a long-running
+ background process.Examples of this are database servers like MySQL or PostgreSQL.On macOS, launchd is primarily responsible for starting, stopping, and
+ managing long-running services.Ports that want to run daemon processes can install their own .plist file(s)
+ into launchd. These files will allow launchd to start and
+ manage the port's daemon processes.So once a port is installed, the load action can be used to do the above
+ and activate the port's launchd service(s):$ sudo port load prometheus
+---> Loading startupitem 'prometheus' for prometheusNow the port's service(s) should be running in launchd. This can be verified with
+ the launchctl command:$ sudo launchctl list | grep macports
+49119 0 org.macports.prometheusTo stop the daemon service and mark it as disabled for launchd, use 
+ the port unload command.3.1.24. port unloadAs discussed in the port load section, the
+ port load command can be used to install and activate a port's daemon service(s) in
+ launchd.The unload action reverses this.port unload will stop the port's daemon processes, and mark the port's service
+ .plist as disabled:$ sudo port unload prometheus
+---> Unloading startupitem 'prometheus' for prometheusThe port's service(s) should 

@@ -1,0 +1,121 @@
+# AI Model Provider Configuration
+#
+# This file configures how devlore-cli computes input limits for writ migrate.
+#
+# Model-specific limits are loaded from litellm-cache.json (synced from LiteLLM).
+# Provider-level input_limits are used as defaults when the specific model isn't found.
+#
+# To update model limits:
+#   ./scripts/Sync-ModelLimits   # Fetches latest from LiteLLM
+#
+# Sources:
+# - https://github.com/BerriAI/litellm (model limits cache)
+# - https://github.com/orgs/community/discussions/149698 (GitHub Models limits)
+
+# Cache file for model-specific limits (auto-synced from LiteLLM)
+model_cache: litellm-cache.json
+
+providers:
+  anthropic:
+    description: Anthropic Claude models
+    litellm_provider: anthropic  # Maps to litellm_provider field in cache
+    # Provider-level defaults (used if model not in cache)
+    input_limits:
+      tree_depth: 10
+      script_budget: 524288  # 500KB
+
+  openai:
+    description: OpenAI GPT models via api.openai.com
+    litellm_provider: openai
+    input_limits:
+      tree_depth: 8
+      script_budget: 204800  # 200KB
+
+  github:
+    description: GitHub Models (free tier, rate-limited)
+    litellm_provider: openai  # Uses OpenAI models but with stricter limits
+    # GitHub enforces per-request limits below the model's capability
+    # These override the model's native limits
+    max_input_override: 16000   # GitHub caps at 16K input
+    max_output_override: 4000   # GitHub caps at 4K output
+    input_limits:
+      tree_depth: 4
+      script_budget: 8192   # 8KB
+
+  azure-openai:
+    description: Azure OpenAI Service
+    litellm_provider: azure
+    input_limits:
+      tree_depth: 6
+      script_budget: 51200  # 50KB
+
+  ollama:
+    description: Local models via Ollama
+    litellm_provider: ollama
+    # Local models vary widely; use conservative defaults
+    input_limits:
+      tree_depth: 5
+      script_budget: 10240  # 10KB
+
+  # --- Free Tier Providers (Account Required) ---
+
+  gemini:
+    description: Google AI Studio (Gemini API) - generous free tier
+    # Source: https://ai.google.dev/pricing
+    # Free: 1500 requests/day for Gemini 1.5 Flash/Pro
+    litellm_provider: gemini
+    # Gemini has 1M token context - very generous
+    input_limits:
+      tree_depth: 10
+      script_budget: 524288  # 500KB
+
+  groq:
+    description: Groq Cloud - fast inference, free tier
+    # Source: https://console.groq.com/docs/rate-limits
+    # Known for low latency; supports Llama 3, Mixtral
+    litellm_provider: groq
+    input_limits:
+      tree_depth: 8
+      script_budget: 204800  # 200KB
+
+  openrouter:
+    description: OpenRouter - unified API, aggregates many models
+    # Source: https://openrouter.ai/docs
+    # Filter for :free models for no-cost access
+    litellm_provider: openrouter
+    input_limits:
+      tree_depth: 8
+      script_budget: 204800  # 200KB
+
+  huggingface:
+    description: Hugging Face Serverless Inference API
+    # Source: https://huggingface.co/docs/api-inference
+    # Free tier with rate limits; many open models
+    litellm_provider: huggingface
+    input_limits:
+      tree_depth: 5
+      script_budget: 20480  # 20KB (conservative)
+
+  # --- Local Providers (No Account Required) ---
+
+  lmstudio:
+    description: LM Studio - local GUI with HTTP server
+    # Source: https://lmstudio.ai/
+    # Runs local server, OpenAI-compatible API
+    litellm_provider: openai  # LM Studio uses OpenAI-compatible API
+    input_limits:
+      tree_depth: 5
+      script_budget: 10240  # 10KB
+
+# How input_limits are computed:
+#
+# 1. Look up model in litellm-cache.json by exact name
+# 2. If found, compute input_limits from max_input_tokens:
+#    - tree_depth: scales with context (more context = deeper tree)
+#    - script_budget: ~25% of max_input_tokens * 4 chars/token
+# 3. If provider has max_input_override, apply it (e.g., GitHub)
+# 4. If model not found, use provider's default input_limits
+#
+# Token estimation:
+# - ~4 characters per token for code/JSON
+# - Reserve ~50% of context for system prompt + response

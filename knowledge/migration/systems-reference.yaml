@@ -1,0 +1,91 @@
+description: Auto-generated reference of migrate constants from Go source
+encryption_systems:
+    - file: analysis.go
+      line: 24
+      name: EncryptGitCrypt
+      value: git-crypt
+    - file: analysis.go
+      line: 25
+      name: EncryptBlackbox
+      value: blackbox
+    - file: analysis.go
+      line: 26
+      name: EncryptTranscrypt
+      value: transcrypt
+    - file: analysis.go
+      line: 27
+      name: EncryptGPG
+      value: gpg
+    - file: analysis.go
+      line: 28
+      name: EncryptAge
+      value: age
+    - file: analysis.go
+      line: 29
+      name: EncryptAnsibleVault
+      value: ansible-vault
+    - file: analysis.go
+      line: 30
+      name: EncryptSOPS
+      value: sops
+    - file: analysis.go
+      line: 31
+      name: EncryptNone
+      value: none
+generated: true
+platforms:
+    - Darwin
+    - Linux
+    - Linux.Debian
+    - Linux.Fedora
+    - Linux.Arch
+    - Windows
+    - Unix
+repo_layers:
+    - file: analysis.go
+      line: 132
+      name: LayerBase
+      value: base
+    - file: analysis.go
+      line: 133
+      name: LayerTeam
+      value: team
+    - file: analysis.go
+      line: 134
+      name: LayerPersonal
+      value: personal
+source: devlore-cli/internal/writ/migrate
+source_systems:
+    - file: analysis.go
+      line: 10
+      name: SystemNative
+      value: native
+    - file: analysis.go
+      line: 11
+      name: SystemTuckr
+      value: tuckr
+    - file: analysis.go
+      line: 12
+      name: SystemStow
+      value: stow
+    - file: analysis.go
+      line: 13
+      name: SystemChezmoi
+      value: chezmoi
+    - file: analysis.go
+      line: 14
+      name: SystemYadm
+      value: yadm
+    - file: analysis.go
+      line: 15
+      name: SystemBareGit
+      value: bare-git
+    - file: analysis.go
+      line: 16
+      name: SystemScriptBased
+      value: script-based
+    - file: analysis.go
+      line: 17
+      name: SystemUnknown
+      value: unknown
+version: "1.0"

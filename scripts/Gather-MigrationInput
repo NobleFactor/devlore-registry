@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: SSPL-1.0
+# Copyright (c) 2025-2026 Noble Factor. All rights reserved.
+#
+# Gather-MigrationInput - Gather tree and script contents for migration analysis
+#
+# This script collects the inputs needed for LLM-based migration analysis:
+# - Directory tree structure (JSON format)
+# - Contents of executable scripts
+#
+# Usage:
+#   ./scripts/Gather-MigrationInput <source-root> [--max-depth N] [--output <file>]
+#
+# Output:
+#   JSON with tree structure and script contents
+
+set -euo pipefail
+
+# Defaults
+MAX_DEPTH=5
+OUTPUT=""
+SOURCE_ROOT=""
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --max-depth)
+            MAX_DEPTH="$2"
+            shift 2
+            ;;
+        --output)
+            OUTPUT="$2"
+            shift 2
+            ;;
+        -h|--help)
+            sed -n '2,/^$/p' "$0" | sed 's/^# //' | sed 's/^#//'
+            exit 0
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            exit 1
+            ;;
+        *)
+            if [[ -z "$SOURCE_ROOT" ]]; then
+                SOURCE_ROOT="$1"
+            else
+                echo "Unexpected argument: $1" >&2
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [[ -z "$SOURCE_ROOT" ]]; then
+    echo "Error: source-root required" >&2
+    echo "Usage: $0 <source-root> [--max-depth N] [--output <file>]" >&2
+    exit 1
+fi
+
+if [[ ! -d "$SOURCE_ROOT" ]]; then
+    echo "Error: Not a directory: $SOURCE_ROOT" >&2
+    exit 1
+fi
+
+# Resolve to absolute path
+SOURCE_ROOT="$(cd "$SOURCE_ROOT" && pwd)"
+
+# Function to build tree JSON using jq for proper escaping
+build_tree_json() {
+    local dir="$1"
+    local depth="$2"
+    local max="$3"
+
+    if (( depth > max )); then
+        echo "[]"
+        return
+    fi
+
+    local items=()
+    local name
+
+    for entry in "$dir"/*; do
+        [[ -e "$entry" ]] || continue
+
+        name=$(basename "$entry")
+
+        # Skip .git directory and hidden files at depth > 1
+        [[ "$name" == ".git" ]] && continue
+        [[ "$name" == ".DS_Store" ]] && continue
+
+        if [[ -d "$entry" ]]; then
+            local contents
+            contents=$(build_tree_json "$entry" $((depth + 1)) "$max")
+            items+=("$(jq -n --arg name "$name" --argjson contents "$contents" \
+                '{type: "directory", name: $name, contents: $contents}')")
+        else
+            items+=("$(jq -n --arg name "$name" '{type: "file", name: $name}')")
+        fi
+    done
+
+    if [[ ${#items[@]} -eq 0 ]]; then
+        echo "[]"
+    else
+        printf '%s\n' "${items[@]}" | jq -s '.'
+    fi
+}
+
+# Function to find executable scripts
+find_executables() {
+    local dir="$1"
+
+    # Use name-based detection for cross-platform compatibility
+    find "$dir" -maxdepth 4 -type f \( \
+        -name "*.sh" -o \
+        -name "*.ps1" -o \
+        -name "Install-*" -o \
+        -name "Initialize-*" -o \
+        -name "Build-*" -o \
+        -name "Sync-*" -o \
+        -name "bootstrap" -o \
+        -name "Brewfile" -o \
+        -name "Hooks.toml" -o \
+        -name "*.brews-installed" -o \
+        -name "*.ports-installed" -o \
+        -name "*.packages-installed" \
+    \) ! -path "*/.git/*" 2>/dev/null | sort
+}
+
+# Build output using jq for proper JSON construction
+build_output() {
+    local tree_json
+    tree_json=$(build_tree_json "$SOURCE_ROOT" 1 "$MAX_DEPTH")
+
+    # Build executables array
+    local exec_items=()
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+
+        # Get relative path
+        local rel_path="${file#$SOURCE_ROOT/}"
+
+        # Skip files larger than 50KB
+        local size
+        size=$(wc -c < "$file" | tr -d ' ')
+        if (( size > 51200 )); then
+            continue
+        fi
+
+        # Read content
+        local content
+        content=$(cat "$file" 2>/dev/null || echo "")
+
+        exec_items+=("$(jq -n \
+            --arg path "$rel_path" \
+            --argjson size "$size" \
+            --arg content "$content" \
+            '{path: $path, size: $size, content: $content}')")
+
+    done < <(find_executables "$SOURCE_ROOT")
+
+    local exec_json
+    if [[ ${#exec_items[@]} -eq 0 ]]; then
+        exec_json="[]"
+    else
+        exec_json=$(printf '%s\n' "${exec_items[@]}" | jq -s '.')
+    fi
+
+    # Combine into final output
+    jq -n \
+        --arg source_root "$SOURCE_ROOT" \
+        --arg gathered_at "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+        --argjson tree "$tree_json" \
+        --argjson executables "$exec_json" \
+        '{
+            source_root: $source_root,
+            gathered_at: $gathered_at,
+            tree: $tree,
+            executables: $executables
+        }'
+}
+
+if [[ -n "$OUTPUT" ]]; then
+    build_output > "$OUTPUT"
+    echo "Output written to: $OUTPUT" >&2
+    echo "Source: $SOURCE_ROOT" >&2
+else
+    build_output
+fi

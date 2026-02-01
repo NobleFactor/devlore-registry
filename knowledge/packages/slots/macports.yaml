@@ -1,0 +1,258 @@
+# MacPorts package slots - extracted from primary sources
+# Source: https://www.macports.org/install.php
+# Source: https://trac.macports.org/wiki/Migration
+# Source: https://trac.macports.org/wiki/ProblemHotlist
+# Source: https://guide.macports.org
+
+package_name: macports
+description: "The MacPorts Project - package management for macOS"
+category: package-manager
+tags:
+  - package-manager
+  - macos
+  - ports
+  - cli
+
+platforms:
+  darwin:
+    supported: true
+    architectures:
+      - arm64
+      - x86_64
+    install_path: "/opt/local"
+    applications_path: "/Applications/MacPorts"
+    supported_versions:
+      # Current support
+      - version: "26"
+        name: "Tahoe"
+        xcode_min: "26.0"
+      - version: "15"
+        name: "Sequoia"
+        xcode_min: "16.0"
+      - version: "14"
+        name: "Sonoma"
+        xcode_min: "15.0"
+      - version: "13"
+        name: "Ventura"
+        xcode_min: "14.1"
+      # Legacy support available for 10.5-12
+    install_methods:
+      pkg:
+        description: "Recommended - download .pkg for your OS version"
+        url_pattern: "https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6-{version}-{codename}.pkg"
+        notes:
+          - "Must match your exact macOS version"
+          - "Download from https://www.macports.org/install.php"
+      source:
+        description: "Build from source tarball"
+        url: "https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6.tar.bz2"
+        commands:
+          - "tar xjf MacPorts-2.11.6.tar.bz2"
+          - "cd MacPorts-2.11.6"
+          - "./configure"
+          - "make"
+          - "sudo make install"
+        notes: "Requires manual PATH configuration"
+      git:
+        description: "For developers tracking latest changes"
+        repo: "https://github.com/macports/macports-base.git"
+    dependencies:
+      - name: "Command Line Tools for Xcode"
+        install: "xcode-select --install"
+        verify: "xcode-select -p"
+      - name: "Xcode (optional)"
+        notes: "Required for some ports that build from source"
+        install: "App Store"
+
+verification:
+  command: "port version"
+  success_pattern: "Version:"
+  functional_test:
+    command: "port list installed"
+    description: "List installed ports"
+
+post_install:
+  selfupdate:
+    command: "sudo port -v selfupdate"
+    description: "Synchronize with MacPorts repository"
+    required: true
+  path_setup:
+    description: "Add /opt/local/bin to PATH"
+    paths:
+      - "/opt/local/bin"
+      - "/opt/local/sbin"
+
+uninstall:
+  steps:
+    - description: "Uninstall all ports"
+      command: "sudo port -f uninstall installed"
+    - description: "Remove macports user"
+      command: "sudo dscl . -delete /Users/macports"
+    - description: "Remove macports group"
+      command: "sudo dscl . -delete /Groups/macports"
+    - description: "Remove all MacPorts files"
+      command: "sudo rm -rf /opt/local /Applications/MacPorts /Library/LaunchAgents/org.macports.* /Library/LaunchDaemons/org.macports.*"
+  notes:
+    - "Remove macports user BEFORE deleting /opt/local on macOS 10.15+"
+    - "Individual ports may have created additional users/groups"
+    - "Custom prefix installations require adjusted paths"
+
+os_upgrade:
+  description: "MacPorts requires migration after major macOS upgrades"
+  critical: true
+  detection:
+    - "Ports fail to build after OS upgrade"
+    - "Compiler version mismatch errors"
+    - "Library compatibility errors"
+
+  modern_migration:
+    description: "MacPorts 2.10.0+ migration procedure"
+    min_version: "2.10.0"
+    steps:
+      - step: 1
+        description: "Update Xcode and Command Line Tools"
+        commands:
+          - "xcode-select --install"
+          - "sudo xcodebuild -license accept"
+        notes: "May need to download Xcode from App Store first"
+      - step: 2
+        description: "Review macports.conf"
+        file: "/opt/local/etc/macports/macports.conf"
+        action: "Comment out non-default universal_archs or build_arch settings"
+        notes: "Compare against macports.conf.default"
+      - step: 3
+        description: "Execute migration"
+        command: "sudo port migrate"
+        notes: "Reinstalls base and incompatible ports"
+      - step: 4
+        description: "Handle failures (optional)"
+        commands:
+          - "port snapshot --list"
+          - "sudo port restore --last"
+          - "sudo port snapshot --delete <id>"
+        notes: "Retry failed ports using snapshots"
+
+  legacy_migration:
+    description: "Pre-2.10.0 manual migration"
+    steps:
+      - step: 1
+        description: "Export installed ports"
+        command: "port -qv installed > myports.txt"
+      - step: 2
+        description: "Uninstall all ports"
+        command: "sudo port -f uninstall installed"
+      - step: 3
+        description: "Remove MacPorts"
+        command: "sudo rm -rf /opt/local"
+      - step: 4
+        description: "Install new MacPorts .pkg for current OS"
+        notes: "Download from macports.org/install.php"
+      - step: 5
+        description: "Restore ports"
+        command: "sudo port install $(cat myports.txt | awk '{print $1}')"
+        notes: "May need to resolve dependency cycles manually"
+
+  common_issues:
+    - issue: "Compiler incompatibility"
+      symptom: "Ports built with gcc10 fail on new OS"
+      fix: "Run sudo port migrate to rebuild"
+
+    - issue: "CoreSimulator framework errors"
+      symptom: "Xcode component errors during build"
+      fix: "xcodebuild -runFirstLaunch"
+
+    - issue: "C++ headers not found (CLT 16.0+)"
+      symptom: "clang++ cannot find standard headers"
+      fix: "sudo rm -rf /Library/Developer/CommandLineTools/usr/include/c++"
+
+    - issue: "SQLite registry permissions"
+      symptom: "Database is read-only error"
+      fix: "sudo port outdated"
+
+    - issue: "Let's Encrypt certificate errors (macOS 10.11 and earlier)"
+      symptom: "SSL certificate verification failures"
+      fix: "Manually install ISRG Root X1 certificate via Keychain Access"
+
+    - issue: "Xcode selection incorrect"
+      symptom: "xcode-select -print-path returns wrong path"
+      fix: "sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer"
+
+    - issue: "CLT package receipt lost"
+      symptom: "Software Update doesn't offer CLT updates"
+      fix: "pkgutil --pkg-info com.apple.pkg.CLTools_Executables; reinstall if needed"
+
+features:
+  variants:
+    type: boolean
+    default: true
+    description: "Build ports with variant support"
+
+settings:
+  prefix:
+    type: string
+    default: "/opt/local"
+    description: "Installation prefix"
+
+  build_arch:
+    type: string
+    description: "Target architecture for builds"
+    note: "Usually auto-detected, clear after OS upgrade"
+
+  universal_archs:
+    type: string
+    description: "Architectures for universal builds"
+    note: "Clear after OS upgrade"
+
+tribal_knowledge:
+  - title: "Version-specific .pkg installers"
+    detail: "MacPorts .pkg must match your exact macOS version. Using wrong version will fail or cause issues."
+    source: "https://www.macports.org/install.php"
+
+  - title: "Migration required after OS upgrade"
+    detail: "MacPorts installation is tied to OS version and architecture. Major OS upgrades require migration or reinstall."
+    source: "https://trac.macports.org/wiki/Migration"
+
+  - title: "Clear architecture settings after upgrade"
+    detail: "Comment out build_arch and universal_archs in macports.conf after OS upgrade"
+    source: "https://trac.macports.org/wiki/Migration"
+
+  - title: "CLT 16.0+ C++ header issue"
+    detail: "After CLT 16.0 update, remove legacy c++ directory: sudo rm -rf /Library/Developer/CommandLineTools/usr/include/c++"
+    source: "https://trac.macports.org/wiki/ProblemHotlist"
+
+  - title: "Accept Xcode license first"
+    detail: "Run xcodebuild -license accept before port operations after Xcode update"
+    source: "https://trac.macports.org/wiki/ProblemHotlist"
+
+  - title: "selfupdate before installing"
+    detail: "Always run sudo port -v selfupdate before installing new ports"
+    source: "https://www.macports.org/install.php"
+
+  - title: "macports user for security"
+    detail: "MacPorts creates a dedicated user/group for security isolation"
+    source: "https://guide.macports.org"
+
+  - title: "Port snapshots for recovery"
+    detail: "MacPorts 2.10+ creates snapshots during migration for recovery"
+    source: "https://trac.macports.org/wiki/Migration"
+
+  - title: "runFirstLaunch for CoreSimulator"
+    detail: "If Xcode components fail, run xcodebuild -runFirstLaunch"
+    source: "https://trac.macports.org/wiki/ProblemHotlist"
+
+sources:
+  - url: "https://www.macports.org/install.php"
+    title: "MacPorts installation page"
+    accessed: "2026-01-31"
+
+  - url: "https://trac.macports.org/wiki/Migration"
+    title: "Migration guide for OS upgrades"
+    accessed: "2026-01-31"
+
+  - url: "https://trac.macports.org/wiki/ProblemHotlist"
+    title: "Common problems and solutions"
+    accessed: "2026-01-31"
+
+  - url: "https://guide.macports.org"
+    title: "MacPorts guide"
+    accessed: "2026-01-31"

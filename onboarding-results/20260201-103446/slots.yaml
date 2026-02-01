@@ -1,0 +1,250 @@
+```yaml
+package_name: "macports"
+slots:
+  - category: "identity"
+    name: "name"
+    value: "MacPorts"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Title"
+    
+  - category: "identity"
+    name: "version"
+    value: "2.11.6"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Installing MacPorts section"
+    
+  - category: "identity"
+    name: "description"
+    value: "An easy-to-use system for compiling, installing, and upgrading either command-line, X11 or Aqua based open-source software on the Mac OS X operating system"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Meta description"
+    
+  - category: "identity"
+    name: "homepage"
+    value: "https://www.macports.org"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - URL"
+    
+  - category: "platform"
+    name: "supported_os"
+    value: ["darwin"]
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - macOS versions list"
+    annotation: "Supports macOS Tahoe v26, Sequoia v15, Sonoma v14, Ventura v13, and older versions"
+    
+  - category: "dependency"
+    name: "required_packages"
+    value: ["xcode-command-line-tools"]
+    confidence: 1.0
+    platform: "darwin"
+    source_ref: "macports.org/install.php - Quickstart"
+    annotation: "Install using: xcode-select --install"
+    
+  - category: "dependency"
+    name: "optional_packages"
+    value: ["xcode", "x11"]
+    confidence: 0.9
+    platform: "darwin"
+    source_ref: "macports.org/install.php - Optional dependencies section"
+    annotation: "Xcode needed for some ports from source; X11 for ports requiring windowing"
+    
+  - category: "installation"
+    name: "install_methods"
+    value: ["pkg_installer", "source_build", "git_clone"]
+    confidence: 1.0
+    platform: "darwin"
+    source_ref: "macports.org/install.php - Installing MacPorts section"
+    
+  - category: "installation"
+    name: "pkg_download_urls"
+    value:
+      - "https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6-26-Tahoe.pkg"
+      - "https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6-15-Sequoia.pkg"
+      - "https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6-14-Sonoma.pkg"
+      - "https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6-13-Ventura.pkg"
+    confidence: 1.0
+    platform: "darwin"
+    source_ref: "macports.org/install.php - pkg installers section"
+    
+  - category: "installation"
+    name: "source_archive_urls"
+    value:
+      - "https://distfiles.macports.org/MacPorts/MacPorts-2.11.6.tar.bz2"
+      - "https://distfiles.macports.org/MacPorts/MacPorts-2.11.6.tar.gz"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - source form section"
+    
+  - category: "installation"
+    name: "git_repository"
+    value: "https://github.com/macports/macports-base.git"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Git clone section"
+    
+  - category: "installation"
+    name: "source_build_commands"
+    value: 
+      - "cd MacPorts-2.11.6"
+      - "./configure && make && sudo make install"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Source Installation section"
+    
+  - category: "installation"
+    name: "default_prefix"
+    value: "/opt/local"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Source Installation section"
+    
+  - category: "configuration"
+    name: "path_setup"
+    value: "Add ${prefix}/bin and ${prefix}/sbin to the start of your PATH environment variable"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Source Installation section"
+    
+  - category: "configuration"
+    name: "manpath_setup"
+    value: "Add the ${prefix}/share/man path to MANPATH if it exists"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Source Installation section"
+    
+  - category: "configuration"
+    name: "xcode_license_acceptance"
+    value: "xcodebuild -license"
+    confidence: 1.0
+    platform: "darwin"
+    source_ref: "macports.org/install.php - Xcode section"
+    annotation: "Required for Xcode 4 and later"
+    
+  - category: "verification"
+    name: "initial_sync_command"
+    value: "sudo port -v selfupdate"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - multiple sections"
+    
+  - category: "verification"
+    name: "version_check_command"
+    value: "port version"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "MacPorts Guide - macOS Package Install section"
+    
+  - category: "verification"
+    name: "help_command"
+    value: "man port"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Source Installation section"
+    
+  - category: "feature"
+    name: "package_manager_commands"
+    value: 
+      - "port install <portname>"
+      - "port search <term>"
+      - "port info <portname>"
+      - "port list"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - various sections"
+    
+  - category: "configuration"
+    name: "migration_command"
+    value: "sudo port migrate"
+    confidence: 1.0
+    platform: "all"
+    source_ref: "Migration wiki - Run port migrate section"
+    annotation: "Requires MacPorts 2.10.0 or later"
+    
+  - category: "setting"
+    name: "rsync_port"
+    value: 873
+    confidence: 1.0
+    platform: "all"
+    source_ref: "macports.org/install.php - Selfupdate section"
+    annotation: "Default port for rsync protocol used by selfupdate"
+
+sources:
+  - title: "MacPorts Download & Installation"
+    url: "https://www.macports.org/install.php"
+    trust_level: "vendor"
+    sections_used: 
+      - "Quickstart"
+      - "Installing MacPorts" 
+      - "macOS Package (.pkg) Installer"
+      - "Source Installation"
+      - "Git Sources"
+      - "Selfupdate"
+      
+  - title: "Migration – MacPorts"
+    url: "https://trac.macports.org/wiki/Migration"
+    trust_level: "vendor"
+    sections_used:
+      - "Migration procedure"
+      - "Run port migrate"
+      - "Review macports.conf settings"
+      
+  - title: "FAQ – MacPorts"
+    url: "https://trac.macports.org/wiki/FAQ"
+    trust_level: "vendor"
+    sections_used:
+      - "General Questions"
+      - "Will my MacPorts install continue to work"
+      
+  - title: "MacPorts Guide"
+    url: "https://guide.macports.org"
+    trust_level: "vendor"
+    sections_used:
+      - "Installing MacPorts"
+      - "macOS Package Install"
+      - "Source Install"
+      - "MacPorts and the Shell"
+
+ambiguities:
+  - slot_name: "supported_os_versions"
+    description: "Document mentions many macOS versions but doesn't clearly specify minimum requirements"
+    options: 
+      - "Support all listed versions (Leopard through Tahoe)"
+      - "Only support currently maintained versions"
+    suggested_default: "Support versions with available pkg installers (Ventura through Tahoe)"
+
+tribal_knowledge:
+  - title: "Migration Required for Major OS Updates"
+    description: "MacPorts installations don't survive major OS upgrades. Must run migration procedure or reinstall completely when upgrading macOS major versions or changing CPU architecture."
+    source_ref: "Migration wiki - main description"
+    affects_phase: "install"
+    
+  - title: "Avoid /usr/local Conflicts"
+    description: "Software in /usr/local can interfere with MacPorts builds. MacPorts uses /opt/local specifically to avoid conflicts with other package managers."
+    source_ref: "FAQ - Can I install software in /usr/local"
+    affects_phase: "install"
+    
+  - title: "Xcode Command Line Tools Required"
+    description: "Even if full Xcode is installed, the command line tools must be separately installed using xcode-select --install. This is a common source of build failures."
+    source_ref: "macports.org/install.php - Quickstart and Xcode sections"
+    affects_phase: "prepare"
+    
+  - title: "Shell Configuration Modified by Installer"
+    description: "The pkg installer automatically modifies shell configuration files (.zprofile, .profile, etc.) to set PATH and other environment variables. Manual source installs require manual shell setup."
+    source_ref: "MacPorts Guide - MacPorts and the Shell"
+    affects_phase: "provision"
+    
+  - title: "Regular Updates Essential"
+    description: "Must run 'sudo port selfupdate' regularly to keep both MacPorts base and the ports tree current. This is critical for security and functionality."
+    source_ref: "macports.org/install.php - multiple sections"
+    affects_phase: "verify"
+    
+  - title: "Trace Mode for Build Issues" 
+    description: "When ports fail to build due to conflicts with /usr/local or other external software, use trace mode 'sudo port -t install <portname>' to isolate the build environment."
+    source_ref: "FAQ - Can I install software in /usr/local"
+    affects_phase: "install"
+```

@@ -1,0 +1,62 @@
+name: macports
+version: "2.11.6"
+description: An easy-to-use system for compiling, installing, and upgrading either command-line, X11 or Aqua based open-source software on the Mac OS X operating system
+homepage: https://www.macports.org/
+repository: https://github.com/macports/macports-base
+license: BSD-3-Clause
+
+authors:
+  - name: The MacPorts Project
+    url: https://www.macports.org
+
+platforms:
+  - Darwin
+
+features:
+  install-from-source:
+    description: Install MacPorts from source instead of using .pkg installer
+    default: false
+  enable-readline:
+    description: Enable readline support when building from source
+    default: true
+  auto-accept-xcode-license:
+    description: Automatically accept Xcode license during provisioning
+    default: true
+
+settings:
+  macos-version:
+    type: string
+    default: "auto"
+    description: Target macOS version for installer selection (auto-detects if not specified)
+  install-prefix:
+    type: string
+    default: "/opt/local"
+    description: Installation prefix (only applies to source installations)
+
+dependencies:
+  - name: xcode-command-line-tools
+    required: true
+    reason: Required for ports that build from source when binaries are not available
+  - name: xcode
+    required: false
+    reason: Needed for some ports from source
+  - name: x11-server
+    required: false
+    reason: Required for ports that depend on X11
+
+conflicts:
+  - name: homebrew
+    reason: Software in /usr/local can interfere with MacPorts builds causing mysterious failures
+  - name: fink
+    reason: Both use /opt directory structure and can conflict
+
+verification:
+  command: "port version"
+  pattern: "Version: \\d+\\.\\d+\\.\\d+"
+
+tags:
+  - package-manager
+  - macos
+  - ports
+  - source-compilation
+

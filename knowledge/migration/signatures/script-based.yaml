@@ -1,0 +1,47 @@
+# Script-based dotfile management signature
+# Custom install/setup scripts without a standard tool
+
+name: script-based
+description: |
+  Custom install scripts (install.sh, setup.sh, bootstrap.sh) that manually
+  symlink or copy dotfiles. No standard dotfile tool is used - everything
+  is handled by shell scripts written by the user.
+
+markers:
+  - type: file
+    path: "install.sh"
+    confidence: 0.7
+    description: "Custom install script at root"
+
+  - type: file
+    path: "setup.sh"
+    confidence: 0.7
+    description: "Custom setup script at root"
+
+  - type: file
+    path: "bootstrap.sh"
+    confidence: 0.7
+    description: "Custom bootstrap script at root"
+
+  - type: file
+    path: "Makefile"
+    confidence: 0.5
+    description: "Make-based installation"
+
+  - type: content_pattern
+    pattern: "ln -s.*\\$HOME"
+    confidence: 0.8
+    description: "Scripts that create symlinks to $HOME"
+
+  - type: content_pattern
+    pattern: "cp.*\\$HOME"
+    confidence: 0.6
+    description: "Scripts that copy files to $HOME"
+
+notes: |
+  Script-based repos vary widely in structure. Migration requires analyzing
+  the scripts to understand:
+  - What files are symlinked vs copied
+  - Whether platform conditionals exist
+  - What packages are installed
+  - Order of operations and dependencies

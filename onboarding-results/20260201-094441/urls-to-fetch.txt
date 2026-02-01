@@ -1,0 +1,3 @@
+https://trac.macports.org/wiki/Migration
+https://guide.macports.org
+https://trac.macports.org/wiki/ProblemHotlist

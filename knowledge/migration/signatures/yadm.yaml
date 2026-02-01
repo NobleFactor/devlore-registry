@@ -1,0 +1,108 @@
+# yadm (Yet Another Dotfiles Manager) signature
+# https://yadm.io/
+
+name: yadm
+description: |
+  yadm uses a bare git repository with $HOME as the worktree.
+  Files are tracked directly in the home directory.
+  Alternate files use ## suffixes for platform/class/hostname selection.
+  Templates use Jinja2 syntax with yadm-specific variables.
+
+markers:
+  - type: directory
+    path: ".yadm/"
+    confidence: 1.0
+    description: "yadm configuration directory (legacy location)"
+
+  - type: directory
+    path: ".local/share/yadm/"
+    confidence: 1.0
+    description: "yadm configuration directory (XDG location)"
+
+  - type: file
+    path: ".yadm/repo.git"
+    confidence: 1.0
+    description: "yadm bare repository"
+
+  - type: file
+    path: ".local/share/yadm/repo.git"
+    confidence: 1.0
+    description: "yadm bare repository (XDG location)"
+
+  - type: file
+    path: ".yadm/encrypt"
+    confidence: 0.95
+    description: "yadm encryption list"
+
+  - type: file_pattern
+    pattern: "*##*"
+    confidence: 0.9
+    description: "yadm alternate file suffix"
+
+  - type: file_pattern
+    pattern: "*.yadm-template"
+    confidence: 0.95
+    description: "yadm Jinja2 template"
+
+  - type: file
+    path: ".yadm/bootstrap"
+    confidence: 0.9
+    description: "yadm bootstrap script"
+
+  - type: file
+    path: ".config/yadm/bootstrap"
+    confidence: 0.9
+    description: "yadm bootstrap script (XDG location)"
+
+alternate_file_patterns:
+  description: |
+    yadm alternate files use ## suffixes to specify conditions.
+    Multiple conditions can be chained.
+  patterns:
+    - suffix: "##os.Darwin"
+      maps_to: ".Darwin segment"
+    - suffix: "##os.Linux"
+      maps_to: ".Linux segment"
+    - suffix: "##class.work"
+      maps_to: "work project"
+    - suffix: "##class.personal"
+      maps_to: "personal project"
+    - suffix: "##hostname.myhost"
+      maps_to: "machine-specific (consider if needed)"
+    - suffix: "##template"
+      maps_to: ".template extension"
+
+template_variables:
+  - yadm: "YADM_OS"
+    writ: ".OS"
+  - yadm: "YADM_HOSTNAME"
+    writ: ".Hostname"
+  - yadm: "YADM_USER"
+    writ: ".Username"
+  - yadm: "YADM_DISTRO"
+    writ: ".Distro"
+  - yadm: "YADM_DISTRO_FAMILY"
+    writ: ".DistroFamily"
+  - yadm: "env.HOME"
+    writ: ".Home"
+
+encryption:
+  method: "GPG (default) or OpenSSL"
+  file: ".yadm/encrypt or .config/yadm/encrypt"
+  notes: |
+    yadm encrypts files listed in the encrypt file.
+    Migration to writ requires re-encryption with age/SOPS.
+    Decrypt: yadm decrypt
+    Then encrypt with SOPS: sops -e file > file.sops
+
+segment_transform:
+  description: "yadm alternate suffixes map to writ segments"
+  from: "{filename}##os.{platform}"
+  to: "{project}.{Platform}/{filename}"
+  examples:
+    - from: ".bashrc##os.Darwin"
+      to: "all.Darwin/.bashrc"
+    - from: ".bashrc##os.Linux"
+      to: "all.Linux/.bashrc"
+    - from: ".gitconfig##class.work"
+      to: "work/.gitconfig"
