@@ -3,38 +3,96 @@
 
 name: tuckr
 description: |
-  Tuckr organizes dotfiles in a Configs/ directory with segment subdirectories.
-  Segments use platform suffixes separated by dashes (e.g., all-Darwin, all-Linux).
-  Optional Hooks.toml defines pre/post-deployment scripts.
+  Tuckr organizes dotfiles in a Configs/ directory with group subdirectories.
+  Platform-specific groups use underscore suffixes (e.g., all_linux, all_macos).
+  Hooks/ directory contains pre_<group>.sh and post_<group>.sh scripts.
+  Secrets/ directory is for encrypted sensitive files (WIP feature).
 
 markers:
-  - type: file
-    path: "**/Hooks.toml"
-    confidence: 1.0
-    description: "Tuckr hook configuration file"
-
-  - type: directory_pattern
-    pattern: "Configs/*-{Darwin,Linux,Windows,Unix}"
+  # Strong signals
+  - type: directory
+    path: "Configs/"
     confidence: 0.9
-    description: "Segment directories with platform suffixes"
+    description: "Main configuration directory (may also be at root)"
+
+  - type: directory
+    path: "Hooks/"
+    confidence: 0.95
+    description: "Hook scripts directory"
+
+  - type: file
+    path: "Hooks/pre_*.sh"
+    confidence: 1.0
+    description: "Pre-deployment hook script"
+
+  - type: file
+    path: "Hooks/post_*.sh"
+    confidence: 1.0
+    description: "Post-deployment hook script"
+
+  - type: file
+    path: "Hooks.toml"
+    confidence: 0.9
+    description: "Legacy hooks configuration file"
+
+  # Platform variant patterns
+  - type: directory_pattern
+    pattern: "Configs/*_{linux,macos,darwin,windows,unix}"
+    confidence: 0.95
+    description: "Platform-specific group with underscore suffix"
 
   - type: directory_pattern
-    pattern: "Configs/all-*"
+    pattern: "*_{linux,macos,darwin,windows,unix}"
     confidence: 0.85
-    description: "Common 'all' segment with platform suffix"
+    description: "Platform-specific group at root level"
+
+  # Script signals
+  - type: script_content
+    pattern: "tuckr add"
+    confidence: 1.0
+    description: "Tuckr add command in install script"
+
+  - type: script_content
+    pattern: "tuckr set"
+    confidence: 1.0
+    description: "Tuckr set command in install script"
+
+  - type: script_content
+    pattern: "tuckr rm"
+    confidence: 0.95
+    description: "Tuckr remove command in install script"
 
 segment_transform:
-  description: "Tuckr uses dash separators, writ uses dot separators"
-  from: "{name}-{platform}"
-  to: "{name}.{platform}"
+  description: |
+    Tuckr uses underscore separators with lowercase platform names.
+    Writ uses dot separators with capitalized platform names.
+  from: "{name}_{platform}"
+  to: "{name}.{Platform}"
+  platform_mapping:
+    linux: "Linux"
+    macos: "Darwin"
+    darwin: "Darwin"
+    windows: "Windows"
+    unix: "Unix"
   examples:
-    - from: "all-Darwin"
+    - from: "all_linux"
+      to: "all.Linux"
+    - from: "all_macos"
       to: "all.Darwin"
-    - from: "noblefactor-Linux"
-      to: "noblefactor.Linux"
+    - from: "nvim_unix"
+      to: "nvim.Unix"
+
+special_features:
+  environment_expansion:
+    pattern: "%VARNAME"
+    description: "Expands to environment variable value in paths"
+
+  root_targeting:
+    pattern: "^path/to/file"
+    description: "Targets absolute paths outside $HOME (e.g., /etc/)"
 
 encryption:
   notes: |
-    Tuckr itself doesn't handle encryption. Users typically combine Tuckr
-    with git-crypt or manual GPG encryption. Check .gitattributes for
-    git-crypt patterns.
+    Tuckr has a built-in Secrets/ directory for encrypted files (WIP).
+    Users may also combine Tuckr with git-crypt or manual GPG encryption.
+    Check .gitattributes for git-crypt patterns.

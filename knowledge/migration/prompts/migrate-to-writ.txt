@@ -15,6 +15,91 @@ Given information about a user's current dotfile setup, generate a migration pla
 - **yadm** — Yet Another Dotfiles Manager (bare git + alt files)
 - **Tuckr** — Dotfile manager with groups and hooks
 - **Bare git repo** — DIY approach with bare repo and $HOME worktree
+- **Script-based** — Custom install scripts without a standard tool
+
+## System Detection Signatures
+
+Identify the source system by looking for these patterns:
+
+### Tuckr
+**Strong signals:**
+- `Configs/` directory containing group subdirectories
+- `Hooks/` directory with `pre_<group>.sh` or `post_<group>.sh` scripts
+- `Secrets/` directory for encrypted files
+
+**Naming convention:**
+- Platform variants use underscore: `<group>_<platform>` (e.g., `all_linux`, `nvim_macos`)
+- Valid platforms: `_linux`, `_macos`, `_darwin`, `_windows`, `_unix`
+- **Migration**: Rename to writ convention: `all_linux` → `all.Linux`, `all_macos` → `all.Darwin`
+
+**Script patterns:** `tuckr add`, `tuckr rm`, `tuckr set`
+
+### GNU Stow
+**Strong signals:**
+- `.stow-local-ignore` file at root
+- Package directories at root, each mirroring `$HOME` structure
+- No `Configs/` wrapper directory
+
+**Structure:**
+- `<package>/.bashrc` → symlinked to `~/.bashrc`
+- `<package>/.config/nvim/init.lua` → symlinked to `~/.config/nvim/init.lua`
+
+**No platform variants** — Stow has no built-in platform support. Users may have `bash-linux/` and `bash-macos/` as separate packages.
+
+**Script patterns:** `stow <package>`, `stow -v -t ~`, `stow -R`
+
+### chezmoi
+**Strong signals:**
+- `.chezmoi.toml.tmpl` or `.chezmoi.yaml.tmpl` config file
+- `.chezmoiignore` for exclusions
+- Files/directories with special prefixes: `dot_`, `private_`, `executable_`, `run_once_`
+
+**Prefix meanings:**
+- `dot_` → prepend `.` to filename
+- `private_` → set mode 0600/0700
+- `executable_` → set executable bit
+- `run_once_` → execute script once during apply
+- `modify_` → script that modifies existing file (no writ equivalent)
+
+**Suffix meanings:**
+- `.tmpl` → Go template
+- `.age` / `.asc` → encrypted
+
+**No directory platform variants** — Uses templates with `{{ if eq .chezmoi.os "darwin" }}`
+
+**Script patterns:** `chezmoi init`, `chezmoi apply`, `chezmoi add`
+
+### yadm
+**Strong signals:**
+- `.yadm/` directory
+- `.yadm/encrypt` listing encrypted files
+- Files with `##` in names (alternate files)
+
+**Alternate file naming:**
+- `.bashrc##os.Linux` → used on Linux
+- `.bashrc##os.Darwin` → used on macOS
+- `.gitconfig##class.Work` → used when class is "Work"
+
+**Script patterns:** `yadm add`, `yadm alt`, `yadm bootstrap`
+
+### Bare Git Repo
+**Strong signals:**
+- Bare repo directory (`.cfg/`, `.dotfiles/`) containing `HEAD`, `objects/`, `refs/`
+- Scripts with `git --git-dir=... --work-tree=$HOME`
+
+**No structure** — Files tracked directly in `$HOME`
+
+### Script-based
+**Signals (when no other system detected):**
+- `install.sh`, `setup.sh`, or `Makefile` at root
+- Manual symlink commands: `ln -sf`, `ln -s`
+- No tool-specific commands (no tuckr, chezmoi, stow, yadm)
+
+**Common patterns:**
+```bash
+ln -sf "$DOTFILES/bashrc" ~/.bashrc
+for file in configs/*; do ln -sf "$file" "$HOME/.$(basename $file)"; done
+```
 
 ## Writ Core Concepts
 

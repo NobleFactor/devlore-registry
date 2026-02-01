@@ -8,35 +8,149 @@ description: |
   Files can have attributes encoded in names (private_, executable_, etc.).
 
 markers:
+  # Configuration files (strongest signals)
   - type: file
     path: ".chezmoi.toml.tmpl"
     confidence: 1.0
-    description: "chezmoi configuration template"
+    description: "chezmoi configuration template (TOML)"
+
+  - type: file
+    path: ".chezmoi.yaml.tmpl"
+    confidence: 1.0
+    description: "chezmoi configuration template (YAML)"
 
   - type: file
     path: ".chezmoiroot"
     confidence: 1.0
-    description: "chezmoi root marker"
+    description: "chezmoi root marker (for nested source dirs)"
 
+  - type: file
+    path: ".chezmoiignore"
+    confidence: 1.0
+    description: "chezmoi ignore patterns"
+
+  - type: file
+    path: ".chezmoiexternal.yaml"
+    confidence: 1.0
+    description: "chezmoi external file definitions"
+
+  - type: file
+    path: ".chezmoiremove"
+    confidence: 1.0
+    description: "chezmoi files to remove from target"
+
+  # Prefix patterns (file attributes encoded in names)
   - type: directory_pattern
     pattern: "dot_*"
     confidence: 0.95
-    description: "chezmoi dot-prefixed directories"
+    description: "chezmoi dot-prefixed directories → hidden directories"
 
   - type: file_pattern
-    pattern: "*.tmpl"
-    confidence: 0.8
-    description: "chezmoi template files"
+    pattern: "dot_*"
+    confidence: 0.9
+    description: "chezmoi dot-prefixed files → hidden files"
 
   - type: file_pattern
     pattern: "private_*"
-    confidence: 0.9
-    description: "chezmoi private (mode 0600) files"
+    confidence: 0.95
+    description: "chezmoi private files (mode 0600/0700)"
 
   - type: file_pattern
     pattern: "executable_*"
+    confidence: 0.95
+    description: "chezmoi executable files (mode 0755)"
+
+  - type: file_pattern
+    pattern: "readonly_*"
+    confidence: 0.95
+    description: "chezmoi readonly files (no write permission)"
+
+  - type: file_pattern
+    pattern: "run_once_*"
+    confidence: 1.0
+    description: "chezmoi one-time run script"
+
+  - type: file_pattern
+    pattern: "run_onchange_*"
+    confidence: 1.0
+    description: "chezmoi run-on-change script"
+
+  - type: file_pattern
+    pattern: "run_before_*"
+    confidence: 1.0
+    description: "chezmoi run-before script"
+
+  - type: file_pattern
+    pattern: "run_after_*"
+    confidence: 1.0
+    description: "chezmoi run-after script"
+
+  - type: file_pattern
+    pattern: "modify_*"
+    confidence: 1.0
+    description: "chezmoi modify script (edits existing file)"
+
+  - type: file_pattern
+    pattern: "create_*"
+    confidence: 0.95
+    description: "chezmoi create-only file (skip if exists)"
+
+  - type: file_pattern
+    pattern: "remove_*"
+    confidence: 0.95
+    description: "chezmoi remove target file/directory"
+
+  # Suffix patterns
+  - type: file_pattern
+    pattern: "*.tmpl"
+    confidence: 0.85
+    description: "chezmoi Go template files"
+
+  - type: file_pattern
+    pattern: "*.age"
     confidence: 0.9
-    description: "chezmoi executable files"
+    description: "chezmoi age-encrypted files"
+
+  - type: file_pattern
+    pattern: "*.asc"
+    confidence: 0.8
+    description: "chezmoi GPG-encrypted files"
+
+  # Script signals
+  - type: script_content
+    pattern: "chezmoi init"
+    confidence: 1.0
+    description: "chezmoi init command"
+
+  - type: script_content
+    pattern: "chezmoi apply"
+    confidence: 1.0
+    description: "chezmoi apply command"
+
+  - type: script_content
+    pattern: "chezmoi add"
+    confidence: 0.95
+    description: "chezmoi add command"
+
+  # Template content signals
+  - type: file_content
+    pattern: "{{ .chezmoi."
+    confidence: 1.0
+    description: "chezmoi template variable reference"
+
+  - type: file_content
+    pattern: "{{- if eq .chezmoi.os"
+    confidence: 1.0
+    description: "chezmoi OS-conditional template"
+
+platform_support:
+  notes: |
+    chezmoi uses templates for platform-specific logic, not directory variants.
+    Platform checks are done within .tmpl files using Go template syntax:
+      {{ if eq .chezmoi.os "darwin" }}...{{ end }}
+      {{ if eq .chezmoi.os "linux" }}...{{ end }}
+      {{ if eq .chezmoi.arch "arm64" }}...{{ end }}
+    This is fundamentally different from writ's segment directory approach.
 
 segment_transform:
   description: "chezmoi encodes metadata in filenames; writ uses directory structure"
