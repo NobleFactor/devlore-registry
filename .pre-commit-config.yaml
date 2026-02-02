@@ -6,15 +6,23 @@
 # Install: pre-commit install
 # Run manually: pre-commit run --all-files
 #
+# Requires: shfmt, shellcheck
+#
 # Full schema validation runs in CI via: star registry validate
+# Knowledge index generation runs in CI via: star registry index-knowledge
 
 repos:
   - repo: local
     hooks:
-      - id: build-index
-        name: Check knowledge index.yaml files
-        entry: scripts/Build-Index
-        language: script
-        files: ^knowledge/
-        pass_filenames: false
-        stages: [pre-commit]
+      # === Shell hooks ===
+      - id: shfmt
+        name: Format shell scripts (shfmt)
+        entry: shfmt -d -i 4 -ci
+        language: system
+        types: [shell]
+
+      - id: shellcheck
+        name: Lint shell scripts (shellcheck)
+        entry: shellcheck -x --severity=warning
+        language: system
+        types: [shell]
