@@ -34,7 +34,7 @@ KNOWLEDGE_DIR="$REPO_ROOT/knowledge/migration"
 # Defaults
 SOURCE_ROOT=""
 PROVIDERS="ollama,gemini,anthropic"
-OUTPUT_DIR="$REPO_ROOT/comparison-results"
+OUTPUT_DIR="$REPO_ROOT/testoutput/comparison"
 OLLAMA_MODEL=""
 SKIP_GATHER=false
 

@@ -8,16 +8,23 @@ description: |
   .stow-local-ignore configures files to exclude from symlinking.
 
 markers:
+  # File-based signals
   - type: file
     path: ".stow-local-ignore"
     confidence: 1.0
-    description: "Stow ignore configuration"
+    description: "Stow local ignore configuration"
+
+  - type: file
+    path: ".stow-global-ignore"
+    confidence: 1.0
+    description: "Stow global ignore configuration"
 
   - type: file
     path: ".stowrc"
     confidence: 0.95
     description: "Stow configuration file"
 
+  # Structure-based signals
   - type: structure
     description: "Package directories with home-relative paths"
     example: |
@@ -27,7 +34,51 @@ markers:
       vim/
         .vimrc
         .vim/
+      nvim/
+        .config/
+          nvim/
+            init.lua
     confidence: 0.7
+
+  # Script-based signals
+  - type: script_content
+    pattern: "stow "
+    confidence: 0.9
+    description: "Stow command in install script"
+
+  - type: script_content
+    pattern: "stow -v"
+    confidence: 0.95
+    description: "Verbose stow command"
+
+  - type: script_content
+    pattern: "stow -t ~"
+    confidence: 0.95
+    description: "Stow with home target"
+
+  - type: script_content
+    pattern: "stow --target"
+    confidence: 0.9
+    description: "Stow with explicit target"
+
+  - type: script_content
+    pattern: "stow -R"
+    confidence: 0.9
+    description: "Stow restow command"
+
+  - type: script_content
+    pattern: "stow -D"
+    confidence: 0.9
+    description: "Stow unstow command"
+
+platform_support:
+  notes: |
+    GNU Stow has NO built-in platform variant support.
+    Users who need platform variants typically:
+    1. Use separate branches per machine
+    2. Create manual packages like "bash-linux", "bash-macos"
+    3. Use wrapper scripts with conditional logic
+    4. Combine with other tools (like yadm) for platform selection
 
 segment_transform:
   description: "Stow packages map to writ projects under Home/Configs/"

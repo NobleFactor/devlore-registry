@@ -1,0 +1,452 @@
+# Dotfile System Detection Signatures
+#
+# This file documents the structural patterns, naming conventions, and
+# behavioral signatures of common dotfile management systems. Use these
+# patterns to identify which system manages a dotfiles repository.
+#
+# Detection confidence should be based on multiple signals:
+# - HIGH: Multiple strong signals present (directory structure + scripts + config files)
+# - MEDIUM: One strong signal or multiple weak signals
+# - LOW: Only weak signals present
+
+systems:
+  tuckr:
+    description: |
+      Tuckr is a dotfile manager inspired by Stow with added features for
+      platform-specific configs, hooks, and encryption. Groups are organized
+      under Configs/ and can have platform-specific variants.
+
+    directory_signals:
+      strong:
+        - pattern: "Configs/"
+          description: Main directory containing all group configurations
+        - pattern: "Hooks/"
+          description: Contains setup scripts with pre_/post_ prefixes
+        - pattern: "Secrets/"
+          description: Encrypted sensitive files (WIP feature)
+
+      weak:
+        - pattern: "Hooks.toml"
+          description: Hooks configuration file (older versions)
+
+    naming_conventions:
+      groups:
+        pattern: "Configs/<group>/"
+        examples:
+          - "Configs/nvim/"
+          - "Configs/zsh/"
+          - "Configs/tmux/"
+
+      platform_variants:
+        pattern: "<group>_<platform>"
+        platforms:
+          - "_linux"
+          - "_macos"
+          - "_windows"
+          - "_unix"
+          - "_darwin"  # Some users use darwin instead of macos
+        examples:
+          - "Configs/all_linux/"
+          - "Configs/all_macos/"
+          - "Configs/nvim_unix/"
+        migration_note: |
+          Tuckr uses underscore separators for platform variants.
+          Writ uses dot separators. Migration requires renaming:
+          all_linux → all.Linux
+          all_macos → all.Darwin
+
+    script_signals:
+      command_patterns:
+        - "tuckr add"
+        - "tuckr rm"
+        - "tuckr set"
+        - "tuckr unset"
+        - "tuckr status"
+        - "tuckr encrypt"
+        - "tuckr decrypt"
+
+      hook_naming:
+        - pattern: "pre_<group>.sh"
+          description: Runs before group deployment
+        - pattern: "post_<group>.sh"
+          description: Runs after group deployment
+
+    special_features:
+      environment_expansion:
+        pattern: "%VARNAME"
+        description: Expands to environment variable value in paths
+
+      root_targeting:
+        pattern: "^path/to/file"
+        description: Targets absolute paths outside $HOME
+
+    internal_structure:
+      description: |
+        Inside each group, the structure mirrors the target home directory.
+        Example: Configs/tmux/.config/tmux/tmux.conf → ~/.config/tmux/tmux.conf
+
+  stow:
+    description: |
+      GNU Stow is a symlink farm manager. Each "package" is a directory
+      that mirrors the target directory structure. Stow creates symlinks
+      from the package contents to the target (usually $HOME).
+
+    directory_signals:
+      strong:
+        - pattern: ".stow-local-ignore"
+          description: Stow-specific ignore file for local exclusions
+        - pattern: ".stow-global-ignore"
+          description: Global ignore patterns
+
+      weak:
+        - pattern: "package directories at root"
+          description: Multiple directories each containing dotfiles that mirror $HOME
+
+    naming_conventions:
+      packages:
+        pattern: "<package>/"
+        examples:
+          - "bash/"
+          - "vim/"
+          - "tmux/"
+          - "git/"
+        note: Package names are arbitrary; no enforced convention
+
+      platform_variants:
+        note: |
+          GNU Stow has NO built-in platform variant support.
+          Users who need platform variants typically:
+          1. Use branches per machine
+          2. Create manual packages like "bash-linux", "bash-macos"
+          3. Use wrapper scripts with conditional logic
+
+    script_signals:
+      command_patterns:
+        - "stow "
+        - "stow -v"
+        - "stow -t ~"
+        - "stow --target"
+        - "stow -R"  # Restow
+        - "stow -D"  # Unstow
+        - "stow --dotfiles"  # Handle dot- prefix
+
+    special_features:
+      dotfiles_mode:
+        pattern: "--dotfiles"
+        description: Converts dot- prefix to . (e.g., dot-bashrc → .bashrc)
+
+      folding:
+        description: |
+          Stow "folds" directories - instead of creating individual symlinks
+          for each file, it symlinks entire directories when possible.
+
+    internal_structure:
+      description: |
+        Each package mirrors the target directory structure from its root.
+        Example: bash/.bashrc → ~/.bashrc
+        Example: nvim/.config/nvim/init.lua → ~/.config/nvim/init.lua
+
+  chezmoi:
+    description: |
+      Chezmoi is a sophisticated dotfile manager with templates, encryption,
+      and cross-machine state management. It uses special prefixes/suffixes
+      to encode file attributes in the source directory.
+
+    directory_signals:
+      strong:
+        - pattern: ".chezmoi.toml.tmpl"
+          description: Chezmoi configuration template
+        - pattern: ".chezmoi.yaml.tmpl"
+          description: Alternative config format
+        - pattern: ".chezmoiignore"
+          description: Files to ignore during apply
+        - pattern: ".chezmoiexternal.yaml"
+          description: External file downloads
+        - pattern: ".chezmoiremove"
+          description: Files to remove from target
+
+      weak:
+        - pattern: "dot_" prefix in filenames
+          description: Any file/dir starting with dot_
+
+    naming_conventions:
+      prefixes:
+        # Order matters - chezmoi processes prefixes in specific order
+        - prefix: "remove_"
+          description: Remove the target file/directory
+        - prefix: "run_"
+          description: Execute as a script, not install
+        - prefix: "run_once_"
+          description: Execute only once ever
+        - prefix: "run_onchange_"
+          description: Execute when content changes
+        - prefix: "run_after_"
+          description: Run after other scripts
+        - prefix: "run_before_"
+          description: Run before other scripts
+        - prefix: "create_"
+          description: Create only if target doesn't exist
+        - prefix: "modify_"
+          description: Script that modifies existing file
+        - prefix: "encrypted_"
+          description: Decrypt before applying
+        - prefix: "private_"
+          description: Remove group/world permissions (mode 0600/0700)
+        - prefix: "readonly_"
+          description: Remove write permissions
+        - prefix: "executable_"
+          description: Set executable bit
+        - prefix: "exact_"
+          description: Remove extraneous files in directory
+        - prefix: "empty_"
+          description: Create empty file (normally skipped)
+        - prefix: "symlink_"
+          description: Create symlink instead of copy
+        - prefix: "dot_"
+          description: Prepend . to filename
+
+      suffixes:
+        - suffix: ".tmpl"
+          description: Process as Go template
+        - suffix: ".literal"
+          description: Stop prefix/suffix processing
+        - suffix: ".age"
+          description: Age-encrypted file
+        - suffix: ".asc"
+          description: GPG-encrypted file
+
+      platform_variants:
+        note: |
+          Chezmoi uses templates for platform-specific logic, not directory
+          variants. Platform checks are done in .tmpl files using:
+          {{ if eq .chezmoi.os "darwin" }}...{{ end }}
+          {{ if eq .chezmoi.os "linux" }}...{{ end }}
+
+    script_signals:
+      command_patterns:
+        - "chezmoi init"
+        - "chezmoi apply"
+        - "chezmoi add"
+        - "chezmoi edit"
+        - "chezmoi diff"
+        - "chezmoi update"
+
+    template_patterns:
+      - "{{ .chezmoi."
+      - "{{- if"
+      - "{{- range"
+      - "{{ template"
+
+    migration_notes:
+      templates: |
+        Chezmoi uses Go templates, same as writ. However, chezmoi provides
+        a rich data context (.chezmoi.os, .chezmoi.hostname, etc.) that
+        must be mapped to writ's segment system.
+
+      modify_scripts: |
+        modify_ scripts have no direct writ equivalent. These require
+        manual migration to either:
+        1. Templates that generate the full file
+        2. Post-deploy hooks (future writ feature)
+
+  yadm:
+    description: |
+      YADM (Yet Another Dotfiles Manager) wraps git with dotfile-specific
+      features. It uses a bare git repo with worktree at $HOME, plus
+      "alternate files" for platform-specific variants.
+
+    directory_signals:
+      strong:
+        - pattern: ".yadm/"
+          description: YADM configuration directory
+        - pattern: ".yadm/encrypt"
+          description: List of files to encrypt
+        - pattern: ".yadm/bootstrap"
+          description: Bootstrap script
+
+      weak:
+        - pattern: "## in filenames"
+          description: Alternate file separator
+
+    naming_conventions:
+      alternate_files:
+        pattern: "<filename>##<condition>"
+        conditions:
+          - "##os.Linux"
+          - "##os.Darwin"
+          - "##class.Work"
+          - "##hostname.myhost"
+          - "##default"  # Fallback
+        examples:
+          - ".bashrc##os.Linux"
+          - ".bashrc##os.Darwin"
+          - ".gitconfig##class.Work"
+        note: Multiple conditions can be chained with commas
+
+      templates:
+        pattern: "<filename>##template"
+        description: Jinja2-style templates processed by yadm
+
+    script_signals:
+      command_patterns:
+        - "yadm add"
+        - "yadm commit"
+        - "yadm push"
+        - "yadm pull"
+        - "yadm alt"
+        - "yadm encrypt"
+        - "yadm decrypt"
+        - "yadm bootstrap"
+
+    special_features:
+      bare_repo:
+        description: |
+          YADM uses a bare git repo (typically ~/.local/share/yadm/repo.git)
+          with $HOME as the worktree. This means dotfiles live directly in
+          $HOME, not in a separate directory.
+
+      classes:
+        description: |
+          YADM supports "classes" for grouping machines. A machine can
+          belong to multiple classes. Configured in .yadm/config.
+
+    migration_notes:
+      structure: |
+        YADM repos have NO source directory - files are in $HOME directly.
+        Migration requires:
+        1. Creating a new dotfiles directory
+        2. Moving tracked files from $HOME to the new location
+        3. Converting alternate files to writ segment directories
+
+  bare_git:
+    description: |
+      A bare git repo approach where users track dotfiles directly using
+      git with $HOME as the worktree. No dedicated tool; uses git aliases.
+
+    directory_signals:
+      strong:
+        - pattern: ".cfg/" or ".dotfiles/" bare repo
+          description: Bare git repository (has HEAD, objects/, refs/)
+        - pattern: "config worktree = ~" or "worktree = /home/"
+          description: Git config showing $HOME as worktree
+
+      weak:
+        - pattern: "git --git-dir=... --work-tree=..."
+          description: Git invocation pattern in scripts/aliases
+
+    script_signals:
+      alias_patterns:
+        - "alias config='git --git-dir=$HOME/.cfg --work-tree=$HOME'"
+        - "alias dotfiles='git --git-dir="
+        - "--bare"  # In clone commands
+
+    naming_conventions:
+      note: |
+        Bare git repos have no naming conventions. Files are wherever
+        they naturally live in $HOME. No platform variant support.
+
+    migration_notes: |
+      Similar to YADM - files are in $HOME directly. Migration requires
+      moving files to a dedicated dotfiles directory.
+
+  script_based:
+    description: |
+      Custom installation scripts without a standard dotfile manager.
+      Users write their own install.sh, setup.sh, or Makefile that
+      manually creates symlinks or copies files.
+
+    directory_signals:
+      weak:
+        - pattern: "install.sh" or "setup.sh" at root
+          description: Custom installation script
+        - pattern: "Makefile" with install/symlink targets
+          description: Make-based installation
+        - pattern: "configs/" or "dotfiles/" subdirectory
+          description: Organized but non-standard structure
+
+    script_signals:
+      command_patterns:
+        - "ln -s"
+        - "ln -sf"
+        - "ln -sfn"
+        - "cp "
+        - 'for file in' # Loop-based linking
+        - "stow" # May use stow internally but with custom wrapper
+
+      negative_signals:
+        description: |
+          Absence of any tool-specific commands (tuckr, chezmoi, yadm)
+          combined with presence of manual linking commands indicates
+          script-based approach.
+
+    common_patterns:
+      loop_linking: |
+        for file in dotfiles/*; do
+          ln -sf "$file" "$HOME/.$(basename $file)"
+        done
+
+      explicit_links: |
+        ln -sf "$DOTFILES/bashrc" ~/.bashrc
+        ln -sf "$DOTFILES/vimrc" ~/.vimrc
+
+    migration_notes: |
+      Script-based setups vary widely. The migration must:
+      1. Parse the install script to understand the mapping
+      2. Identify any conditional logic (platform checks)
+      3. Reorganize files into writ's project/segment structure
+
+# Platform Normalization
+#
+# Different systems use different platform names. Normalize to writ conventions.
+platform_normalization:
+  darwin:
+    source_names: ["macos", "osx", "mac", "Darwin"]
+    writ_name: "Darwin"
+
+  linux:
+    source_names: ["linux", "Linux", "gnu-linux"]
+    writ_name: "Linux"
+    distributions:
+      - source: ["debian", "Debian"]
+        writ: "Debian"
+      - source: ["ubuntu", "Ubuntu"]
+        writ: "Ubuntu"
+      - source: ["fedora", "Fedora"]
+        writ: "Fedora"
+      - source: ["arch", "Arch", "archlinux"]
+        writ: "Arch"
+      - source: ["rhel", "RHEL", "centos", "CentOS"]
+        writ: "RHEL"
+
+  unix:
+    source_names: ["unix", "Unix", "posix"]
+    writ_name: "Unix"
+    note: Matches both Darwin and Linux
+
+  windows:
+    source_names: ["windows", "Windows", "win32", "win64"]
+    writ_name: "Windows"
+
+# Separator Conventions
+#
+# How different systems separate base name from platform variant
+separator_conventions:
+  underscore:
+    systems: ["tuckr"]
+    pattern: "<base>_<platform>"
+    examples: ["all_linux", "nvim_macos"]
+
+  dash:
+    systems: ["custom", "some stow users"]
+    pattern: "<base>-<platform>"
+    examples: ["all-Darwin", "nvim-Linux"]
+
+  hash:
+    systems: ["yadm"]
+    pattern: "<base>##<condition>"
+    examples: [".bashrc##os.Linux"]
+
+  dot:
+    systems: ["writ"]
+    pattern: "<base>.<Segment>"
+    examples: ["all.Darwin", "all.Linux.Debian"]

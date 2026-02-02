@@ -21,7 +21,7 @@ KNOWLEDGE_DIR="$REPO_ROOT/knowledge/package-authoring"
 # Defaults
 SLOTS_FILE=""
 PROVIDERS="gemini,anthropic"
-OUTPUT_DIR="$REPO_ROOT/package-generation-results"
+OUTPUT_DIR="$REPO_ROOT/testoutput/package-generation"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do

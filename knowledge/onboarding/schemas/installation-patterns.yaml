@@ -1,0 +1,303 @@
+# Software Installation Patterns
+#
+# This file documents common installation patterns observed across different
+# types of software. Use these patterns to classify software complexity and
+# identify the most appropriate installation methods.
+
+# Product Categories
+#
+# Software falls into distinct categories with different installation characteristics.
+categories:
+  cli-tool:
+    description: Command-line utilities and tools
+    examples: ["ripgrep", "fd", "jq", "fzf", "curl", "wget"]
+    typical_complexity: simple
+    characteristics:
+      - Single binary or small set of binaries
+      - No background services
+      - No complex configuration required
+      - Often available via multiple package managers
+    common_install_patterns:
+      darwin:
+        - "brew install <package>"
+        - "sudo port install <package>"
+      linux:
+        - "apt-get install <package>"
+        - "dnf install <package>"
+        - "pacman -S <package>"
+      windows:
+        - "choco install <package>"
+        - "scoop install <package>"
+        - "winget install <vendor>.<package>"
+      cross_platform:
+        - "cargo install <package>"  # Rust tools
+        - "go install <package>@latest"  # Go tools
+        - "pip install <package>"  # Python tools
+        - "npm install -g <package>"  # Node tools
+
+  runtime:
+    description: Language runtimes and interpreters
+    examples: ["nodejs", "python", "ruby", "go", "rust", "java"]
+    typical_complexity: moderate
+    characteristics:
+      - May require version management (nvm, pyenv, rbenv)
+      - Often multiple installation methods
+      - May require PATH configuration
+      - May have complex dependency chains
+    complexity_factors:
+      - Version manager availability and preference
+      - System package vs user installation
+      - PATH configuration requirements
+      - Interaction with system-provided versions
+    common_install_patterns:
+      version_managers:
+        nodejs: ["nvm", "fnm", "volta"]
+        python: ["pyenv", "asdf"]
+        ruby: ["rbenv", "rvm", "asdf"]
+        java: ["sdkman", "asdf"]
+      system_packages:
+        darwin: ["brew install <runtime>"]
+        linux: ["apt-get install <runtime>", "dnf install <runtime>"]
+
+  editor:
+    description: Text editors and IDEs
+    examples: ["vscode", "neovim", "vim", "emacs", "sublime-text", "jetbrains-*"]
+    typical_complexity: moderate
+    characteristics:
+      - May be GUI or TUI
+      - Often has plugin ecosystem
+      - May require additional configuration
+      - Desktop integration (file associations, PATH)
+    common_install_patterns:
+      darwin:
+        - "brew install --cask <editor>"  # GUI apps
+        - "brew install <editor>"  # CLI editors
+      linux:
+        - Package manager with repository setup
+        - Snap/Flatpak for sandboxed install
+        - Direct .deb/.rpm download
+      windows:
+        - "choco install <editor>"
+        - "winget install <vendor>.<editor>"
+        - Direct installer download
+
+  database:
+    description: Database servers and clients
+    examples: ["postgresql", "mysql", "redis", "mongodb", "sqlite"]
+    typical_complexity: moderate to complex
+    characteristics:
+      - Server requires data directory
+      - May run as system service
+      - Requires user/permission setup
+      - Has both server and client components
+    complexity_factors:
+      - Service management (systemd, launchd)
+      - Data directory initialization
+      - User and permission configuration
+      - Backup/restore procedures
+
+  container-runtime:
+    description: Container and virtualization tools
+    examples: ["docker", "podman", "containerd", "colima"]
+    typical_complexity: complex
+    characteristics:
+      - Requires elevated privileges or user groups
+      - May require kernel features
+      - Platform-specific implementation differences
+      - Network configuration
+    complexity_factors:
+      - macOS: VM-based (Docker Desktop, Colima, Lima)
+      - Linux: Native or rootless mode
+      - Windows: WSL2 or Hyper-V
+
+  package-manager:
+    description: Software package managers themselves
+    examples: ["homebrew", "macports", "chocolatey", "scoop", "apt", "dnf"]
+    typical_complexity: moderate to complex
+    characteristics:
+      - Self-bootstrapping installation
+      - May require Xcode/build tools
+      - May conflict with other package managers
+      - OS upgrade sensitivity
+    complexity_factors:
+      - Xcode Command Line Tools requirement (macOS)
+      - OS version compatibility
+      - Migration after OS upgrade
+      - Conflict with system package manager
+
+# Complexity Classification
+#
+# How to classify installation complexity based on observed patterns.
+complexity_classification:
+  simple:
+    definition: Single command, no prerequisites, no configuration required
+    indicators:
+      - Available in standard package managers
+      - No post-install configuration needed
+      - No service/daemon to manage
+      - No platform-specific prerequisites
+    examples:
+      - "brew install ripgrep"
+      - "apt-get install jq"
+      - "cargo install fd-find"
+
+  moderate:
+    definition: Multiple steps or configuration required, but well-documented
+    indicators:
+      - Requires repository/source addition
+      - Needs PATH or shell configuration
+      - Has version management considerations
+      - Multiple valid installation methods to choose from
+    examples:
+      - Node.js with nvm (install nvm, then nvm install)
+      - VS Code on Linux (add repository, then apt install)
+      - Python with pyenv
+
+  complex:
+    definition: Platform-specific procedures, significant prerequisites, or operational concerns
+    indicators:
+      - OS-version-specific installers
+      - Requires additional software (Xcode, build tools)
+      - OS upgrade requires migration
+      - Conflicting software must be removed
+      - Kernel/system configuration required
+      - GPU/hardware dependencies
+    examples:
+      - MacPorts (version-specific pkg, Xcode required, migration on OS upgrade)
+      - Docker on macOS (VM setup, resource allocation)
+      - CUDA toolkit (driver compatibility, kernel modules)
+
+# Package Manager Patterns
+#
+# Common command patterns for major package managers.
+package_managers:
+  homebrew:
+    platforms: [darwin, linux]
+    install_patterns:
+      formula: "brew install <package>"
+      cask: "brew install --cask <package>"
+      tap: "brew tap <org>/<repo> && brew install <package>"
+    update: "brew update && brew upgrade <package>"
+    uninstall: "brew uninstall <package>"
+    verification: "brew list <package>"
+
+  macports:
+    platforms: [darwin]
+    install_patterns:
+      port: "sudo port install <package>"
+      variants: "sudo port install <package> +<variant>"
+    update: "sudo port selfupdate && sudo port upgrade <package>"
+    uninstall: "sudo port uninstall <package>"
+    notes:
+      - Requires version-specific .pkg installer
+      - Migration required after macOS upgrade
+
+  apt:
+    platforms: [linux]
+    distributions: [debian, ubuntu]
+    install_patterns:
+      package: "sudo apt-get install <package>"
+      repository: |
+        # Add repository first
+        curl -fsSL <key_url> | sudo gpg --dearmor -o /etc/apt/keyrings/<name>.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/<name>.gpg] <repo_url> stable main" | sudo tee /etc/apt/sources.list.d/<name>.list
+        sudo apt-get update
+        sudo apt-get install <package>
+    update: "sudo apt-get update && sudo apt-get upgrade <package>"
+    uninstall: "sudo apt-get remove <package>"
+
+  dnf:
+    platforms: [linux]
+    distributions: [fedora, rhel, centos]
+    install_patterns:
+      package: "sudo dnf install <package>"
+      repository: |
+        sudo dnf config-manager --add-repo <repo_url>
+        sudo dnf install <package>
+    update: "sudo dnf upgrade <package>"
+    uninstall: "sudo dnf remove <package>"
+
+  pacman:
+    platforms: [linux]
+    distributions: [arch, manjaro]
+    install_patterns:
+      package: "sudo pacman -S <package>"
+      aur: "yay -S <package>"  # or paru
+    update: "sudo pacman -Syu"
+    uninstall: "sudo pacman -Rs <package>"
+
+  chocolatey:
+    platforms: [windows]
+    install_patterns:
+      package: "choco install <package>"
+    update: "choco upgrade <package>"
+    uninstall: "choco uninstall <package>"
+
+  scoop:
+    platforms: [windows]
+    install_patterns:
+      package: "scoop install <package>"
+      bucket: "scoop bucket add <bucket> && scoop install <package>"
+    update: "scoop update <package>"
+    uninstall: "scoop uninstall <package>"
+
+  winget:
+    platforms: [windows]
+    install_patterns:
+      package: "winget install <vendor>.<package>"
+    update: "winget upgrade <vendor>.<package>"
+    uninstall: "winget uninstall <vendor>.<package>"
+
+  snap:
+    platforms: [linux]
+    install_patterns:
+      package: "sudo snap install <package>"
+      classic: "sudo snap install <package> --classic"
+    update: "sudo snap refresh <package>"
+    uninstall: "sudo snap remove <package>"
+
+# Verification Patterns
+#
+# Common patterns for verifying successful installation.
+verification_patterns:
+  version_check:
+    pattern: "<command> --version"
+    examples:
+      - "node --version"
+      - "python --version"
+      - "docker --version"
+
+  help_check:
+    pattern: "<command> --help"
+    description: Verifies command exists and is executable
+
+  which_check:
+    pattern: "which <command> || command -v <command>"
+    description: Verifies command is in PATH
+
+  functionality_check:
+    examples:
+      - "rg --help | head -1"  # ripgrep
+      - "node -e 'console.log(1+1)'"  # Node.js
+      - "docker run hello-world"  # Docker
+
+# Repository Setup Patterns
+#
+# Common patterns for adding third-party repositories.
+repository_setup:
+  apt_keyring:
+    description: Modern apt repository with signed keyring
+    pattern: |
+      curl -fsSL <key_url> | sudo gpg --dearmor -o /etc/apt/keyrings/<name>.gpg
+      echo "deb [arch=<arch> signed-by=/etc/apt/keyrings/<name>.gpg] <repo_url> <codename> main" | sudo tee /etc/apt/sources.list.d/<name>.list
+      sudo apt-get update
+
+  dnf_repo:
+    description: DNF/YUM repository configuration
+    pattern: |
+      sudo rpm --import <key_url>
+      sudo dnf config-manager --add-repo <repo_url>
+
+  homebrew_tap:
+    description: Homebrew third-party repository
+    pattern: "brew tap <org>/<repo>"
