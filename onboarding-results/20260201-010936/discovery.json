@@ -1,0 +1,56 @@
+{
+  "product": {
+    "name": "MacPorts",
+    "canonical_name": "macports",
+    "category": "package-manager",
+    "vendor": "The MacPorts Project",
+    "version": "2.11.6",
+    "license": null
+  },
+  "sources": {
+    "homepage": "https://www.macports.org",
+    "installation": ["https://www.macports.org/install.php"],
+    "upgrade": ["https://www.macports.org/install.php"],
+    "uninstall": [],
+    "troubleshooting": ["https://trac.macports.org/wiki/FAQ"],
+    "repository": "https://github.com/macports/macports-base",
+    "releases": "https://github.com/macports/macports-base/releases"
+  },
+  "platforms": {
+    "darwin": {
+      "supported": true,
+      "architectures": ["arm64", "x86_64"],
+      "notes": "Supports macOS Tahoe v26 through legacy versions back to Leopard with version-specific .pkg installers"
+    },
+    "linux": {
+      "supported": true,
+      "distributions": ["experimental POSIX-compliant platforms"],
+      "notes": "Experimental support exists but not actively pursued - source installation only"
+    },
+    "windows": {
+      "supported": false,
+      "min_version": null,
+      "notes": "Not supported - macOS and experimental POSIX platforms only"
+    }
+  },
+  "complexity": {
+    "rating": "complex",
+    "concerns": [
+      "OS upgrade requires migration",
+      "Version-specific installers required",
+      "Xcode dependency for building from source",
+      "Command Line Developer Tools requirement",
+      "X11 windowing environment may be needed",
+      "Manual shell environment configuration for source installs",
+      "GPG signature verification available"
+    ]
+  },
+  "next_urls_to_fetch": [
+    "https://trac.macports.org/wiki/Migration",
+    "https://trac.macports.org/wiki/FAQ",
+    "https://guide.macports.org",
+    "https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6.chk.txt",
+    "https://trac.macports.org/wiki",
+    "https://github.com/macports/macports-base/"
+  ]
+}

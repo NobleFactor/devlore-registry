@@ -1,0 +1,58 @@
+name: macports
+version: "2.11.6"
+description: Package manager for macOS providing command-line, X11 and Aqua open-source software
+homepage: https://www.macports.org
+repository: https://github.com/macports/macports-base
+license: BSD-3-Clause
+
+authors:
+  - name: The MacPorts Project
+    url: https://www.macports.org
+
+platforms:
+  - Darwin
+
+features:
+  install-from-source:
+    description: Install from source tarball instead of .pkg installer
+    default: false
+  
+  install-from-git:
+    description: Install from Git repository HEAD
+    default: false
+
+settings:
+  macos-version:
+    type: string
+    default: "auto"
+    description: Target macOS version for installer selection (auto-detects)
+    
+  prefix:
+    type: string
+    default: "/opt/local"
+    description: Installation prefix (only for source builds)
+    
+  configure-args:
+    type: string
+    default: ""
+    description: Additional configure arguments for source builds
+
+dependencies:
+  - name: xcode-command-line-tools
+    required: true
+    notes: "Install via: xcode-select --install"
+
+conflicts:
+  - name: homebrew
+    reason: "Different installation prefixes can cause library conflicts"
+    severity: warning
+
+verification:
+  command: "port version"
+  pattern: "Version: \\d+\\.\\d+\\.\\d+"
+
+tags:
+  - package-manager
+  - macos
+  - ports
+  - source-builds

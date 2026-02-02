@@ -1,0 +1,95 @@
+```json
+{
+  "package_name": "ollama",
+  "files": {
+    "lifecycle": {
+      "filename": "lifecycle.yaml",
+      "content": "name: ollama\ndescription: Run large language models locally\nhomepage: https://ollama.com\nrepository: https://github.com/ollama/ollama\n\nplatforms:\n  - darwin\n  - linux\n  - windows\n\nfeatures:\n  gpu-acceleration:\n    description: Enable GPU acceleration if available\n    default: true\n  systemd-service:\n    description: Install and enable systemd service\n    default: true\n    platforms: [linux]\n\nsettings:\n  ollama_host:\n    type: string\n    default: \"127.0.0.1:11434\"\n    description: Host and port for Ollama API server\n  ollama_models:\n    type: string\n    default: \"~/.ollama/models\"\n    description: Directory for storing downloaded models\n\ndependencies:\n  linux:\n    - curl\n\nphases:\n  prepare: prepare.star\n  install: install.star\n  provision: provision.star\n  verify: verify.star\n\nverification:\n  command: \"ollama --version\"\n  pattern: \"ollama version\"\n\ntags:\n  - cli\n  - llm\n  - ai\n  - machine-learning\n  - local-inference\n"
+    },
+    "prepare": {
+      "filename": "prepare.star",
+      "content": "# ollama/prepare.star - Prepare phase for Ollama\n\n# TRIBAL KNOWLEDGE:\n# The Linux install script specifically checks for WSL2 and rejects WSL1.\n# (Source: https://ollama.com/install.sh)\n#\n# TRIBAL KNOWLEDGE:\n# On macOS, Ollama requires macOS Sonoma (14.0) or newer.\n# (Source: https://ollama.com/download)\n\ndef prepare():\n    \"\"\"Check preconditions for Ollama installation.\"\"\"\n    if platform.os == \"darwin\":\n        _prepare_darwin()\n    elif platform.os == \"linux\":\n        _prepare_linux()\n    elif platform.os == \"windows\":\n        _prepare_windows()\n    return {\"prepare\": True}\n\ndef _prepare_darwin():\n    \"\"\"Check macOS specific preconditions.\"\"\"\n    # TRIBAL KNOWLEDGE: Ollama requires macOS Sonoma (14.0) or newer.\n    # (Source: https://ollama.com/download)\n    if not platform.version_gte(\"14.0\"):\n        fail(\"Ollama requires macOS Sonoma (14.0) or newer.\")\n\ndef _prepare_linux():\n    \"\"\"Check Linux specific preconditions.\"\"\"\n    # Ensure curl is available for the installation script\n    if not fs.which(\"curl\"):\n        fail(\"The 'curl' command is required for Ollama installation on Linux. Please install it.\")\n\n    # TRIBAL KNOWLEDGE: The Linux install script specifically checks for WSL2 and rejects WSL1.\n    # This check is performed by the script itself, so no explicit check here.\n    # (Source: https://ollama.com/install.sh)\n    pass\n\ndef _prepare_windows():\n    \"\"\"Check Windows specific preconditions.\"\"\"\n    # Ollama requires Windows 10 or newer.\n    if not platform.version_gte(\"10\"):\n        fail(\"Ollama requires Windows 10 or newer.\")\n\ndef rollback():\n    \"\"\"No rollback needed for prepare phase.\"\"\"\n    pass\n"
+    },
+    "install": {
+      "filename": "install.star",
+      "content": "# ollama/install.star - Install phase for Ollama\n\n# TRIBAL KNOWLEDGE:\n# On macOS, Ollama installs as an application bundle, but also places a CLI binary\n# at /usr/local/bin/ollama for command-line interaction.\n# (Source: ollama.com/download/Ollama.dmg contents)\n\n# TRIBAL KNOWLEDGE:\n# The Linux install script performs several system-level changes:\n# - Creates an 'ollama' system user.\n# - Installs and enables a systemd service for Ollama.\n# - Adds the current user to 'render' and 'video' groups for GPU access.\n# - Auto-detects NVIDIA and AMD GPUs and configures accordingly.\n# - Handles architecture-specific binaries, including special handling for NVIDIA Jetson (JetPack 5/6).\n# - Prefers .tar.zst compression if 'zstd' is available, falls back to .tgz.\n# (Source: https://ollama.com/install.sh)\n\ndef install():\n    \"\"\"Install Ollama.\"\"\"\n    if platform.os == \"darwin\":\n        _install_darwin()\n    elif platform.os == \"linux\":\n        _install_linux()\n    elif platform.os == \"windows\":\n        _install_windows()\n    return {\"install\": True}\n\ndef _install_darwin():\n    \"\"\"Install Ollama on macOS via DMG.\"\"\"\n    dmg_url = \"https://ollama.com/download/Ollama.dmg\"\n    app_name = \"Ollama\"\n    volume_name = \"Ollama\" # Typically the volume name matches the app name for simple DMGs\n\n    # TRIBAL KNOWLEDGE: Use -nobrowse flag to prevent Finder from opening the mounted DMG.\n    temp_dmg = f\"/tmp/{app_name}.dmg\"\n    http.download(dmg_url, temp_dmg)\n\n    result = shell.exec(\n        f\"hdiutil attach {temp_dmg} -nobrowse\",\n        allowed_commands=[\"hdiutil\"],\n    )\n    mount_point = f\"/Volumes/{volume_name}\"\n\n    shell.exec(\n        f\"cp -R {mount_point}/{app_name}.app /Applications/\",\n        allowed_commands=[\"cp\"],\n    )\n\n    shell.exec(f\"hdiutil detach {mount_point}\", allowed_commands=[\"hdiutil\"])\n    fs.remove(temp_dmg)\n\n    # TRIBAL KNOWLEDGE: The Ollama macOS app installs a CLI binary at /usr/local/bin/ollama.\n    # This is handled by the app itself upon first launch or background process.\n    # No explicit action needed here.\n\ndef _install_linux():\n    \"\"\"Install Ollama on Linux via script.\"\"\"\n    script_url = \"https://ollama.com/install.sh\"\n    # TRIBAL KNOWLEDGE: The install script handles creating user, systemd service,\n    # adding user to render/video groups, GPU detection, and JetPack specific binaries.\n    # It also checks for WSL2 and prefers .tar.zst if zstd is available.\n    # (Source: https://ollama.com/install.sh)\n    shell.exec(\n        f\"curl -fsSL {script_url} | sh\",\n        allowed_commands=[\"curl\", \"sh\"],\n    )\n\ndef _install_windows():\n    \"\"\"Install Ollama on Windows via EXE installer.\"\"\"\n    exe_url = \"https://ollama.com/download/OllamaSetup.exe\"\n    exe_name = \"OllamaSetup.exe\"\n    silent_flag = \"/S\" # NSIS-style silent install\n\n    temp_path = env.expand(\"%TEMP%\") + f\"\\\\{exe_name}\"\n    http.download(exe_url, temp_path)\n    shell.exec(\n        f\"{temp_path} {silent_flag}\",\n        allowed_commands=[temp_path], # Allowed command is the downloaded executable itself\n    )\n    fs.remove(temp_path)\n\ndef rollback():\n    \"\"\"Remove Ollama.\"\"\"\n    if platform.os == \"darwin\":\n        # TRIBAL KNOWLEDGE: Simply remove the .app bundle.\n        # May also need to remove:\n        # ~/Library/Application Support/Ollama\n        # ~/Library/Preferences/com.ollama.Ollama.plist\n        # ~/Library/Caches/Ollama\n        fs.remove(\"/Applications/Ollama.app\")\n    elif platform.os == \"linux\":\n        # TRIBAL KNOWLEDGE: The Linux install script does not provide a standard uninstall flag.\n        # Manual cleanup is required:\n        # - Stop and disable systemd service: sudo systemctl stop ollama && sudo systemctl disable ollama\n        # - Remove ollama user and group: sudo userdel ollama && sudo groupdel ollama\n        # - Remove binaries: sudo rm -rf /usr/local/bin/ollama\n        # - Remove data directory: sudo rm -rf /usr/share/ollama /var/lib/ollama ~/.ollama\n        # - Remove user from render/video groups if added by script.\n        print(\"Manual cleanup required for Ollama on Linux. See README.md for details.\")\n    elif platform.os == \"windows\":\n        # TRIBAL KNOWLEDGE: Windows EXE installers don't have a standard uninstall command.\n        # Uninstall via \"Add or Remove Programs\" or by querying the registry for uninstall string.\n        # Example: wmic product where name=\"Ollama\" call uninstall /nointeractive\n        print(\"Manual cleanup required for Ollama on Windows. See README.md for details.\")\n"
+    },
+    "provision": {
+      "filename": "provision.star",
+      "content": "# ollama/provision.star - Provision phase for Ollama\n\ndef provision():\n    \"\"\"Configure Ollama after installation.\"\"\"\n    if platform.os == \"darwin\":\n        _provision_darwin()\n    elif platform.os == \"linux\":\n        _provision_linux()\n    elif platform.os == \"windows\":\n        _provision_windows()\n    return {\"provision\": True}\n\ndef _provision_darwin():\n    \"\"\"macOS: Ollama Desktop app handles its own provisioning and startup.\"\"\"\n    # TRIBAL KNOWLEDGE: Ollama on macOS runs as a menu bar application and\n    # automatically starts its backend service. No explicit service management needed.\n    pass\n\ndef _provision_linux():\n    \"\"\"Linux: Ensure systemd service is enabled and started.\"\"\"\n    # TRIBAL KNOWLEDGE: The install script already sets up the systemd service.\n    # We ensure it's enabled and running, especially if the 'systemd_service' feature is active.\n    # (Source: https://ollama.com/install.sh)\n    if package.feature_enabled(\"systemd-service\"):\n        service.enable(\"ollama\")\n        service.start(\"ollama\")\n    else:\n        print(\"Systemd service not enabled as 'systemd-service' feature is disabled.\")\n\n    # TRIBAL KNOWLEDGE: The Linux install script adds the current user to 'render' and 'video' groups\n    # for GPU access. This is crucial for GPU acceleration to work.\n    # (Source: https://ollama.com/install.sh)\n    # No explicit action needed here as the install script handles it.\n\n    # The 'ollama pull llama3.2:1b' is an optional post-install step for testing.\n    # It's better documented in README.md rather than forced in provision.\n    # If it were a required step, it would be here.\n\ndef _provision_windows():\n    \"\"\"Windows: Ollama Desktop app handles its own provisioning and startup.\"\"\"\n    # TRIBAL KNOWLEDGE: Ollama on Windows runs as a system tray application and\n    # automatically starts its backend service. No explicit service management needed.\n    pass\n\ndef rollback():\n    \"\"\"Rollback Ollama provisioning.\"\"\"\n    if platform.os == \"linux\":\n        # Disable and stop the systemd service\n        service.stop(\"ollama\")\n        service.disable(\"ollama\")\n    # No specific rollback for macOS/Windows provisioning as it's self-managed.\n"
+    },
+    "verify": {
+      "filename": "verify.star",
+      "content": "# ollama/verify.star - Verify phase for Ollama\n\ndef verify():\n    \"\"\"Verify Ollama installation and basic functionality.\"\"\"\n    if platform.os == \"darwin\":\n        _verify_darwin()\n    elif platform.os == \"linux\":\n        _verify_linux()\n    elif platform.os == \"windows\":\n        _verify_windows()\n    return {\"verify\": True}\n\ndef _verify_darwin():\n    \"\"\"Verify Ollama on macOS.\"\"\"\n    # Check if the CLI binary is available and functional\n    _verify_cli_and_functional()\n\ndef _verify_linux():\n    \"\"\"Verify Ollama on Linux.\"\"\"\n    # Check if the CLI binary is available and functional\n    _verify_cli_and_functional()\n    # Also check if the systemd service is running if enabled\n    if package.feature_enabled(\"systemd-service\"):\n        if not service.status(\"ollama\"):\n            fail(\"Ollama systemd service is not running.\")\n\ndef _verify_windows():\n    \"\"\"Verify Ollama on Windows.\"\"\"\n    # Check if the CLI binary is available and functional\n    _verify_cli_and_functional()\n\ndef _verify_cli_and_functional():\n    \"\"\"Helper to verify CLI version and list models.\"\"\"\n    # Verify version command\n    result = shell.exec(\n        \"ollama --version\",\n        allowed_commands=[\"ollama\"],\n        capture_output=True,\n    )\n    if \"ollama version\" not in result.stdout:\n        fail(f\"Ollama version check failed. Output: {result.stdout}\")\n\n    # Functional test: list available models (should not error)\n    # TRIBAL KNOWLEDGE: 'ollama list' requires the Ollama server to be running.\n    # This implicitly verifies the backend service is operational.\n    result = shell.exec(\n        \"ollama list\",\n        allowed_commands=[\"ollama\"],\n        capture_output=True,\n    )\n    if result.return_code != 0:\n        fail(f\"Ollama functional test (ollama list) failed. Output: {result.stderr}\")\n\ndef rollback():\n    \"\"\"No rollback needed for verify phase.\"\"\"\n    pass\n"
+    },
+    "readme": {
+      "filename": "README.md",
+      "content": "# Ollama Lore Package\n\nOllama is a powerful tool for running large language models locally on your machine, supporting various platforms and GPU acceleration. It simplifies the process of downloading, running, and managing LLMs, making local AI inference accessible.\n\n## Tribal Knowledge\n\nThis section documents non-obvious steps, common pitfalls, and specific behaviors related to Ollama installation and usage.\n\n*   **WSL2 Only, Not WSL1**: The Linux installation script for Ollama specifically checks for and requires WSL2. WSL1 environments are not supported and will be rejected by the installer.\n    *   *Reference: `prepare.star:3-5`*\n*   **macOS Sonoma Requirement**: Ollama on macOS requires macOS Sonoma (version 14.0) or newer to function correctly.\n    *   *Reference: `prepare.star:19-21`*\n*   **macOS CLI Binary Location**: While Ollama installs as a standard macOS application bundle (`Ollama.app`), it also places a command-line interface (CLI) binary at `/usr/local/bin/ollama`. This allows for easy interaction via the terminal.\n    *   *Reference: `install.star:3-5`*\n*   **Linux Install Script Actions**: The `install.sh` script for Linux performs several critical system-level configurations:\n    *   It creates an `ollama` system user.\n    *   It installs and enables a `systemd` service for the Ollama daemon.\n    *   It adds the current user to the `render` and `video` groups to ensure proper GPU access.\n    *   It automatically detects NVIDIA and AMD GPUs and configures Ollama accordingly.\n    *   It includes special handling for NVIDIA Jetson devices running JetPack 5 or 6, providing architecture-specific binaries.\n    *   It prefers `.tar.zst` compression for downloads if the `zstd` utility is available, falling back to `.tgz` otherwise.\n    *   *Reference: `install.star:9-16`*\n*   **Self-Managed macOS/Windows Services**: On macOS and Windows, Ollama runs as a menu bar or system tray application, respectively. These applications are self-managing and automatically handle the startup and background operation of the Ollama backend service. No manual `service.enable` or `service.start` commands are typically required.\n    *   *Reference: `provision.star:14-16`*\n*   **`ollama list` Requires Server**: The `ollama list` command, used for functional verification, requires the Ollama backend service to be actively running. A successful execution of this command implicitly confirms that the Ollama server is operational.\n    *   *Reference: `verify.star:44-46`*\n*   **Optional Post-Install: Pulling a Default Model**: After installation, it's highly recommended to pull a default model (e.g., `ollama pull llama3.2:1b`) to test the setup and begin using Ollama. This step is optional and not automatically performed by the `provision` phase.\n\n## Features\n\n| Feature Name        | Description                                     | Default | Platforms |\n| :------------------ | :---------------------------------------------- | :------ | :-------- |\n| `gpu-acceleration`  | Enable GPU acceleration if available            | `true`  | All       |\n| `systemd-service`   | Install and enable systemd service (Linux only) | `true`  | Linux     |\n\n## Settings\n\n| Setting Name  | Type   | Default Value      | Description                               | Environment Variable |\n| :------------ | :----- | :----------------- | :---------------------------------------- | :------------------- |\n| `ollama_host` | string | `127.0.0.1:11434`  | Host and port for Ollama API server       | `OLLAMA_HOST`        |\n| `ollama_models` | string | `~/.ollama/models` | Directory for storing downloaded models   | `OLLAMA_MODELS`      |\n\n## Sources Consulted\n\n*   **Official download page**\n    *   URL: `https://ollama.com/download`\n    *   Relevance: Primary source for download links and platform requirements.\n*   **Linux installation page**\n    *   URL: `https://ollama.com/download/linux`\n    *   Relevance: Specific details for Linux installation.\n*   **Windows installation page**\n    *   URL: `https://ollama.com/download/windows`\n    *   Relevance: Specific details for Windows installation.\n*   **Linux install script source**\n    *   URL: `https://ollama.com/install.sh`\n    *   Relevance: Detailed understanding of Linux installation logic, system changes, and tribal knowledge.\n*   **GitHub repository**\n    *   URL: `https://github.com/ollama/ollama`\n    *   Relevance: General project information and community insights.\n"
+    }
+  },
+  "tribal_knowledge_summary": [
+    {
+      "title": "WSL2 only, not WSL1",
+      "file": "prepare.star",
+      "lines": "3-5"
+    },
+    {
+      "title": "macOS Sonoma Requirement",
+      "file": "prepare.star",
+      "lines": "19-21"
+    },
+    {
+      "title": "macOS CLI Binary Location",
+      "file": "install.star",
+      "lines": "3-5"
+    },
+    {
+      "title": "Linux Install Script Actions",
+      "file": "install.star",
+      "lines": "9-16"
+    },
+    {
+      "title": "Self-Managed macOS/Windows Services",
+      "file": "provision.star",
+      "lines": "14-16"
+    },
+    {
+      "title": "`ollama list` Requires Server",
+      "file": "verify.star",
+      "lines": "44-46"
+    },
+    {
+      "title": "Optional Post-Install: Pulling a Default Model",
+      "file": "README.md",
+      "lines": "60-62"
+    }
+  ],
+  "sources_consulted": [
+    {
+      "title": "Official download page",
+      "url": "https://ollama.com/download",
+      "relevance": "Primary source for download links and platform requirements."
+    },
+    {
+      "title": "Linux installation page",
+      "url": "https://ollama.com/download/linux",
+      "relevance": "Specific details for Linux installation."
+    },
+    {
+      "title": "Windows installation page",
+      "url": "https://ollama.com/download/windows",
+      "relevance": "Specific details for Windows installation."
+    },
+    {
+      "title": "Linux install script source",
+      "url": "https://ollama.com/install.sh",
+      "relevance": "Detailed understanding of Linux installation logic, system changes, and tribal knowledge."
+    },
+    {
+      "title": "GitHub repository",
+      "url": "https://github.com/ollama/ollama",
+      "relevance": "General project information and community insights."
+    }
+  ]
+}
+```

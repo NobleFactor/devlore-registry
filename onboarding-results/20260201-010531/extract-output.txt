@@ -1,0 +1,219 @@
+```yaml
+package_name: macports
+slots:
+  - category: identity
+    name: name
+    value: MacPorts
+    confidence: 1.0
+    platform: all
+    source_ref: "Primary Document - Download & Installation"
+
+  - category: identity
+    name: version
+    value: "2.11.6"
+    confidence: 1.0
+    platform: all
+    source_ref: "Primary Document - Installing MacPorts"
+
+  - category: identity
+    name: description
+    value: "An easy-to-use system for compiling, installing, and upgrading either command-line, X11 or Aqua based open-source software on the Mac OS X operating system"
+    confidence: 1.0
+    platform: all
+    source_ref: "Primary Document - meta description"
+
+  - category: identity
+    name: homepage
+    value: "https://www.macports.org"
+    confidence: 1.0
+    platform: all
+    source_ref: "Primary Document - URL"
+
+  - category: platform
+    name: supported_os
+    value: ["darwin"]
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - macOS Package (.pkg) Installer"
+    annotation: "Primarily designed for macOS, though experimental support exists for other POSIX-compliant platforms"
+
+  - category: platform
+    name: supported_versions
+    value: ["macOS Tahoe v26", "macOS Sequoia v15", "macOS Sonoma v14", "macOS Ventura v13", "Monterey", "Big Sur", "Catalina", "Mojave", "High Sierra", "Sierra", "El Capitan", "Yosemite", "Mavericks", "Mountain Lion", "Lion", "Snow Leopard", "Leopard"]
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Available Downloads"
+
+  - category: dependency
+    name: required_dependencies
+    value: ["xcode-command-line-tools"]
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Quickstart"
+
+  - category: dependency
+    name: optional_dependencies
+    value: ["xcode", "x11-windowing-environment"]
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Installing MacPorts requirements"
+
+  - category: installation
+    name: install_command
+    value: "xcode-select --install"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Quickstart step 1"
+    annotation: "This installs the required Command Line Developer Tools"
+
+  - category: installation
+    name: package_installer
+    value: "Download and install .pkg file from macOS Installer"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - macOS Package (.pkg) Installer"
+
+  - category: installation
+    name: pkg_urls
+    value: 
+      - "https://github.com/macports/macports-base/releases - Tahoe installer"
+      - "https://github.com/macports/macports-base/releases - Sequoia installer" 
+      - "https://github.com/macports/macports-base/releases - Sonoma installer"
+      - "https://github.com/macports/macports-base/releases - Ventura installer"
+    confidence: 0.9
+    platform: darwin
+    source_ref: "Primary Document - Available Downloads"
+    annotation: "Specific URLs referenced but not directly provided in the document"
+
+  - category: installation
+    name: source_install_commands
+    value: 
+      - "tar xjvf MacPorts-2.11.6.tar.bz2"
+      - "cd MacPorts-2.11.6"
+      - "./configure && make && sudo make install"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Source Installation"
+
+  - category: installation
+    name: git_install_commands
+    value:
+      - "git clone https://github.com/macports/macports-base.git"
+      - "cd macports-base"
+      - "git checkout v2.11.6"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Git Sources"
+
+  - category: configuration
+    name: path_setup
+    value: "Add ${prefix}/bin and ${prefix}/sbin to the start of your PATH environment variable"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Source Installation"
+    annotation: "Required for source installations, handled automatically by pkg installer"
+
+  - category: configuration
+    name: shell_config
+    value: "Shell configuration files will be adapted by the installer to include necessary settings"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - macOS Package (.pkg) Installer"
+
+  - category: configuration
+    name: xcode_license
+    value: "xcodebuild -license"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Installing MacPorts"
+    annotation: "Required to accept Xcode EULA for Xcode 4 and later"
+
+  - category: verification
+    name: verify_command
+    value: "port version"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "MacPorts Guide - macOS Package Install"
+
+  - category: verification
+    name: initial_update
+    value: "sudo port -v selfupdate"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - macOS Package (.pkg) Installer"
+    annotation: "Run after installation to ensure latest release and Portfiles"
+
+  - category: setting
+    name: default_prefix
+    value: "/opt/local"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Source Installation"
+
+  - category: setting
+    name: rsync_port
+    value: "tcp port 873"
+    confidence: 1.0
+    platform: darwin
+    source_ref: "Primary Document - Selfupdate"
+
+  - category: conflict
+    name: conflicting_software
+    value: ["/usr/local installations", "fink", "homebrew", "pkgsrc"]
+    confidence: 0.8
+    platform: darwin
+    source_ref: "FAQ Document - Can I install software in /usr/local while using MacPorts?"
+
+sources:
+  - title: "MacPorts Download & Installation"
+    url: "https://www.macports.org/install.php"
+    trust_level: vendor
+    sections_used: ["Quickstart", "Installing MacPorts", "macOS Package (.pkg) Installer", "Source Installation", "Git Sources"]
+  
+  - title: "MacPorts Migration Guide"
+    url: "https://trac.macports.org/wiki/Migration"
+    trust_level: vendor
+    sections_used: ["Migration procedure", "Troubleshooting"]
+  
+  - title: "MacPorts FAQ"
+    url: "https://trac.macports.org/wiki/FAQ"
+    trust_level: vendor
+    sections_used: ["General Questions", "Software Questions"]
+  
+  - title: "MacPorts Guide"
+    url: "https://guide.macports.org"
+    trust_level: vendor
+    sections_used: ["Installing MacPorts", "macOS Package Install", "Source Install"]
+
+tribal_knowledge:
+  - title: "Major OS upgrade requires migration"
+    description: "MacPorts installations don't automatically work after major OS upgrades or CPU architecture changes. Must run 'sudo port migrate' or follow manual migration procedure."
+    source_ref: "Migration Document - Introduction"
+    affects_phase: install
+
+  - title: "Avoid /usr/local conflicts"
+    description: "Software installed in /usr/local can interfere with MacPorts builds. Some software looks into /usr/local for external headers, libraries, and binaries which can cause port failures."
+    source_ref: "FAQ Document - Can I install software in /usr/local"
+    affects_phase: install
+
+  - title: "Use trace mode for interference"
+    description: "If you have software in /usr/local causing build failures, use 'sudo port -t install <portname>' to hide /usr/local during builds."
+    source_ref: "FAQ Document - Can I install software in /usr/local"
+    affects_phase: install
+
+  - title: "Selfupdate networking requirement" 
+    description: "Selfupdate requires rsync networking protocol (tcp port 873) to be accessible for updating ports tree and MacPorts base."
+    source_ref: "Primary Document - Selfupdate"
+    affects_phase: provision
+
+  - title: "Xcode version compatibility"
+    description: "Always use the latest available Xcode version for your OS. Outdated Xcode versions may cause port install failures. Xcode is not updated via Software Update on OS versions prior to 10.6."
+    source_ref: "MacPorts Guide - Install Xcode"
+    affects_phase: prepare
+
+ambiguities:
+  - slot_name: installation_method
+    description: "Multiple installation methods available with different use cases"
+    options: ["pkg installer (recommended)", "source installation", "git installation"]
+    suggested_default: "pkg installer for most users"
+```

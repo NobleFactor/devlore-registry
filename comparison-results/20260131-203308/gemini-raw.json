@@ -1,0 +1,30 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "```json\n{\n  \"source_system\": \"tuckr\",\n  \"repo_layer\": \"personal\",\n  \"source_location\": \"/Users/david-noble/Workspace/Personal\",\n  \"target_location\": \"~/dotfiles\",\n  \"projects\": [\n    {\n      \"name\": \"all\",\n      \"description\": \"Core dotfiles and configurations deployed on all machines.\",\n      \"source_groups\": [\"all\", \"all-Darwin\", \"all-Debian\", \"all-Linux\", \"all-Unix\", \"all-Windows\"],\n      \"always_deploy\": true\n    },\n    {\n      \"name\": \"microsoft\",\n      \"description\": \"Configurations specific to Microsoft development environments.\",\n      \"source_groups\": [\"microsoft\", \"microsoft-Unix\", \"microsoft-Windows\"],\n      \"always_deploy\": false\n    },\n    {\n      \"name\": \"noblefactor\",\n      \"description\": \"Configurations for Noble Factor projects.\",\n      \"source_groups\": [\"noblefactor\", \"noblefactor-Unix\"],\n      \"always_deploy\": false\n    },\n    {\n      \"name\": \"thenobles\",\n      \"description\": \"Configurations for The Nobles family projects.\",\n      \"source_groups\": [\"thenobles\", \"thenobles-Darwin\"],\n      \"always_deploy\": false\n    },\n    {\n      \"name\": \"homebridge\",\n      \"description\": \"Deployment configurations and secrets for Homebridge.\",\n      \"source_groups\": [\"Deployments/homebridge\"],\n      \"always_deploy\": false\n    },\n    {\n      \"name\": \"webhook\",\n      \"description\": \"Deployment configurations and secrets for webhook services.\",\n      \"source_groups\": [\"Deployments/webhook\"],\n      \"always_deploy\": false\n    }\n  ],\n  \"segments\": [\n    {\n      \"directory\": \"all.Darwin\",\n      \"condition\": \"macOS\",\n      \"source_equivalent\": \"Home/Configs/all-Darwin\"\n    },\n    {\n      \"directory\": \"all.Debian\",\n      \"condition\": \"Debian-based Linux\",\n      \"source_equivalent\": \"Home/Configs/all-Debian\"\n    },\n"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "MAX_TOKENS",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 82584,
+    "candidatesTokenCount": 494,
+    "totalTokenCount": 90771,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 82584
+      }
+    ],
+    "thoughtsTokenCount": 7693
+  },
+  "modelVersion": "gemini-2.5-flash",
+  "responseId": "q9d-acHQL6avqtsPu9C2-Ac"
+}
