@@ -1,2 +1,7 @@
 # Test output (ephemeral, recreated by test scripts)
 testoutput/
+
+# Generated indexes (committed by CI workflow, not contributors)
+packages/index.yaml
+packages/cross-reference.yaml
+knowledge/*/index.yaml
