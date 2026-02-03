@@ -15,28 +15,43 @@ jobs:
       - name: Checkout devlore-registry
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.NOBLEFACTOR_REPOSITORY_ACCESS }}
+          token: ${{ secrets.NOBLEFACTOR_AUTOMATION }}
 
       - name: Checkout noblefactor-ops
         uses: actions/checkout@v4
         with:
           repository: NobleFactor/noblefactor-ops
           path: noblefactor-ops
-          token: ${{ secrets.NOBLEFACTOR_REPOSITORY_ACCESS }}
+          token: ${{ secrets.NOBLEFACTOR_AUTOMATION }}
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.24'
+          cache-dependency-path: noblefactor-ops/go.sum
+
+      - name: Build star
+        working-directory: noblefactor-ops
+        run: go build -o star ./cmd/star
 
       - name: Update package index
-        run: go run ./noblefactor-ops/cmd/star registry index-packages --path .
+        run: ./noblefactor-ops/star devlore-registry index packages --path .
 
       - name: Update knowledge indexes
-        run: go run ./noblefactor-ops/cmd/star registry index-knowledge --path .
+        run: ./noblefactor-ops/star devlore-registry index knowledge --path .
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: update indexes"
-          file_pattern: "packages/INDEX.yaml knowledge/*/index.yaml"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Force-add ignored generated files
+          git add -f packages/index.yaml packages/cross-reference.yaml knowledge/*/index.yaml 2>/dev/null || true
+
+          # Commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No index changes to commit"
+          else
+            git commit -m "chore: update indexes"
+            git push
+          fi
