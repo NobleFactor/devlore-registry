@@ -180,10 +180,12 @@ $(cat "$INPUT_FILE")
 EOF
     )
 
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
 
     if ollama run "$OLLAMA_MODEL" "$user_prompt" >"$output_file" 2>"$RUN_DIR/ollama-stderr.txt"; then
-        local end_time=$(date +%s)
+        local end_time
+        end_time=$(date +%s)
         local duration=$((end_time - start_time))
         echo "   Ollama completed in ${duration}s"
         echo "$duration" >"$RUN_DIR/ollama-duration.txt"
@@ -203,7 +205,8 @@ run_gemini() {
         return
     fi
 
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
 
     # Build request
     local request_file="$RUN_DIR/gemini-request.json"
@@ -228,7 +231,8 @@ run_gemini() {
         echo "$response" >"$RUN_DIR/gemini-raw.json"
         echo "$response" | jq -r '.candidates[0].content.parts[0].text // "ERROR: No content"' >"$output_file"
 
-        local end_time=$(date +%s)
+        local end_time
+        end_time=$(date +%s)
         local duration=$((end_time - start_time))
         echo "   Gemini completed in ${duration}s"
         echo "$duration" >"$RUN_DIR/gemini-duration.txt"
@@ -248,7 +252,8 @@ run_anthropic() {
         return
     fi
 
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
 
     # Build request
     local request_file="$RUN_DIR/anthropic-request.json"
@@ -287,7 +292,8 @@ EOF
         echo "$response" >"$RUN_DIR/anthropic-raw.json"
         echo "$response" | jq -r '.content[0].text // "ERROR: No content"' >"$output_file"
 
-        local end_time=$(date +%s)
+        local end_time
+        end_time=$(date +%s)
         local duration=$((end_time - start_time))
         echo "   Anthropic completed in ${duration}s"
         echo "$duration" >"$RUN_DIR/anthropic-duration.txt"
