@@ -27,7 +27,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 URL=""
 PROVIDER="anthropic"
 OUTPUT_DIR="$REPO_ROOT/testoutput/onboarding"
-MAX_URLS=5  # Maximum URLs to fetch in discovery
+MAX_URLS=5 # Maximum URLs to fetch in discovery
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -44,7 +44,7 @@ while [[ $# -gt 0 ]]; do
             MAX_URLS="$2"
             shift 2
             ;;
-        -h|--help)
+        -h | --help)
             sed -n '2,/^$/p' "$0" | sed 's/^# //' | sed 's/^#//'
             exit 0
             ;;
@@ -100,7 +100,7 @@ call_llm() {
         jq -n --rawfile prompt "$prompt_file" '{
             "contents": [{"parts": [{"text": $prompt}]}],
             "generationConfig": {"temperature": 0.1, "maxOutputTokens": 65536}
-        }' > "$request_file"
+        }' >"$request_file"
 
         local response
         response=$(curl -s -X POST \
@@ -108,8 +108,8 @@ call_llm() {
             -H "Content-Type: application/json" \
             -d @"$request_file")
 
-        echo "$response" > "${output_file%.txt}-raw.json"
-        echo "$response" | jq -r '.candidates[0].content.parts[0].text // "ERROR: No content"' > "$output_file"
+        echo "$response" >"${output_file%.txt}-raw.json"
+        echo "$response" | jq -r '.candidates[0].content.parts[0].text // "ERROR: No content"' >"$output_file"
 
     elif [[ "$PROVIDER" == "anthropic" ]]; then
         if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
@@ -125,7 +125,7 @@ call_llm() {
             "model": "claude-sonnet-4-20250514",
             "max_tokens": 64000,
             "messages": [{"role": "user", "content": $prompt}]
-        }' > "$request_file"
+        }' >"$request_file"
 
         local response
         response=$(curl -s -X POST \
@@ -135,8 +135,8 @@ call_llm() {
             -H "anthropic-version: 2023-06-01" \
             -d @"$request_file")
 
-        echo "$response" > "${output_file%.txt}-raw.json"
-        echo "$response" | jq -r '.content[0].text // "ERROR: No content"' > "$output_file"
+        echo "$response" >"${output_file%.txt}-raw.json"
+        echo "$response" | jq -r '.content[0].text // "ERROR: No content"' >"$output_file"
     fi
 }
 
@@ -149,17 +149,17 @@ fetch_url() {
     # Use a simple curl to get content, convert to markdown-ish format
     # Write to temp file first to avoid SIGPIPE from head truncation
     local tmp_file="${output_file}.tmp"
-    curl -sL "$url" | \
-        sed 's/<script[^>]*>.*<\/script>//g' | \
-        sed 's/<style[^>]*>.*<\/style>//g' | \
-        sed 's/<[^>]*>//g' | \
-        sed 's/&nbsp;/ /g' | \
-        sed 's/&amp;/\&/g' | \
-        sed 's/&lt;/</g' | \
-        sed 's/&gt;/>/g' | \
-        tr -s ' \n' > "$tmp_file"
+    curl -sL "$url" |
+        sed 's/<script[^>]*>.*<\/script>//g' |
+        sed 's/<style[^>]*>.*<\/style>//g' |
+        sed 's/<[^>]*>//g' |
+        sed 's/&nbsp;/ /g' |
+        sed 's/&amp;/\&/g' |
+        sed 's/&lt;/</g' |
+        sed 's/&gt;/>/g' |
+        tr -s ' \n' >"$tmp_file"
     # Truncate to 50KB
-    head -c 50000 "$tmp_file" > "$output_file"
+    head -c 50000 "$tmp_file" >"$output_file"
     rm -f "$tmp_file"
 }
 
@@ -184,23 +184,23 @@ DISCOVER_PROMPT="$RUN_DIR/discover-prompt.txt"
     echo '```'
     cat "$RUN_DIR/initial-content.txt"
     echo '```'
-} > "$DISCOVER_PROMPT"
+} >"$DISCOVER_PROMPT"
 
 call_llm "$DISCOVER_PROMPT" "$RUN_DIR/discover-output.txt" "Product discovery"
 
 # Extract JSON from discovery output (strip markdown fences if present)
-sed '1{/^```/d}; ${/^```/d}' "$RUN_DIR/discover-output.txt" | \
-    sed '/^```json$/d; /^```$/d' > "$RUN_DIR/discovery.json"
+sed '1{/^```/d}; ${/^```/d}' "$RUN_DIR/discover-output.txt" |
+    sed '/^```json$/d; /^```$/d' >"$RUN_DIR/discovery.json"
 
 # Validate and extract info
-if jq . "$RUN_DIR/discovery.json" > /dev/null 2>&1; then
+if jq . "$RUN_DIR/discovery.json" >/dev/null 2>&1; then
     PRODUCT_NAME=$(jq -r '.product.canonical_name // "unknown"' "$RUN_DIR/discovery.json")
     echo "   Product identified: $PRODUCT_NAME"
     echo "   Complexity: $(jq -r '.complexity.rating // "unknown"' "$RUN_DIR/discovery.json")"
 
     # Get next URLs to fetch
-    jq -r '.next_urls_to_fetch[]?' "$RUN_DIR/discovery.json" | head -n "$MAX_URLS" > "$RUN_DIR/urls-to-fetch.txt"
-    URL_COUNT=$(wc -l < "$RUN_DIR/urls-to-fetch.txt" | tr -d ' ')
+    jq -r '.next_urls_to_fetch[]?' "$RUN_DIR/discovery.json" | head -n "$MAX_URLS" >"$RUN_DIR/urls-to-fetch.txt"
+    URL_COUNT=$(wc -l <"$RUN_DIR/urls-to-fetch.txt" | tr -d ' ')
     echo "   Found $URL_COUNT additional URLs to fetch"
 else
     echo "   Warning: Discovery output is not valid JSON"
@@ -222,7 +222,7 @@ while IFS= read -r fetch_url; do
     FETCH_COUNT=$((FETCH_COUNT + 1))
     safe_name=$(echo "$fetch_url" | sed 's/[^a-zA-Z0-9]/_/g' | cut -c1-50)
     fetch_url "$fetch_url" "$RUN_DIR/fetched/${FETCH_COUNT}-${safe_name}.txt"
-done < "$RUN_DIR/urls-to-fetch.txt"
+done <"$RUN_DIR/urls-to-fetch.txt"
 
 # Build extraction prompt with all content
 EXTRACT_PROMPT="$RUN_DIR/extract-prompt.txt"
@@ -253,7 +253,7 @@ EXTRACT_PROMPT="$RUN_DIR/extract-prompt.txt"
     echo '```yaml'
     cat "$REPO_ROOT/knowledge/package-authoring/schemas/parse-output.json"
     echo '```'
-} > "$EXTRACT_PROMPT"
+} >"$EXTRACT_PROMPT"
 
 call_llm "$EXTRACT_PROMPT" "$RUN_DIR/extract-output.txt" "Slot extraction"
 
@@ -322,7 +322,7 @@ GENERATE_PROMPT="$RUN_DIR/generate-prompt.txt"
     echo '```json'
     cat "$RUN_DIR/discovery.json" 2>/dev/null || echo "{}"
     echo '```'
-} > "$GENERATE_PROMPT"
+} >"$GENERATE_PROMPT"
 
 call_llm "$GENERATE_PROMPT" "$RUN_DIR/generate-output.txt" "Package generation"
 
@@ -330,13 +330,13 @@ call_llm "$GENERATE_PROMPT" "$RUN_DIR/generate-output.txt" "Package generation"
 # LLM may include preamble text before the JSON and markdown fences
 first_brace=$(grep -n '^{' "$RUN_DIR/generate-output.txt" | head -1 | cut -d: -f1)
 if [[ -n "$first_brace" ]]; then
-    tail -n "+$first_brace" "$RUN_DIR/generate-output.txt" | sed '/^```$/d' > "$RUN_DIR/package.json"
+    tail -n "+$first_brace" "$RUN_DIR/generate-output.txt" | sed '/^```$/d' >"$RUN_DIR/package.json"
 else
     # Fallback: try stripping markdown fences
-    sed '/^```/d' "$RUN_DIR/generate-output.txt" > "$RUN_DIR/package.json"
+    sed '/^```/d' "$RUN_DIR/generate-output.txt" >"$RUN_DIR/package.json"
 fi
 
-if jq . "$RUN_DIR/package.json" > /dev/null 2>&1; then
+if jq . "$RUN_DIR/package.json" >/dev/null 2>&1; then
     echo "   Package generated successfully"
 
     # Save individual files
@@ -344,8 +344,8 @@ if jq . "$RUN_DIR/package.json" > /dev/null 2>&1; then
     mkdir -p "$PACKAGE_DIR"
 
     # Root files
-    jq -r '.files.lifecycle.content // empty' "$RUN_DIR/package.json" > "$PACKAGE_DIR/lifecycle.yaml" 2>/dev/null || true
-    jq -r '.files.readme.content // empty' "$RUN_DIR/package.json" > "$PACKAGE_DIR/README.md" 2>/dev/null || true
+    jq -r '.files.lifecycle.content // empty' "$RUN_DIR/package.json" >"$PACKAGE_DIR/lifecycle.yaml" 2>/dev/null || true
+    jq -r '.files.readme.content // empty' "$RUN_DIR/package.json" >"$PACKAGE_DIR/README.md" 2>/dev/null || true
 
     # Platform-specific operation/phase scripts
     # Structure: {Platform}/{Operation}/{phase}.star
@@ -376,7 +376,7 @@ if jq . "$RUN_DIR/package.json" > /dev/null 2>&1; then
                 for phase in $phases; do
                     content=$(jq -r ".platforms[\"$platform\"].$operation.$phase.content // empty" "$RUN_DIR/package.json" 2>/dev/null)
                     if [[ -n "$content" ]]; then
-                        echo "$content" > "$PACKAGE_DIR/$platform/$operation/$phase.star"
+                        echo "$content" >"$PACKAGE_DIR/$platform/$operation/$phase.star"
                     fi
                 done
             fi
@@ -407,7 +407,7 @@ if [[ -d "$RUN_DIR/package-$PRODUCT_NAME" ]]; then
 fi
 
 # Check for shell audit violations
-if jq -e '.shell_audit | length > 0' "$RUN_DIR/package.json" > /dev/null 2>&1; then
+if jq -e '.shell_audit | length > 0' "$RUN_DIR/package.json" >/dev/null 2>&1; then
     VIOLATION_COUNT=$(jq '[.shell_audit[] | select(.status == "violation")] | length' "$RUN_DIR/package.json")
     NEEDS_BINDING_COUNT=$(jq '[.shell_audit[] | select(.status == "needs_binding")] | length' "$RUN_DIR/package.json")
     ACCEPTABLE_COUNT=$(jq '[.shell_audit[] | select(.status == "acceptable")] | length' "$RUN_DIR/package.json")
@@ -431,7 +431,7 @@ if jq -e '.shell_audit | length > 0' "$RUN_DIR/package.json" > /dev/null 2>&1; t
 fi
 
 # Check for binding proposals
-if jq -e '.binding_proposals | length > 0' "$RUN_DIR/package.json" > /dev/null 2>&1; then
+if jq -e '.binding_proposals | length > 0' "$RUN_DIR/package.json" >/dev/null 2>&1; then
     PROPOSAL_COUNT=$(jq '.binding_proposals | length' "$RUN_DIR/package.json")
     echo ""
     echo "=== Binding Proposals ($PROPOSAL_COUNT) ==="

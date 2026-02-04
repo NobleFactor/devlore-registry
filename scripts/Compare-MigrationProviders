@@ -57,7 +57,7 @@ while [[ $# -gt 0 ]]; do
             SKIP_GATHER=true
             shift
             ;;
-        -h|--help)
+        -h | --help)
             sed -n '2,/^$/p' "$0" | sed 's/^# //' | sed 's/^#//'
             exit 0
             ;;
@@ -148,9 +148,9 @@ PROMPT_FILE="$RUN_DIR/prompt.txt"
     echo '```json'
     cat "$INPUT_FILE"
     echo '```'
-} > "$PROMPT_FILE"
+} >"$PROMPT_FILE"
 
-PROMPT_LINES=$(wc -l < "$PROMPT_FILE" | tr -d ' ')
+PROMPT_LINES=$(wc -l <"$PROMPT_FILE" | tr -d ' ')
 echo "   Prompt: $PROMPT_LINES lines"
 
 # Step 3: Run providers
@@ -172,23 +172,24 @@ run_ollama() {
 
     # Run with the input
     local user_prompt
-    user_prompt=$(cat <<EOF
+    user_prompt=$(
+        cat <<EOF
 Analyze this repository and generate a migration plan as JSON:
 
 $(cat "$INPUT_FILE")
 EOF
-)
+    )
 
     local start_time=$(date +%s)
 
-    if ollama run "$OLLAMA_MODEL" "$user_prompt" > "$output_file" 2>"$RUN_DIR/ollama-stderr.txt"; then
+    if ollama run "$OLLAMA_MODEL" "$user_prompt" >"$output_file" 2>"$RUN_DIR/ollama-stderr.txt"; then
         local end_time=$(date +%s)
         local duration=$((end_time - start_time))
         echo "   Ollama completed in ${duration}s"
-        echo "$duration" > "$RUN_DIR/ollama-duration.txt"
+        echo "$duration" >"$RUN_DIR/ollama-duration.txt"
     else
         echo "   Ollama FAILED"
-        echo "FAILED" > "$output_file"
+        echo "FAILED" >"$output_file"
     fi
 }
 
@@ -198,7 +199,7 @@ run_gemini() {
 
     if [[ -z "${GEMINI_API_KEY:-}" ]]; then
         echo "   Gemini SKIPPED (no GEMINI_API_KEY)"
-        echo "SKIPPED: No GEMINI_API_KEY" > "$output_file"
+        echo "SKIPPED: No GEMINI_API_KEY" >"$output_file"
         return
     fi
 
@@ -214,7 +215,7 @@ run_gemini() {
             "temperature": 0.1,
             "maxOutputTokens": 65536
         }
-    }' > "$request_file"
+    }' >"$request_file"
 
     # Call Gemini API (using gemini-2.0-flash, current as of 2026)
     local response
@@ -224,16 +225,16 @@ run_gemini() {
         -d @"$request_file" 2>"$RUN_DIR/gemini-stderr.txt"); then
 
         # Extract text from response
-        echo "$response" > "$RUN_DIR/gemini-raw.json"
-        echo "$response" | jq -r '.candidates[0].content.parts[0].text // "ERROR: No content"' > "$output_file"
+        echo "$response" >"$RUN_DIR/gemini-raw.json"
+        echo "$response" | jq -r '.candidates[0].content.parts[0].text // "ERROR: No content"' >"$output_file"
 
         local end_time=$(date +%s)
         local duration=$((end_time - start_time))
         echo "   Gemini completed in ${duration}s"
-        echo "$duration" > "$RUN_DIR/gemini-duration.txt"
+        echo "$duration" >"$RUN_DIR/gemini-duration.txt"
     else
         echo "   Gemini FAILED"
-        echo "FAILED: API error" > "$output_file"
+        echo "FAILED: API error" >"$output_file"
     fi
 }
 
@@ -243,7 +244,7 @@ run_anthropic() {
 
     if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
         echo "   Anthropic SKIPPED (no ANTHROPIC_API_KEY)"
-        echo "SKIPPED: No ANTHROPIC_API_KEY" > "$output_file"
+        echo "SKIPPED: No ANTHROPIC_API_KEY" >"$output_file"
         return
     fi
 
@@ -255,12 +256,13 @@ run_anthropic() {
     system_prompt=$(sed -n '1,/^# === INPUT TO ANALYZE ===/p' "$PROMPT_FILE" | head -n -2)
 
     local user_prompt
-    user_prompt=$(cat <<EOF
+    user_prompt=$(
+        cat <<EOF
 Analyze this repository and generate a migration plan as JSON:
 
 $(cat "$INPUT_FILE")
 EOF
-)
+    )
 
     jq -n \
         --arg system "$system_prompt" \
@@ -270,7 +272,7 @@ EOF
             "max_tokens": 8192,
             "system": $system,
             "messages": [{"role": "user", "content": $user}]
-        }' > "$request_file"
+        }' >"$request_file"
 
     # Call Anthropic API
     local response
@@ -282,21 +284,21 @@ EOF
         -d @"$request_file" 2>"$RUN_DIR/anthropic-stderr.txt"); then
 
         # Extract text from response
-        echo "$response" > "$RUN_DIR/anthropic-raw.json"
-        echo "$response" | jq -r '.content[0].text // "ERROR: No content"' > "$output_file"
+        echo "$response" >"$RUN_DIR/anthropic-raw.json"
+        echo "$response" | jq -r '.content[0].text // "ERROR: No content"' >"$output_file"
 
         local end_time=$(date +%s)
         local duration=$((end_time - start_time))
         echo "   Anthropic completed in ${duration}s"
-        echo "$duration" > "$RUN_DIR/anthropic-duration.txt"
+        echo "$duration" >"$RUN_DIR/anthropic-duration.txt"
     else
         echo "   Anthropic FAILED"
-        echo "FAILED: API error" > "$output_file"
+        echo "FAILED: API error" >"$output_file"
     fi
 }
 
 # Run selected providers
-IFS=',' read -ra PROVIDER_LIST <<< "$PROVIDERS"
+IFS=',' read -ra PROVIDER_LIST <<<"$PROVIDERS"
 for provider in "${PROVIDER_LIST[@]}"; do
     case "$provider" in
         ollama)
@@ -336,7 +338,7 @@ REPORT_FILE="$RUN_DIR/comparison-report.md"
         duration_file="$RUN_DIR/${provider}-duration.txt"
 
         if [[ -f "$output_file" ]]; then
-            size=$(wc -c < "$output_file" | tr -d ' ')
+            size=$(wc -c <"$output_file" | tr -d ' ')
             duration="N/A"
             [[ -f "$duration_file" ]] && duration="$(cat "$duration_file")s"
 
@@ -368,7 +370,7 @@ REPORT_FILE="$RUN_DIR/comparison-report.md"
         if [[ -f "$output_file" ]]; then
             echo '```json'
             head -c 50000 "$output_file"
-            if [[ $(wc -c < "$output_file" | tr -d ' ') -gt 50000 ]]; then
+            if [[ $(wc -c <"$output_file" | tr -d ' ') -gt 50000 ]]; then
                 echo ""
                 echo "... (truncated)"
             fi
@@ -383,7 +385,7 @@ REPORT_FILE="$RUN_DIR/comparison-report.md"
     echo ""
     echo "See: knowledge/migration/examples/baseline-personal.json"
 
-} > "$REPORT_FILE"
+} >"$REPORT_FILE"
 
 echo ""
 echo "=== Complete ==="
