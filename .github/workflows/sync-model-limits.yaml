@@ -11,10 +11,19 @@ jobs:
   sync-model-limits:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.NOBLEFACTOR_AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.NOBLEFACTOR_AUTOMATION_APP_PRIVATE_KEY }}
+          owner: NobleFactor
+          repositories: devlore-registry
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.NOBLEFACTOR_REPOSITORY_ACCESS }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Sync model limits from LiteLLM
         run: ./scripts/Sync-ModelLimits
