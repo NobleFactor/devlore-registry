@@ -59,7 +59,7 @@ curl -fsSL "$LITELLM_URL" | jq '{
       })
     | from_entries
   )
-}' > "$OUTPUT_FILE"
+}' >"$OUTPUT_FILE"
 
 # Count models cached
 model_count=$(jq '.models | length' "$OUTPUT_FILE")

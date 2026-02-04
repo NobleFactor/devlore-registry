@@ -34,7 +34,7 @@ while [[ $# -gt 0 ]]; do
             OUTPUT_DIR="$2"
             shift 2
             ;;
-        -h|--help)
+        -h | --help)
             sed -n '2,/^$/p' "$0" | sed 's/^# //' | sed 's/^#//'
             exit 0
             ;;
@@ -115,9 +115,9 @@ PACKAGES_KNOWLEDGE="$REPO_ROOT/knowledge/packages"
     echo '```yaml'
     cat "$SLOTS_FILE"
     echo '```'
-} > "$PROMPT_FILE"
+} >"$PROMPT_FILE"
 
-PROMPT_LINES=$(wc -l < "$PROMPT_FILE" | tr -d ' ')
+PROMPT_LINES=$(wc -l <"$PROMPT_FILE" | tr -d ' ')
 echo "   Prompt: $PROMPT_LINES lines"
 
 # Provider functions
@@ -127,11 +127,12 @@ run_gemini() {
 
     if [[ -z "${GEMINI_API_KEY:-}" ]]; then
         echo "   Gemini SKIPPED (no GEMINI_API_KEY)"
-        echo "SKIPPED: No GEMINI_API_KEY" > "$output_file"
+        echo "SKIPPED: No GEMINI_API_KEY" >"$output_file"
         return
     fi
 
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
 
     local request_file="$RUN_DIR/gemini-request.json"
     jq -n --rawfile prompt "$PROMPT_FILE" '{
@@ -140,7 +141,7 @@ run_gemini() {
             "temperature": 0.1,
             "maxOutputTokens": 65536
         }
-    }' > "$request_file"
+    }' >"$request_file"
 
     local response
     if response=$(curl -s -X POST \
@@ -148,16 +149,17 @@ run_gemini() {
         -H "Content-Type: application/json" \
         -d @"$request_file" 2>"$RUN_DIR/gemini-stderr.txt"); then
 
-        echo "$response" > "$RUN_DIR/gemini-raw.json"
-        echo "$response" | jq -r '.candidates[0].content.parts[0].text // "ERROR: No content"' > "$output_file"
+        echo "$response" >"$RUN_DIR/gemini-raw.json"
+        echo "$response" | jq -r '.candidates[0].content.parts[0].text // "ERROR: No content"' >"$output_file"
 
-        local end_time=$(date +%s)
+        local end_time
+        end_time=$(date +%s)
         local duration=$((end_time - start_time))
         echo "   Gemini completed in ${duration}s"
-        echo "$duration" > "$RUN_DIR/gemini-duration.txt"
+        echo "$duration" >"$RUN_DIR/gemini-duration.txt"
     else
         echo "   Gemini FAILED"
-        echo "FAILED: API error" > "$output_file"
+        echo "FAILED: API error" >"$output_file"
     fi
 }
 
@@ -167,11 +169,12 @@ run_anthropic() {
 
     if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
         echo "   Anthropic SKIPPED (no ANTHROPIC_API_KEY)"
-        echo "SKIPPED: No ANTHROPIC_API_KEY" > "$output_file"
+        echo "SKIPPED: No ANTHROPIC_API_KEY" >"$output_file"
         return
     fi
 
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
 
     local request_file="$RUN_DIR/anthropic-request.json"
     local prompt_content
@@ -183,7 +186,7 @@ run_anthropic() {
             "model": "claude-sonnet-4-20250514",
             "max_tokens": 16384,
             "messages": [{"role": "user", "content": $prompt}]
-        }' > "$request_file"
+        }' >"$request_file"
 
     local response
     if response=$(curl -s -X POST \
@@ -193,23 +196,24 @@ run_anthropic() {
         -H "anthropic-version: 2023-06-01" \
         -d @"$request_file" 2>"$RUN_DIR/anthropic-stderr.txt"); then
 
-        echo "$response" > "$RUN_DIR/anthropic-raw.json"
-        echo "$response" | jq -r '.content[0].text // "ERROR: No content"' > "$output_file"
+        echo "$response" >"$RUN_DIR/anthropic-raw.json"
+        echo "$response" | jq -r '.content[0].text // "ERROR: No content"' >"$output_file"
 
-        local end_time=$(date +%s)
+        local end_time
+        end_time=$(date +%s)
         local duration=$((end_time - start_time))
         echo "   Anthropic completed in ${duration}s"
-        echo "$duration" > "$RUN_DIR/anthropic-duration.txt"
+        echo "$duration" >"$RUN_DIR/anthropic-duration.txt"
     else
         echo "   Anthropic FAILED"
-        echo "FAILED: API error" > "$output_file"
+        echo "FAILED: API error" >"$output_file"
     fi
 }
 
 # Run providers
 echo "[2/3] Running providers..."
 
-IFS=',' read -ra PROVIDER_LIST <<< "$PROVIDERS"
+IFS=',' read -ra PROVIDER_LIST <<<"$PROVIDERS"
 for provider in "${PROVIDER_LIST[@]}"; do
     case "$provider" in
         gemini)
@@ -244,7 +248,7 @@ SUMMARY_FILE="$RUN_DIR/summary.md"
         duration_file="$RUN_DIR/${provider}-duration.txt"
 
         if [[ -f "$output_file" ]]; then
-            size=$(wc -c < "$output_file" | tr -d ' ')
+            size=$(wc -c <"$output_file" | tr -d ' ')
             duration="N/A"
             [[ -f "$duration_file" ]] && duration="$(cat "$duration_file")s"
 
@@ -262,7 +266,7 @@ SUMMARY_FILE="$RUN_DIR/summary.md"
             echo "| $provider | $duration | $size bytes | $valid_json |"
         fi
     done
-} > "$SUMMARY_FILE"
+} >"$SUMMARY_FILE"
 
 echo ""
 echo "=== Complete ==="

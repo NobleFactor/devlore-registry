@@ -43,7 +43,7 @@ while [[ $# -gt 0 ]]; do
             OUTPUT="$2"
             shift 2
             ;;
-        -h|--help)
+        -h | --help)
             sed -n '2,/^$/p' "$0" | sed 's/^# //' | sed 's/^#//'
             exit 0
             ;;
@@ -64,7 +64,7 @@ fi
 # Function to output (to file or stdout)
 output() {
     if [[ -n "$OUTPUT" ]]; then
-        echo "$@" >> "$OUTPUT"
+        echo "$@" >>"$OUTPUT"
     else
         echo "$@"
     fi
@@ -72,7 +72,7 @@ output() {
 
 # Clear output file if specified
 if [[ -n "$OUTPUT" ]]; then
-    > "$OUTPUT"
+    : >"$OUTPUT"
 fi
 
 # Start Modelfile
@@ -203,5 +203,5 @@ if [[ -n "$OUTPUT" ]]; then
     echo "Generated: $OUTPUT" >&2
     echo "Model: $MODEL" >&2
     echo "Domain: $DOMAIN" >&2
-    wc -l < "$OUTPUT" | xargs -I {} echo "Lines: {}" >&2
+    wc -l <"$OUTPUT" | xargs -I {} echo "Lines: {}" >&2
 fi
