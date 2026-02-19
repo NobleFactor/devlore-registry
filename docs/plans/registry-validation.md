@@ -1,0 +1,185 @@
+# Registry Validation: Fix CI Workflows
+
+## Status: Draft
+
+## Problem
+
+Both CI workflows in devlore-registry are broken:
+
+- **validate.yaml**: Broken since Feb 3 (PR #15 merged without updating it). Runs
+  `./star registry validate` — a command that was renamed in noblefactor-ops PR #17
+  (Feb 2) and then deleted entirely in the extension restructuring (Feb 10-12).
+- **update-indexes.yaml**: Broken since creation. All 4 runs failed. Runs
+  `./noblefactor-ops/star devlore-registry index packages` — also deleted.
+
+### Root Cause
+
+Star discovers extensions at runtime from `${GIT_WORKSPACE_ROOT}/star/extensions/`.
+In CI, the git workspace root is devlore-registry, which has no extensions directory.
+The validate and index commands were moved to devlore-cli's extensions
+(`com.noblefactor.devlore.Package` and `com.noblefactor.devlore.Knowledge`), but
+devlore-cli is never checked out in CI.
+
+### Timeline
+
+| Date | Event | Effect |
+|------|-------|--------|
+| Jan 31 | noblefactor-ops PR #8: `ops/validate.star` (`registry.validate`) | `star registry validate` works |
+| Jan 31 | devlore-registry PR #12: validate.yaml created | CI passes |
+| Feb 2 | noblefactor-ops PR #17: rename to `devlore-registry.validate` | `star registry validate` breaks |
+| Feb 3 | devlore-registry PR #15: updates update-indexes.yaml, skips validate.yaml | validate.yaml broken on develop |
+| Feb 10-12 | noblefactor-ops #46,#47,#51: extension restructuring | `ops/devlore-registry/` deleted |
+| Feb 13 | devlore-cli PR #113: `com.noblefactor.devlore.Package` created | Validate lives in devlore-cli |
+
+### Current Command Locations
+
+| Old Command | Current Location | Binary |
+|-------------|-----------------|--------|
+| `star registry validate` | `star devlore package validate` | devlore-cli extensions |
+| `star devlore-registry index packages` | `star devlore package index` | devlore-cli extensions |
+| `star devlore-registry index knowledge` | `star devlore knowledge index` | devlore-cli extensions |
+
+### Existing Commands in devlore-cli
+
+These commands already exist and work today. They live in devlore-cli's
+`star/extensions/` and are discovered when star runs from the devlore-cli workspace:
+
+| Extension | Command | What it does |
+|-----------|---------|-------------|
+| `com.noblefactor.devlore.Package` | `star devlore package validate` | Validate package YAML against JSON schemas |
+| `com.noblefactor.devlore.Package` | `star devlore package index` | Generate index.yaml and cross-reference.yaml |
+| `com.noblefactor.devlore.Knowledge` | `star devlore knowledge validate` | Validate knowledge YAML against JSON schemas |
+| `com.noblefactor.devlore.Knowledge` | `star devlore knowledge index` | Generate knowledge index files |
+
+All four accept `--target` to point at a registry directory (default: `../devlore-registry`).
+
+Local verification (run from devlore-cli workspace):
+```bash
+star devlore package validate --target=../devlore-registry
+star devlore knowledge validate --target=../devlore-registry
+star devlore package index --target=../devlore-registry
+star devlore knowledge index --target=../devlore-registry
+```
+
+## Design
+
+The commands exist in devlore-cli but CI can't discover them because star looks
+for extensions at `${GIT_WORKSPACE_ROOT}/star/extensions/` and devlore-registry
+has no extensions directory.
+
+### Option A: Check out devlore-cli in CI (Rejected)
+
+Check out devlore-cli in CI and point star at its extensions. Problems:
+- CI now depends on three repos (registry, noblefactor-ops, devlore-cli)
+- Extension discovery assumes `${GIT_WORKSPACE_ROOT}/star/extensions/` — can't
+  point at a subdirectory checkout without patching the search path
+
+### Option B: devlore-registry owns its extensions (Preferred)
+
+Create `star/extensions/` in devlore-registry with the validate and index commands.
+These are small Starlark scripts (50-120 lines each). Adapt from the working
+implementations in devlore-cli.
+
+Advantages:
+- Self-contained: CI only needs noblefactor-ops (for the star binary)
+- Extensions live next to the data they validate
+- No cross-repo runtime dependency
+- Can be tested locally before CI runs
+
+## Implementation
+
+### Phase 1: Create registry extensions and fix CI
+
+#### Step 1: Create validate extension
+
+Create `star/extensions/com.noblefactor.devlore-registry.Validate/`:
+- `extension.yaml` — declares `devlore-registry.validate` command with `--type` flag
+- `commands/validate.star` — adapted from devlore-cli's Package validate.star
+
+The validate script:
+- Walks `packages/*/lifecycle.yaml` and validates against `schemas/package.lifecycle.json`
+- Walks `knowledge/*/index.yaml` and validates against `schemas/knowledge.index.json`
+- Validates `packages/index.yaml` against `schemas/package.index.json`
+- Validates `packages/cross-reference.yaml` against `schemas/package.signatures.json`
+- Supports `--type` flag to filter (package, knowledge, or all)
+
+#### Step 2: Create index extensions
+
+Create `star/extensions/com.noblefactor.devlore-registry.IndexPackages/`:
+- `extension.yaml` — declares `devlore-registry.index.packages` command
+- `commands/index-packages.star` — builds packages/index.yaml and cross-reference.yaml
+
+Create `star/extensions/com.noblefactor.devlore-registry.IndexKnowledge/`:
+- `extension.yaml` — declares `devlore-registry.index.knowledge` command
+- `commands/index-knowledge.star` — builds knowledge/*/index.yaml
+
+Source: Adapt from the original `ops/devlore-registry/` scripts (deleted from
+noblefactor-ops but recoverable from git history of PR #17 and earlier).
+
+#### Step 3: Fix validate.yaml
+
+```yaml
+- name: Build star
+  working-directory: noblefactor-ops
+  run: go build -o ../star ./cmd/star
+
+- name: Validate all schemas
+  run: ./star devlore-registry validate
+```
+
+Changes:
+- Update Go version to 1.24
+- Add `cache-dependency-path: noblefactor-ops/go.sum`
+- Fix command: `./star devlore-registry validate`
+
+#### Step 4: Fix update-indexes.yaml
+
+```yaml
+- name: Build star
+  working-directory: noblefactor-ops
+  run: go build -o ../star ./cmd/star
+
+- name: Update package index
+  run: ./star devlore-registry index packages
+
+- name: Update knowledge indexes
+  run: ./star devlore-registry index knowledge
+```
+
+Changes:
+- Fix commands to match new extension names
+- Build star in noblefactor-ops working directory (consistent with validate.yaml)
+
+### Verification
+
+1. `./star devlore-registry validate` passes locally against the registry
+2. `./star devlore-registry index packages` produces correct index.yaml
+3. `./star devlore-registry index knowledge` produces correct index files
+4. Push to a branch and verify both CI workflows pass
+5. Verify validate.yaml triggers on `packages/**` and `schemas/**` changes
+6. Verify update-indexes.yaml triggers on `packages/**/lifecycle.yaml` changes
+
+### Files
+
+| File | Action |
+|------|--------|
+| `star/extensions/com.noblefactor.devlore-registry.Validate/extension.yaml` | Create |
+| `star/extensions/com.noblefactor.devlore-registry.Validate/commands/validate.star` | Create |
+| `star/extensions/com.noblefactor.devlore-registry.IndexPackages/extension.yaml` | Create |
+| `star/extensions/com.noblefactor.devlore-registry.IndexPackages/commands/index-packages.star` | Create |
+| `star/extensions/com.noblefactor.devlore-registry.IndexKnowledge/extension.yaml` | Create |
+| `star/extensions/com.noblefactor.devlore-registry.IndexKnowledge/commands/index-knowledge.star` | Create |
+| `.github/workflows/validate.yaml` | Modify |
+| `.github/workflows/update-indexes.yaml` | Modify |
+
+## Dependencies
+
+- noblefactor-ops `star` binary (built in CI from checkout)
+- Starlark builtins: `file.*`, `yaml.*`, `schema.*` (provided by noblefactor-ops runtime)
+
+## Risks
+
+- The original index scripts may need updates if the Starlark API changed during
+  the extension restructuring. Recover from git history and test locally.
+- The `schema.validate()` builtin must be available in the noblefactor-ops runtime.
+  Verify before implementing.
