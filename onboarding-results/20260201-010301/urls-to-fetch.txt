@@ -1,5 +1,0 @@
-https://trac.macports.org/wiki/Migration
-https://trac.macports.org/wiki/FAQ
-https://guide.macports.org
-https://github.com/macports/macports-base/releases/download/v2.11.6/MacPorts-2.11.6.chk.txt
-https://trac.macports.org/wiki/ProblemHotlist

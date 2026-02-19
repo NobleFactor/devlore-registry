@@ -86,6 +86,30 @@ Advantages:
 - No cross-repo runtime dependency
 - Can be tested locally before CI runs
 
+## Additional Issues Found
+
+### Generated indexes are gitignored instead of committed
+
+`packages/index.yaml`, `packages/cross-reference.yaml`, and `knowledge/*/index.yaml`
+are listed in `.gitignore` (added in devlore-registry PR #15). They were supposed to
+be committed by CI via the `update-indexes.yaml` workflow, but that workflow has never
+worked. These files should be committed to the repo, not gitignored. Remove them from
+`.gitignore` and commit them.
+
+### No smoke testing of Starlark scripts
+
+The validate workflow only checks lifecycle YAML against JSON schemas. It does NOT
+validate the `.star` scripts that define package lifecycle phases. There are 100+
+Starlark scripts in the registry and none are tested by CI. A syntax error or bad
+API call in any script goes undetected until runtime.
+
+CI must smoke test all `.star` code:
+- All packages must be loadable by the DevLore Registry provider
+- All scripts must be parsed and verified by the Starlark runtime
+- Every phase script (`prepare.star`, `install.star`, `provision.star`, `verify.star`,
+  etc.) must be loaded without errors
+- Test via the DevLore Registry provider, not by parsing `.star` files in isolation
+
 ## Implementation
 
 ### Phase 1: Create registry extensions and fix CI
@@ -150,14 +174,47 @@ Changes:
 - Fix commands to match new extension names
 - Build star in noblefactor-ops working directory (consistent with validate.yaml)
 
+#### Step 5: Commit generated indexes
+
+Remove from `.gitignore`:
+- `packages/index.yaml`
+- `packages/cross-reference.yaml`
+- `knowledge/*/index.yaml`
+
+Generate and commit these files. The `update-indexes.yaml` workflow continues to
+regenerate and commit them on push, but they must also be present in the repo for
+local development and validation.
+
+#### Step 6: Add Starlark smoke test extension
+
+Create `star/extensions/com.noblefactor.devlore-registry.SmokeTest/`:
+- `extension.yaml` — declares `devlore-registry.smoke-test` command
+- `commands/smoke-test.star` — loads every package via the DevLore Registry provider
+
+The smoke test:
+- Discovers all packages under `packages/`
+- For each package, loads the lifecycle definition
+- For each platform/lifecycle/phase, loads the `.star` script through the Starlark
+  runtime — verifying syntax, imports, and function signatures
+- Reports pass/fail per script with summary counts
+- Fails CI if any script cannot be loaded
+
+Add to `validate.yaml`:
+```yaml
+- name: Smoke test Starlark scripts
+  run: ./star devlore-registry smoke-test
+```
+
 ### Verification
 
 1. `./star devlore-registry validate` passes locally against the registry
 2. `./star devlore-registry index packages` produces correct index.yaml
 3. `./star devlore-registry index knowledge` produces correct index files
-4. Push to a branch and verify both CI workflows pass
-5. Verify validate.yaml triggers on `packages/**` and `schemas/**` changes
-6. Verify update-indexes.yaml triggers on `packages/**/lifecycle.yaml` changes
+4. `./star devlore-registry smoke-test` loads all `.star` scripts without errors
+5. `packages/index.yaml`, `packages/cross-reference.yaml` committed to repo
+6. Push to a branch and verify both CI workflows pass
+7. Verify validate.yaml triggers on `packages/**` and `schemas/**` changes
+8. Verify update-indexes.yaml triggers on `packages/**/lifecycle.yaml` changes
 
 ### Files
 
@@ -169,8 +226,14 @@ Changes:
 | `star/extensions/com.noblefactor.devlore-registry.IndexPackages/commands/index-packages.star` | Create |
 | `star/extensions/com.noblefactor.devlore-registry.IndexKnowledge/extension.yaml` | Create |
 | `star/extensions/com.noblefactor.devlore-registry.IndexKnowledge/commands/index-knowledge.star` | Create |
+| `star/extensions/com.noblefactor.devlore-registry.SmokeTest/extension.yaml` | Create |
+| `star/extensions/com.noblefactor.devlore-registry.SmokeTest/commands/smoke-test.star` | Create |
 | `.github/workflows/validate.yaml` | Modify |
 | `.github/workflows/update-indexes.yaml` | Modify |
+| `.gitignore` | Modify (remove generated index entries) |
+| `packages/index.yaml` | Commit (generated) |
+| `packages/cross-reference.yaml` | Commit (generated) |
+| `knowledge/*/index.yaml` | Commit (generated) |
 
 ## Dependencies
 
