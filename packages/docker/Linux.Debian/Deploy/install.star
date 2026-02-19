@@ -14,13 +14,12 @@
 #
 # Reference: https://docs.docker.com/engine/install/ubuntu/
 
-def install(package, system, plan):
+def install(package, phase):
     """Install Docker CE packages.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Core Docker packages

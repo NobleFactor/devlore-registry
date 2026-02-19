@@ -3,13 +3,12 @@
 #
 # docker/Linux.Debian/Upgrade/install.star — Install phase for upgrade
 
-def install(package, system, plan):
+def install(package, phase):
     """Upgrade Docker CE packages to latest version.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Upgrade all Docker packages

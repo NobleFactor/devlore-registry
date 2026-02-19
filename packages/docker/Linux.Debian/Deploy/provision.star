@@ -14,29 +14,28 @@
 #
 # 3. Rootless mode requires running dockerd-rootless-setuptool.sh
 
-def provision(package, system, plan):
+def provision(package, phase):
     """Configure Docker for use on this system.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # TODO: plan.user.add_to_group() not yet implemented
     # Add current user to docker group
     # This allows running docker commands without sudo
-    # user = system.env("USER")
+    # user = phase.env("USER")
     # if user and user != "root":
     #     plan.user.add_to_group(user, "docker")
 
     # Enable and start Docker service
-    plan.service(name="docker", action="enable")
-    plan.service(name="docker", action="start")
+    plan.service.enable("docker")
+    plan.service.start("docker")
 
     # Rootless mode setup
     if package.has_feature("rootless"):
-        plan.shell("dockerd-rootless-setuptool.sh install")
+        plan.shell.exec("dockerd-rootless-setuptool.sh install")
 
     # Configure daemon settings if custom values provided
     storage_driver = package.setting("storage-driver")

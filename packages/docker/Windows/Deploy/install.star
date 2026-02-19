@@ -9,13 +9,12 @@
 # The installer handles all component setup including CLI tools.
 # Reference: https://docs.docker.com/desktop/install/windows-install/
 
-def install(package, system, plan):
+def install(package, phase):
     """Install Docker Desktop on Windows.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # TODO: plan.download() not yet implemented
@@ -24,7 +23,7 @@ def install(package, system, plan):
     #     dest="%TEMP%\\DockerDesktopInstaller.exe",
     # )
 
-    plan.shell(
+    plan.shell.exec(
         "%TEMP%\\DockerDesktopInstaller.exe install --quiet --accept-license"
     )
 

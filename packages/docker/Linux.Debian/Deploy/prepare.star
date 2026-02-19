@@ -8,13 +8,12 @@
 # The official Docker apt repository must be configured before install.
 # Reference: https://docs.docker.com/engine/install/ubuntu/
 
-def prepare(package, system, plan):
+def prepare(package, phase):
     """Prepare the system for Docker CE installation.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Remove conflicting packages
@@ -30,8 +29,10 @@ def prepare(package, system, plan):
     ]
 
     for pkg in conflicts:
-        if system.package.installed(pkg):
-            plan.package.remove(pkg)
+        plan.choose(
+            when=plan.package.installed(pkg),
+            then=lambda p=pkg: plan.package.remove(p),
+        )
 
     # Set up Docker's official apt repository
     # 1. Install prerequisites for HTTPS apt repos
@@ -47,9 +48,9 @@ def prepare(package, system, plan):
 
     # 3. Add the Docker apt repository
     # TODO: plan.file.write() not yet implemented
-    # Uses system.platform.arch to get the correct architecture (amd64, arm64)
-    # arch = system.platform.arch
-    # codename = system.platform.codename  # e.g., "jammy", "noble"
+    # Uses platform.arch to get the correct architecture (amd64, arm64)
+    # arch = platform.arch
+    # codename = platform.codename  # e.g., "jammy", "noble"
     # repo_line = "deb [arch=%s signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu %s stable" % (arch, codename)
     # plan.file.write(
     #     path="/etc/apt/sources.list.d/docker.list",

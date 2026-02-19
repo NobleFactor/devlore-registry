@@ -9,21 +9,20 @@
 # CLI tools (docker, docker-compose) are symlinked to /usr/local/bin.
 # Reference: https://docs.docker.com/desktop/setup/install/mac-install/
 
-def provision(package, system, plan):
+def provision(package, phase):
     """Configure Docker Desktop on macOS.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Start Docker Desktop
     # The app manages the daemon lifecycle
-    plan.shell("open -a Docker")
+    plan.shell.exec("open -a Docker")
 
     # Wait for Docker to be ready (daemon startup takes a few seconds)
-    plan.shell("while ! docker info >/dev/null 2>&1; do sleep 1; done")
+    plan.shell.exec("while ! docker info >/dev/null 2>&1; do sleep 1; done")
 
     # Docker Desktop handles daemon.json internally via its settings UI
     # Custom storage-driver and log-driver settings would need to be
