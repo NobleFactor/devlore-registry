@@ -85,20 +85,16 @@ packages/<name>/
 
 ## Phase Script Contract
 
-**CRITICAL:** Phase scripts receive three arguments and build an execution graph declaratively. They do NOT execute operations directly.
+**CRITICAL:** Phase scripts receive two arguments and build an execution graph declaratively. They do NOT execute operations directly. The `plan` object is a global available in every script.
 
 ### Function Signature
 
 ```python
-def install(package, system, plan):
+def install(package, phase):
     """
     Args:
         package: Lore package context (read-only)
-        system:  Platform state queries (read-only, NO mutations)
-        plan:    Execution graph builder (adds nodes for later execution)
-
-    Returns:
-        dict: Phase result, e.g., {"install": True}
+        phase:   Phase context — retry policy, phase metadata
     """
 ```
 
@@ -120,50 +116,28 @@ Access package metadata from lifecycle.yaml:
 
 **Example:**
 ```python
-def install(package, system, plan):
+def install(package, phase):
     if package.has_feature("install-from-source"):
-        _install_from_source(package, system, plan)
+        _install_from_source(package)
     else:
-        _install_from_pkg(package, system, plan)
+        _install_from_pkg(package)
 
     macos_version = package.setting("macos-version", "auto")
 ```
 
-### 2. `system` — Read-Only System Queries (NO mutations!)
-
-Query current platform state. **Never mutate system state directly.**
+### 2. `phase` — Phase Context
 
 | Attribute/Method | Type | Description |
 |------------------|------|-------------|
-| `system.platform.os` | string | "Darwin", "Linux", "Windows" |
-| `system.platform.arch` | string | "arm64", "amd64" |
-| `system.platform.distro` | string | "debian", "fedora", "" |
-| `system.platform.version` | string | OS version |
-| `system.platform.hostname` | string | Machine hostname |
-| `system.package.installed(name)` | bool | Is package installed? |
-| `system.package.version(name)` | string | Installed version |
-| `system.package.manager` | string | "apt", "brew", "port", etc. |
-| `system.service.exists(name)` | bool | Does service exist? |
-| `system.service.running(name)` | bool | Is service running? |
-| `system.service.enabled(name)` | bool | Is service enabled? |
+| `phase.name` | string | Current phase name (e.g., `"install"`) |
+| `phase.retry(...)` | None | Set retry policy for this phase |
 
-**Example:**
-```python
-def install(package, system, plan):
-    # Check if already installed
-    if system.package.installed(package.name):
-        return {"install": "already_installed"}
+### 3. `plan` — Execution Graph Builder (global)
 
-    # Platform-specific logic
-    if system.platform.arch == "arm64":
-        prefix = "/opt/homebrew"
-    else:
-        prefix = "/usr/local"
-```
+`plan` is a global available in every script. It builds the execution graph
+declaratively — operations are scheduled, not executed immediately.
 
-### 3. `plan` — Execution Graph Builder (like Bazel)
-
-Add nodes to the execution graph. Operations execute LATER, not immediately.
+**Package operations** — `plan.package.*`
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -171,33 +145,93 @@ Add nodes to the execution graph. Operations execute LATER, not immediately.
 | `plan.package.upgrade("pkg1", ...)` | node | Upgrade packages |
 | `plan.package.remove("pkg1", ...)` | node | Remove packages |
 | `plan.package.update()` | node | Update package index |
+
+**File operations** — `plan.file.*`
+
+| Method | Returns | Description |
+|--------|---------|-------------|
 | `plan.file.configure(src, tgt)` | node | Template expansion + copy |
 | `plan.file.link(src, tgt)` | node | Create symlink |
 | `plan.file.copy(src, tgt)` | node | Copy file |
 | `plan.file.mkdir(tgt)` | node | Create directory |
 | `plan.file.write(tgt, content)` | node | Write content to file |
-| `plan.service(name, action)` | node | Service action (start/stop/restart/enable/disable) |
-| `plan.shell(command)` | node | Run shell command |
+
+**Service operations** — `plan.service.*`
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `plan.service.start(name)` | node | Start a service |
+| `plan.service.stop(name)` | node | Stop a service |
+| `plan.service.restart(name)` | node | Restart a service |
+| `plan.service.enable(name)` | node | Enable a service at boot |
+| `plan.service.disable(name)` | node | Disable a service at boot |
+
+**Shell operations** — `plan.shell.*`
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `plan.shell.exec(command)` | node | Run shell command (use sparingly) |
+
+**Network and content** — `plan.net.*`, `plan.content.*`
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `plan.net.download(url)` | node | Download a file |
+| `plan.content.literal(content)` | node | Inline content |
+
+**Conditional logic** — `plan.choose()`
+
+Machine-state checks are evaluated at execution time on the target, not during
+graph construction. Platform selection uses the directory hierarchy instead.
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `plan.choose(when, then)` | node | Execute `then` only if predicate is true on target |
+| `plan.package.installed(name)` | predicate | Package is installed |
+| `plan.package.not_installed(name)` | predicate | Package is not installed |
+| `plan.service.running(name)` | predicate | Service is running |
+| `plan.service.exists(name)` | predicate | Service exists |
+
+**Dependency ordering**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
 | `plan.depends_on(from, to)` | None | Create dependency edge |
 
 **Example:**
 ```python
-def install(package, system, plan):
+def install(package, phase):
     # Add nodes to the execution graph
     update_node = plan.package.update()
     install_node = plan.package.install("macports")
 
     # Declare dependencies (install runs after update)
     plan.depends_on(install_node, update_node)
-
-    return {"install": True}
 ```
+
+### Cross-Platform Targeting
+
+**Platform-specific logic belongs in the directory structure, not in script
+conditionals.** The directory hierarchy determines which scripts run:
+
+```
+Common/Deploy/install.star        → runs for all targets
+Unix/Deploy/install.star          → runs for Darwin and Linux targets
+Linux/Deploy/install.star         → runs for all Linux targets
+Linux.Debian/Deploy/install.star  → runs for Debian-family targets only
+Darwin/Deploy/install.star        → runs for macOS targets only
+```
+
+Scripts are selected based on the **target platform**, not the machine building
+the graph. You can build a Linux.Debian graph on a Mac — the resolver picks
+scripts from the target platform's directory hierarchy. This makes graphs
+deterministic and signable.
 
 ## Key Paradigm: Declarative vs Imperative
 
 **WRONG (imperative - these APIs don't exist):**
 ```python
-def install(package, system, plan):
+def install(package, phase):
     # DON'T DO THIS!
     shell.exec("sudo port install wget")
     fs.write("/etc/config", "content")
@@ -205,44 +239,42 @@ def install(package, system, plan):
 
 **CORRECT (declarative - builds execution plan):**
 ```python
-def install(package, system, plan):
-    # Query system state (read-only)
-    if system.package.installed("wget"):
-        return {"install": "already_installed"}
-
-    # Add operations to graph (executed later by engine)
-    plan.package.install("wget")
-    return {"install": True}
+def install(package, phase):
+    # Conditional install — checked at execution time on the target
+    plan.choose(
+        when=plan.package.not_installed("wget"),
+        then=lambda: plan.package.install("wget"),
+    )
 ```
 
-## plan.shell() — The Escape Hatch (USE SPARINGLY)
+## plan.shell.exec() — The Escape Hatch (USE SPARINGLY)
 
 **Philosophy: One API, Many Platforms.**
 
-The binding system provides cross-platform abstractions. `plan.shell()` is an **escape hatch**, not a primary tool. Its use signals a potential binding gap.
+The binding system provides cross-platform abstractions. `plan.shell.exec()` is an **escape hatch**, not a primary tool. Its use signals a potential binding gap.
 
-### NEVER Use plan.shell() For These Operations
+### NEVER Use plan.shell.exec() For These Operations
 
 | Operation | WRONG | CORRECT |
 |-----------|-------|---------|
-| Download | `plan.shell("curl -o file url")` | `plan.download(url, target)` |
-| Extract | `plan.shell("tar xzf archive.tar.gz")` | `plan.archive.extract(archive, target)` |
-| File copy | `plan.shell("cp src dst")` | `plan.file.copy(src, dst)` |
-| File remove | `plan.shell("rm -rf path")` | `plan.file.remove(path)` |
-| Create dir | `plan.shell("mkdir -p path")` | `plan.file.mkdir(path)` |
-| Symlink | `plan.shell("ln -s src dst")` | `plan.file.link(src, dst)` |
-| Write file | `plan.shell("echo content > file")` | `plan.file.write(path, content)` |
-| Git clone | `plan.shell("git clone url")` | `plan.git.clone(url, target)` |
-| Package install | `plan.shell("apt install pkg")` | `plan.package.install(pkg)` |
-| Service control | `plan.shell("systemctl start svc")` | `plan.service(name, "start")` |
+| Download | `plan.shell.exec("curl -o file url")` | `plan.net.download(url)` |
+| Extract | `plan.shell.exec("tar xzf archive.tar.gz")` | `plan.archive.extract(archive, target)` |
+| File copy | `plan.shell.exec("cp src dst")` | `plan.file.copy(src, dst)` |
+| File remove | `plan.shell.exec("rm -rf path")` | `plan.file.remove(path)` |
+| Create dir | `plan.shell.exec("mkdir -p path")` | `plan.file.mkdir(path)` |
+| Symlink | `plan.shell.exec("ln -s src dst")` | `plan.file.link(src, dst)` |
+| Write file | `plan.shell.exec("echo content > file")` | `plan.file.write(path, content)` |
+| Git clone | `plan.shell.exec("git clone url")` | `plan.git.clone(url, target)` |
+| Package install | `plan.shell.exec("apt install pkg")` | `plan.package.install(pkg)` |
+| Service control | `plan.shell.exec("systemctl start svc")` | `plan.service.start(name)` |
 
-### When plan.shell() Is Acceptable
+### When plan.shell.exec() Is Acceptable
 
-Use `plan.shell()` ONLY for:
+Use `plan.shell.exec()` ONLY for:
 1. **Package-specific commands** — Commands unique to this package with no general utility
 2. **Proposed bindings** — Operations that SHOULD have a binding but don't yet (add to `binding_proposals`)
 
-When you must use `plan.shell()`, ALWAYS:
+When you must use `plan.shell.exec()`, ALWAYS:
 1. Add a comment explaining why no binding exists
 2. Add the missing binding to `binding_proposals` if it's a common pattern
 
@@ -250,23 +282,23 @@ When you must use `plan.shell()`, ALWAYS:
 
 **WRONG — Uses shell for common operations:**
 ```python
-def install(package, system, plan):
+def install(package, phase):
     # DON'T DO THIS! These all have dedicated bindings.
-    plan.shell(f"curl -L -o /tmp/app.pkg {url}")        # Use plan.download()
-    plan.shell("tar xzf /tmp/app.tar.gz -C /opt")       # Use plan.archive.extract()
-    plan.shell("mkdir -p /opt/app/config")              # Use plan.file.mkdir()
-    plan.shell("rm -f /tmp/app.tar.gz")                 # Use plan.file.remove()
+    plan.shell.exec(f"curl -L -o /tmp/app.pkg {url}")   # Use plan.net.download()
+    plan.shell.exec("tar xzf /tmp/app.tar.gz -C /opt")  # Use plan.archive.extract()
+    plan.shell.exec("mkdir -p /opt/app/config")          # Use plan.file.mkdir()
+    plan.shell.exec("rm -f /tmp/app.tar.gz")             # Use plan.file.remove()
 ```
 
 **CORRECT — Uses bindings for common operations:**
 ```python
-def install(package, system, plan):
+def install(package, phase):
     # Download using binding (works on all platforms)
-    download = plan.download(pkg_url, "/tmp/app.pkg")
+    download = plan.net.download(pkg_url)
 
     # Package-specific installer command (no binding exists yet)
     # TODO: Propose plan.package.install_pkg() binding
-    install_pkg = plan.shell("sudo installer -pkg /tmp/app.pkg -target /")
+    install_pkg = plan.shell.exec("sudo installer -pkg /tmp/app.pkg -target /")
 
     # Cleanup using binding
     cleanup = plan.file.remove("/tmp/app.pkg")
@@ -274,8 +306,6 @@ def install(package, system, plan):
     # Chain dependencies
     plan.depends_on(install_pkg, download)
     plan.depends_on(cleanup, install_pkg)
-
-    return {"install": True}
 ```
 
 ## Complete Example: MacPorts install.star
@@ -286,6 +316,7 @@ def install(package, system, plan):
 # TRIBAL KNOWLEDGE:
 # MacPorts provides version-specific .pkg installers for each macOS release.
 # Using the wrong version causes compatibility issues.
+# This script lives in Darwin/Deploy/ — it only runs for macOS targets.
 
 # Map macOS major version to installer suffix
 PKG_SUFFIXES = {
@@ -296,42 +327,34 @@ PKG_SUFFIXES = {
     "11": "11-BigSur",
 }
 
-def install(package, system, plan):
+def install(package, phase):
     """Install MacPorts via .pkg installer."""
-    # Check if already installed
-    if system.package.installed("port"):
-        return {"install": "already_installed"}
+    # Skip if already installed — checked at execution time on the target
+    plan.choose(
+        when=plan.package.installed("port"),
+        then=lambda: note("MacPorts already installed, skipping"),
+    )
 
-    # Determine installer URL based on macOS version
-    os_major = system.platform.version.split(".")[0]
-    suffix = PKG_SUFFIXES.get(os_major, "15-Sequoia")
-    pkg_url = f"https://github.com/macports/macports-base/releases/download/v{package.version}/MacPorts-{package.version}-{suffix}.pkg"
+    # Determine installer URL (version from lifecycle.yaml)
+    pkg_url = f"https://github.com/macports/macports-base/releases/download/v{package.version}/MacPorts-{package.version}-15-Sequoia.pkg"
 
     # Download using binding (cross-platform)
-    download = plan.download(pkg_url, "/tmp/macports.pkg")
+    download = plan.net.download(pkg_url)
 
     # macOS .pkg installer - no cross-platform binding exists
     # NOTE: Uses shell because plan.package.install_pkg() not yet implemented
-    install_pkg = plan.shell("sudo installer -pkg /tmp/macports.pkg -target /")
+    install_pkg = plan.shell.exec("sudo installer -pkg /tmp/macports.pkg -target /")
 
     # Cleanup using binding
     cleanup = plan.file.remove("/tmp/macports.pkg")
 
     # Package-specific post-install command
-    selfupdate = plan.shell("sudo /opt/local/bin/port selfupdate")
+    selfupdate = plan.shell.exec("sudo /opt/local/bin/port selfupdate")
 
     # Declare execution order
     plan.depends_on(install_pkg, download)
     plan.depends_on(cleanup, install_pkg)
     plan.depends_on(selfupdate, install_pkg)
-
-    return {"install": True}
-
-def rollback(package, system, plan):
-    """Remove MacPorts if installation fails."""
-    # Use bindings where available
-    plan.file.remove("/opt/local")
-    plan.file.remove("/Applications/MacPorts")
 ```
 
 ## lifecycle.yaml
@@ -388,15 +411,14 @@ tags:
 
 As you generate phase scripts, you may encounter operations that **should** have a dedicated binding but don't exist yet. When this happens:
 
-1. **Use `plan.shell()` as a workaround** — Your generated code must work with current bindings
+1. **Use `plan.shell.exec()` as a workaround** — Your generated code must work with current bindings
 2. **Propose the missing binding** — Include it in the `binding_proposals` array
 
 ### When to Propose a Binding
 
 Propose a new binding when:
 - An operation is common enough to warrant a dedicated method (e.g., `plan.file.chmod`)
-- A system query would be useful but doesn't exist (e.g., `system.network.connected`)
-- Using `plan.shell()` requires platform-specific commands that a binding could abstract
+- Using `plan.shell.exec()` requires platform-specific commands that a binding could abstract
 
 ### Binding Proposal Format
 
@@ -404,8 +426,8 @@ Each proposal must include:
 
 | Field | Description |
 |-------|-------------|
-| `binding` | Full path (e.g., `plan.file.chmod`, `system.env.get`) |
-| `category` | `package`, `system`, or `plan` |
+| `binding` | Full path (e.g., `plan.file.chmod`) |
+| `category` | `package` or `plan` |
 | `signature` | Starlark signature (e.g., `chmod(path: string, mode: string) -> node`) |
 | `description` | What the binding does |
 | `use_case` | Why this package needs it |
@@ -416,24 +438,9 @@ Each proposal must include:
 
 Follow these devlore-cli patterns when writing proposals:
 
-**System query binding (read-only):**
-```go
-func (s *SystemBindings) envGet(_ *starlark.Thread, _ *starlark.Builtin,
-    args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-
-    var name string
-    if err := starlark.UnpackArgs("env.get", args, kwargs, "name", &name); err != nil {
-        return nil, err
-    }
-
-    value := os.Getenv(name)
-    return starlark.String(value), nil
-}
-```
-
 **Plan node binding (returns node for dependency chaining):**
 ```go
-func (p *PlanBindings) fileChmod(_ *starlark.Thread, _ *starlark.Builtin,
+func (p *FilePlan) fileChmod(_ *starlark.Thread, _ *starlark.Builtin,
     args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 
     var path, mode string
@@ -460,13 +467,13 @@ func (p *PlanBindings) fileChmod(_ *starlark.Thread, _ *starlark.Builtin,
   "description": "Change file permissions",
   "use_case": "Need to make downloaded scripts executable before running",
   "file": "internal/starlark/plan.go",
-  "implementation": "func (p *PlanBindings) fileChmod(_ *starlark.Thread, _ *starlark.Builtin,\n    args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {\n\n    var path, mode string\n    if err := starlark.UnpackArgs(\"file.chmod\", args, kwargs,\n        \"path\", &path, \"mode\", &mode); err != nil {\n        return nil, err\n    }\n\n    node := p.addNode(\"file-chmod\", map[string]string{\n        \"path\": path,\n        \"mode\": mode,\n    })\n    return nodeToStarlark(node), nil\n}"
+  "implementation": "func (p *FilePlan) fileChmod(_ *starlark.Thread, _ *starlark.Builtin,\n    args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {\n\n    var path, mode string\n    if err := starlark.UnpackArgs(\"file.chmod\", args, kwargs,\n        \"path\", &path, \"mode\", &mode); err != nil {\n        return nil, err\n    }\n\n    node := p.addNode(\"file-chmod\", map[string]string{\n        \"path\": path,\n        \"mode\": mode,\n    })\n    return nodeToStarlark(node), nil\n}"
 }
 ```
 
 ## Shell Audit Requirements
 
-**MANDATORY**: For every `plan.shell()` call in your output, add an entry to `shell_audit`:
+**MANDATORY**: For every `plan.shell.exec()` call in your output, add an entry to `shell_audit`:
 
 | Status | Meaning | Action Required |
 |--------|---------|-----------------|
@@ -491,20 +498,23 @@ func (p *PlanBindings) fileChmod(_ *starlark.Thread, _ *starlark.Builtin,
 2. Is this a common pattern across packages? → `status: needs_binding`, add proposal
 3. Is this truly package-specific? → `status: acceptable`, add comment explaining why
 
+**Note:** `plan.shell.exec()` is the escape hatch API. All other operations
+have dedicated bindings in `plan.*` sub-namespaces.
+
 ## Quality Checks
 
 Before outputting, verify:
-- [ ] All phase functions use signature `def phase(package, system, plan):`
-- [ ] All rollback functions use signature `def rollback(package, system, plan):`
-- [ ] System queries are read-only (no `system.package.install()`)
+- [ ] All phase functions use signature `def <phase>(package, phase):`
+- [ ] `plan` is used as a global (not an argument)
 - [ ] All mutations go through `plan.*` methods
+- [ ] Platform selection uses directory hierarchy, not script conditionals
 - [ ] Dependencies declared with `plan.depends_on()`
 - [ ] lifecycle.yaml is valid YAML
 - [ ] Required phases exist for each operation
 - [ ] README documents operations, features, and settings
 - [ ] File paths use correct structure: `{Platform}/{Operation}/{phase}.star`
 - [ ] **NO shell violations** (curl, wget, tar, rm, mkdir, cp, etc. must use bindings)
-- [ ] **shell_audit populated** for every plan.shell() call
+- [ ] **shell_audit populated** for every plan.shell.exec() call
 - [ ] Missing bindings identified and proposed with Go implementations
 
 ## Output Format

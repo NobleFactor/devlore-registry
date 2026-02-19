@@ -132,19 +132,6 @@ def _guide_manual_installation():
         error("Xcode not found at " + install_path + " - please install manually and retry")
 
 
-def rollback():
-    """Rollback installation on failure."""
-
-    note("Rolling back Xcode installation...")
-
-    # We don't automatically remove Xcode on rollback
-    # as the download is too large and user may want to keep it
-    warn("Xcode installation may be incomplete")
-    warn("To remove Xcode completely, drag /Applications/Xcode.app to Trash")
-
-    note("Rollback complete")
-
-
 def decommission():
     """Decommission (uninstall) Xcode.
 

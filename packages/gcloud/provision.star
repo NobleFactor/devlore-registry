@@ -170,15 +170,3 @@ def _install_fish_completions():
     """Install fish completions for gcloud (not officially supported)."""
     log.info("Fish completions for gcloud are not officially supported")
 
-def rollback():
-    """Rollback provisioning changes on failure."""
-
-    # Remove completions
-    completions_files = [
-        fs.home() + "/.local/share/bash-completion/completions/gcloud",
-        fs.home() + "/.local/share/zsh/site-functions/_gcloud",
-    ]
-
-    for f in completions_files:
-        if fs.exists(f):
-            fs.remove(f)

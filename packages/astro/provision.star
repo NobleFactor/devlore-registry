@@ -113,16 +113,3 @@ def _show_usage():
     note("  Build for prod:    astro build")
     note("  Add integration:   astro add tailwind")
     note("")
-
-def rollback():
-    """Remove completions."""
-
-    paths = [
-        fs.join(fs.home(), ".local/share/bash-completion/completions/astro"),
-        fs.join(fs.home(), ".local/share/zsh/site-functions/_astro"),
-        fs.join(fs.home(), ".config/fish/completions/astro.fish"),
-    ]
-
-    for p in paths:
-        if fs.exists(p):
-            fs.remove(p)

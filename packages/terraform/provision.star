@@ -176,15 +176,3 @@ def _install_tfsec():
 
     log.warn("Could not install tfsec. Install manually or use trivy.")
 
-def rollback():
-    """Rollback provisioning changes on failure."""
-
-    # Remove completions
-    completions_files = [
-        fs.home() + "/.local/share/bash-completion/completions/terraform",
-        fs.home() + "/.local/share/zsh/site-functions/_terraform",
-    ]
-
-    for f in completions_files:
-        if fs.exists(f):
-            fs.remove(f)

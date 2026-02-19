@@ -100,22 +100,3 @@ def _prepare_windows():
     # Installer handles everything
     pass
 
-def rollback():
-    """Rollback preparation changes on failure."""
-
-    if platform.os == "linux":
-        if platform.distro in ["debian", "ubuntu"]:
-            sources_list = "/etc/apt/sources.list.d/google-cloud-sdk.list"
-            keyring_path = "/usr/share/keyrings/cloud.google.gpg"
-
-            if fs.exists(sources_list):
-                fs.remove(sources_list, sudo = True)
-            if fs.exists(keyring_path):
-                fs.remove(keyring_path, sudo = True)
-
-            package.update()
-
-        elif platform.distro in ["fedora", "rhel", "centos"]:
-            repo_file = "/etc/yum.repos.d/google-cloud-sdk.repo"
-            if fs.exists(repo_file):
-                fs.remove(repo_file, sudo = True)

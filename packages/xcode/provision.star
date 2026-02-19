@@ -225,14 +225,3 @@ def _download_simulator(platform_name, version):
         warn("Failed to download " + platform_name + " Simulator: " + result.stderr)
     else:
         note(platform_name + " Simulator downloaded successfully")
-
-
-def rollback():
-    """Rollback provisioning on failure."""
-
-    note("Rolling back Xcode provisioning...")
-
-    # Provisioning changes are mostly additive and harmless to leave
-    # We don't attempt to remove simulators or undo license acceptance
-
-    note("Rollback complete")

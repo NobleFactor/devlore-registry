@@ -125,26 +125,3 @@ def _install_windows_msi():
 
     # Clean up
     fs.remove(msi_path)
-
-def rollback():
-    """Rollback installation on failure."""
-
-    if platform.os == "darwin":
-        if shell.which("brew"):
-            shell.run("brew uninstall awscli 2>/dev/null", shell = True)
-        else:
-            # pkg installations are harder to remove
-            log.warn("Manual removal may be required: rm -rf /usr/local/aws-cli")
-
-    elif platform.os == "linux":
-        # Remove the installation
-        if fs.exists("/usr/local/aws-cli"):
-            shell.run("sudo rm -rf /usr/local/aws-cli")
-        if fs.exists("/usr/local/bin/aws"):
-            shell.run("sudo rm /usr/local/bin/aws")
-        if fs.exists("/usr/local/bin/aws_completer"):
-            shell.run("sudo rm /usr/local/bin/aws_completer")
-
-    elif platform.os == "windows":
-        if shell.which("winget"):
-            shell.run("winget uninstall Amazon.AWSCLI")

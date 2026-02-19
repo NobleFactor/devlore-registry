@@ -1,664 +1,649 @@
-"":
-    description: ""
-    methods:
-        - file: bindings.go
-          full_name: note
-          line: 61
-          name: note
-        - file: bindings.go
-          full_name: warn
-          line: 62
-          name: warn
-        - file: bindings.go
-          full_name: error
-          line: 63
-          name: error
-        - file: bindings.go
-          full_name: success
-          line: 64
-          name: success
-        - file: bindings.go
-          full_name: fail
-          line: 65
-          name: fail
-    namespaces: {}
-archive:
-    description: Archive operations
-    methods:
-        - file: bindings.go
-          full_name: archive.extract
-          line: 513
-          name: extract
-    namespaces: {}
-binding_count: 145
-docker:
-    description: Docker operations
-    methods:
-        - file: docker.go
-          full_name: docker.run
-          line: 38
-          name: run
-        - file: docker.go
-          full_name: docker.build
-          line: 39
-          name: build
-        - file: docker.go
-          full_name: docker.pull
-          line: 40
-          name: pull
-        - file: docker.go
-          full_name: docker.push
-          line: 41
-          name: push
-        - file: docker.go
-          full_name: docker.exec
-          line: 42
-          name: exec
-        - file: docker.go
-          full_name: docker.stop
-          line: 43
-          name: stop
-        - file: docker.go
-          full_name: docker.start
-          line: 44
-          name: start
-        - file: docker.go
-          full_name: docker.rm
-          line: 45
-          name: rm
-        - file: docker.go
-          full_name: docker.rmi
-          line: 46
-          name: rmi
-        - file: docker.go
-          full_name: docker.tag
-          line: 47
-          name: tag
-        - file: docker.go
-          full_name: docker.login
-          line: 48
-          name: login
-        - file: docker.go
-          full_name: docker.installed
-          line: 51
-          name: installed
-        - file: docker.go
-          full_name: docker.version
-          line: 52
-          name: version
-        - file: docker.go
-          full_name: docker.images
-          line: 53
-          name: images
-        - file: docker.go
-          full_name: docker.image_exists
-          line: 54
-          name: image_exists
-        - file: docker.go
-          full_name: docker.ps
-          line: 55
-          name: ps
-        - file: docker.go
-          full_name: docker.running
-          line: 56
-          name: running
-        - file: docker.go
-          full_name: docker.inspect
-          line: 57
-          name: inspect
-        - file: docker.go
-          full_name: docker.compose_up
-          line: 60
-          name: compose_up
-        - file: docker.go
-          full_name: docker.compose_down
-          line: 61
-          name: compose_down
-        - file: docker.go
-          full_name: docker.compose_ps
-          line: 62
-          name: compose_ps
-    namespaces: {}
-env:
-    description: Environment variable operations
-    methods:
-        - file: bindings.go
-          full_name: env.get
-          line: 544
-          name: get
-        - file: bindings.go
-          full_name: env.set
-          line: 545
-          name: set
-        - file: bindings.go
-          full_name: env.expand
-          line: 546
-          name: expand
-    namespaces: {}
-fs:
-    description: File system operations
-    methods:
-        - file: bindings.go
-          full_name: fs.exists
-          line: 192
-          name: exists
-        - file: bindings.go
-          full_name: fs.is_dir
-          line: 193
-          name: is_dir
-        - file: bindings.go
-          full_name: fs.read
-          line: 194
-          name: read
-        - file: bindings.go
-          full_name: fs.write
-          line: 195
-          name: write
-        - file: bindings.go
-          full_name: fs.mkdir
-          line: 196
-          name: mkdir
-        - file: bindings.go
-          full_name: fs.remove
-          line: 197
-          name: remove
-        - file: bindings.go
-          full_name: fs.copy
-          line: 198
-          name: copy
-        - file: bindings.go
-          full_name: fs.move
-          line: 199
-          name: move
-        - file: bindings.go
-          full_name: fs.chmod
-          line: 200
-          name: chmod
-        - file: bindings.go
-          full_name: fs.symlink
-          line: 201
-          name: symlink
-        - file: bindings.go
-          full_name: fs.which
-          line: 202
-          name: which
-        - file: bindings.go
-          full_name: fs.home
-          line: 203
-          name: home
-        - file: bindings.go
-          full_name: fs.join
-          line: 204
-          name: join
-        - file: bindings.go
-          full_name: fs.dirname
-          line: 205
-          name: dirname
-        - file: bindings.go
-          full_name: fs.basename
-          line: 206
-          name: basename
-    namespaces: {}
-generated: true
-git:
-    description: Git operations
-    methods:
-        - file: git.go
-          full_name: git.clone
-          line: 37
-          name: clone
-        - file: git.go
-          full_name: git.pull
-          line: 38
-          name: pull
-        - file: git.go
-          full_name: git.push
-          line: 39
-          name: push
-        - file: git.go
-          full_name: git.fetch
-          line: 40
-          name: fetch
-        - file: git.go
-          full_name: git.checkout
-          line: 41
-          name: checkout
-        - file: git.go
-          full_name: git.branch
-          line: 42
-          name: branch
-        - file: git.go
-          full_name: git.merge
-          line: 43
-          name: merge
-        - file: git.go
-          full_name: git.rebase
-          line: 44
-          name: rebase
-        - file: git.go
-          full_name: git.reset
-          line: 45
-          name: reset
-        - file: git.go
-          full_name: git.stash
-          line: 46
-          name: stash
-        - file: git.go
-          full_name: git.tag
-          line: 47
-          name: tag
-        - file: git.go
-          full_name: git.add
-          line: 48
-          name: add
-        - file: git.go
-          full_name: git.commit
-          line: 49
-          name: commit
-        - file: git.go
-          full_name: git.status
-          line: 50
-          name: status
-        - file: git.go
-          full_name: git.diff
-          line: 51
-          name: diff
-        - file: git.go
-          full_name: git.log
-          line: 52
-          name: log
-        - file: git.go
-          full_name: git.remote
-          line: 53
-          name: remote
-        - file: git.go
-          full_name: git.config_get
-          line: 56
-          name: config_get
-        - file: git.go
-          full_name: git.config_set
-          line: 57
-          name: config_set
-        - file: git.go
-          full_name: git.installed
-          line: 60
-          name: installed
-        - file: git.go
-          full_name: git.version
-          line: 61
-          name: version
-        - file: git.go
-          full_name: git.repo_root
-          line: 62
-          name: repo_root
-        - file: git.go
-          full_name: git.current_branch
-          line: 63
-          name: current_branch
-        - file: git.go
-          full_name: git.remote_url
-          line: 64
-          name: remote_url
-        - file: git.go
-          full_name: git.is_clean
-          line: 65
-          name: is_clean
-        - file: git.go
-          full_name: git.latest_tag
-          line: 66
-          name: latest_tag
-        - file: git.go
-          full_name: git.commit_hash
-          line: 67
-          name: commit_hash
-    namespaces: {}
-http:
-    description: HTTP operations
-    methods:
-        - file: bindings.go
-          full_name: http.download
-          line: 454
-          name: download
-        - file: bindings.go
-          full_name: http.get
-          line: 455
-          name: get
-    namespaces: {}
-log:
-    description: Logging functions
-    methods:
-        - file: bindings.go
-          full_name: log.info
-          line: 655
-          name: info
-        - file: bindings.go
-          full_name: log.warn
-          line: 656
-          name: warn
-        - file: bindings.go
-          full_name: log.error
-          line: 657
-          name: error
-    namespaces: {}
-npm:
-    description: ""
-    methods:
-        - file: npm.go
-          full_name: npm.install
-          line: 38
-          name: install
-        - file: npm.go
-          full_name: npm.uninstall
-          line: 39
-          name: uninstall
-        - file: npm.go
-          full_name: npm.update
-          line: 40
-          name: update
-        - file: npm.go
-          full_name: npm.run
-          line: 41
-          name: run
-        - file: npm.go
-          full_name: npm.exec
-          line: 42
-          name: exec
-        - file: npm.go
-          full_name: npm.init
-          line: 43
-          name: init
-        - file: npm.go
-          full_name: npm.publish
-          line: 44
-          name: publish
-        - file: npm.go
-          full_name: npm.pack
-          line: 45
-          name: pack
-        - file: npm.go
-          full_name: npm.link
-          line: 46
-          name: link
-        - file: npm.go
-          full_name: npm.audit
-          line: 47
-          name: audit
-        - file: npm.go
-          full_name: npm.ci
-          line: 48
-          name: ci
-        - file: npm.go
-          full_name: npm.cache
-          line: 49
-          name: cache
-        - file: npm.go
-          full_name: npm.config
-          line: 50
-          name: config
-        - file: npm.go
-          full_name: npm.installed
-          line: 53
-          name: installed
-        - file: npm.go
-          full_name: npm.version
-          line: 54
-          name: version
-        - file: npm.go
-          full_name: npm.list_global
-          line: 55
-          name: list_global
-        - file: npm.go
-          full_name: npm.prefix
-          line: 56
-          name: prefix
-    namespaces: {}
 package:
-    description: Lore package context - read-only access to package metadata
-    methods:
-        - file: bindings.go
-          full_name: package.manager
-          line: 90
-          name: manager
-        - file: bindings.go
-          full_name: package.installed
-          line: 91
-          name: installed
-        - file: bindings.go
-          full_name: package.version
-          line: 92
-          name: version
-        - file: bindings.go
-          full_name: package.install
-          line: 93
-          name: install
-        - file: bindings.go
-          full_name: package.remove
-          line: 94
-          name: remove
-        - file: bindings.go
-          full_name: package.update
-          line: 95
-          name: update
-        - file: bindings.go
-          full_name: package.feature
-          line: 96
-          name: feature
-        - file: bindings.go
-          full_name: package.setting
-          line: 97
-          name: setting
-        - file: package.go
+    (root):
+        - doc: True if this is a preview run
+          file: ""
+          full_name: package.dry_run
+          kind: property
+          line: 0
+          name: dry_run
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+          value_type: bool
+        - doc: Enabled features
+          file: ""
+          full_name: package.features
+          kind: property
+          line: 0
+          name: features
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+          value_type: list[string]
+        - doc: ""
+          file: package.go
           full_name: package.has_feature
-          line: 46
+          kind: method
+          line: 72
           name: has_feature
-    namespaces: {}
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_package_gen.go
+          full_name: package.install
+          kind: method
+          line: 95
+          name: install
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: Package name being deployed
+          file: ""
+          full_name: package.name
+          kind: property
+          line: 0
+          name: name
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+          value_type: string
+        - doc: ""
+          file: receiver_package_gen.go
+          full_name: package.remove
+          kind: method
+          line: 59
+          name: remove
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: package.go
+          full_name: package.setting
+          kind: method
+          line: 80
+          name: setting
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: Key-value settings
+          file: ""
+          full_name: package.settings
+          kind: property
+          line: 0
+          name: settings
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+          value_type: dict[string, string]
+        - doc: Package source directory
+          file: ""
+          full_name: package.source_root
+          kind: property
+          line: 0
+          name: source_root
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+          value_type: string
+        - doc: Deployment target directory
+          file: ""
+          full_name: package.target_root
+          kind: property
+          line: 0
+          name: target_root
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+          value_type: string
+        - doc: ""
+          file: plan_package_gen.go
+          full_name: package.update
+          kind: method
+          line: 176
+          name: update
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_package_gen.go
+          full_name: package.upgrade
+          kind: method
+          line: 122
+          name: upgrade
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: Version being deployed
+          file: ""
+          full_name: package.version
+          kind: property
+          line: 0
+          name: version
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+          value_type: string
+phase:
+    (root):
+        - doc: Lifecycle action (e.g. deploy, remove)
+          file: ""
+          full_name: phase.action
+          kind: property
+          line: 0
+          name: action
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+          value_type: string
+        - doc: Lifecycle phase name (e.g. install, provision)
+          file: ""
+          full_name: phase.name
+          kind: property
+          line: 0
+          name: name
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+          value_type: string
+        - doc: retry configures the retry policy for the phase. phase.retry(max_attempts=3, backoff="exponential", initial_delay="1s", max_delay="30s")
+          file: phase_context.go
+          full_name: phase.retry
+          kind: method
+          line: 71
+          name: retry
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
 plan:
-    description: Execution graph builder - all mutations go through plan
-    methods:
-        - file: plan.go
-          full_name: plan.download
-          line: 351
-          name: download
-        - file: plan.go
-          full_name: plan.service
-          line: 352
-          name: service
-        - file: plan.go
-          full_name: plan.shell
-          line: 353
-          name: shell
-        - file: plan.go
-          full_name: plan.depends_on
-          line: 354
-          name: depends_on
-    namespaces:
-        archive:
-            description: ""
-            methods:
-                - file: plan.go
-                  full_name: plan.archive.extract
-                  line: 336
-                  name: extract
-        file:
-            description: File operations
-            methods:
-                - file: plan.go
-                  full_name: plan.file.configure
-                  line: 326
-                  name: configure
-                - file: plan.go
-                  full_name: plan.file.link
-                  line: 327
-                  name: link
-                - file: plan.go
-                  full_name: plan.file.copy
-                  line: 328
-                  name: copy
-                - file: plan.go
-                  full_name: plan.file.mkdir
-                  line: 329
-                  name: mkdir
-                - file: plan.go
-                  full_name: plan.file.write
-                  line: 330
-                  name: write
-                - file: plan.go
-                  full_name: plan.file.remove
-                  line: 331
-                  name: remove
-        git:
-            description: ""
-            methods:
-                - file: plan.go
-                  full_name: plan.git.clone
-                  line: 341
-                  name: clone
-                - file: plan.go
-                  full_name: plan.git.checkout
-                  line: 342
-                  name: checkout
-                - file: plan.go
-                  full_name: plan.git.pull
-                  line: 343
-                  name: pull
-        package:
-            description: Package management operations
-            methods:
-                - file: plan.go
-                  full_name: plan.package.install
-                  line: 318
-                  name: install
-                - file: plan.go
-                  full_name: plan.package.upgrade
-                  line: 319
-                  name: upgrade
-                - file: plan.go
-                  full_name: plan.package.remove
-                  line: 320
-                  name: remove
-                - file: plan.go
-                  full_name: plan.package.update
-                  line: 321
-                  name: update
-service:
-    description: Service management
-    methods:
-        - file: bindings.go
-          full_name: service.exists
-          line: 588
+    (root):
+        - doc: choose creates a conditional branch in the execution graph.
+          file: plan_root.go
+          full_name: plan.choose
+          kind: method
+          line: 119
+          name: choose
+          operations: []
+          output: promise
+          returns: Output of the choose node
+          slot_docs: {}
+          slots: []
+          usage: plan.choose(when=predicate, then=callback)
+        - doc: gather creates a handle for parallel execution of multiple nodes.
+          file: plan_root.go
+          full_name: plan.gather
+          kind: method
+          line: 209
+          name: gather
+          operations: []
+          output: none
+          returns: Gather handle that can be passed to other operations
+          slot_docs: {}
+          slots: []
+          usage: plan.gather(promise1, promise2, ...)
+        - doc: source creates a source file artifact.
+          file: plan_root.go
+          full_name: plan.source
+          kind: method
+          line: 178
+          name: source
+          operations: []
+          output: promise
+          returns: Promise of the source file
+          slot_docs:
+            path: Path to existing source file (immediate only)
+          slots:
+            - path
+          usage: plan.source(path)
+    archive:
+        - doc: ""
+          file: plan_archive_gen.go
+          full_name: plan.archive.extract
+          kind: method
+          line: 52
+          name: extract
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - archive
+            - prefix
+          usage: ""
+    content:
+        - doc: ""
+          file: plan_content_gen.go
+          full_name: plan.content.literal
+          kind: method
+          line: 52
+          name: literal
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - content
+          usage: ""
+    encryption:
+        - doc: ""
+          file: plan_encryption_gen.go
+          full_name: plan.encryption.decrypt
+          kind: method
+          line: 52
+          name: decrypt
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - source
+          usage: ""
+    file:
+        - doc: ""
+          file: plan_file_gen.go
+          full_name: plan.file.copy
+          kind: method
+          line: 103
+          name: copy
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - source
+            - path
+          usage: ""
+        - doc: ""
+          file: plan_file_gen.go
+          full_name: plan.file.exists
+          kind: method
+          line: 59
           name: exists
-        - file: bindings.go
-          full_name: service.status
-          line: 589
-          name: status
-        - file: bindings.go
-          full_name: service.start
-          line: 590
-          name: start
-        - file: bindings.go
-          full_name: service.stop
-          line: 591
-          name: stop
-        - file: bindings.go
-          full_name: service.enable
-          line: 592
-          name: enable
-        - file: bindings.go
-          full_name: service.disable
-          line: 593
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_file_gen.go
+          full_name: plan.file.is_dir
+          kind: method
+          line: 67
+          name: is_dir
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_file_gen.go
+          full_name: plan.file.link
+          kind: method
+          line: 80
+          name: link
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - source
+            - path
+          usage: ""
+        - doc: ""
+          file: plan_file_gen.go
+          full_name: plan.file.remove
+          kind: method
+          line: 149
+          name: remove
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots:
+            - path
+          usage: ""
+        - doc: ""
+          file: plan_file_gen.go
+          full_name: plan.file.write
+          kind: method
+          line: 126
+          name: write
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - content
+            - path
+          usage: ""
+    git:
+        - doc: ""
+          file: plan_git_gen.go
+          full_name: plan.git.checkout
+          kind: method
+          line: 63
+          name: checkout
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - repo
+            - ref
+          usage: ""
+        - doc: ""
+          file: plan_git_gen.go
+          full_name: plan.git.clone
+          kind: method
+          line: 86
+          name: clone
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - url
+            - path
+          usage: ""
+        - doc: ""
+          file: plan_git_gen.go
+          full_name: plan.git.installed
+          kind: method
+          line: 54
+          name: installed
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_git_gen.go
+          full_name: plan.git.pull
+          kind: method
+          line: 109
+          name: pull
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - repo
+          usage: ""
+    net:
+        - doc: ""
+          file: plan_net_gen.go
+          full_name: plan.net.download
+          kind: method
+          line: 52
+          name: download
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - url
+          usage: ""
+    package:
+        - doc: ""
+          file: plan_package_gen.go
+          full_name: plan.package.install
+          kind: method
+          line: 95
+          name: install
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_git_gen.go
+          full_name: plan.package.installed
+          kind: method
+          line: 54
+          name: installed
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_package_gen.go
+          full_name: plan.package.not_installed
+          kind: method
+          line: 74
+          name: not_installed
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_file_gen.go
+          full_name: plan.package.remove
+          kind: method
+          line: 149
+          name: remove
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots:
+            - path
+          usage: ""
+        - doc: ""
+          file: plan_package_gen.go
+          full_name: plan.package.update
+          kind: method
+          line: 176
+          name: update
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_package_gen.go
+          full_name: plan.package.upgrade
+          kind: method
+          line: 122
+          name: upgrade
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_package_gen.go
+          full_name: plan.package.version_gte
+          kind: method
+          line: 82
+          name: version_gte
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+    service:
+        - doc: ""
+          file: plan_service_gen.go
+          full_name: plan.service.disable
+          kind: method
+          line: 108
           name: disable
-    namespaces: {}
-shell:
-    description: Shell command execution
-    methods:
-        - file: bindings.go
-          full_name: shell.exec
-          line: 396
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_service_gen.go
+          full_name: plan.service.enable
+          kind: method
+          line: 104
+          name: enable
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_service_gen.go
+          full_name: plan.service.enabled
+          kind: method
+          line: 79
+          name: enabled
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_file_gen.go
+          full_name: plan.service.exists
+          kind: method
+          line: 59
+          name: exists
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_service_gen.go
+          full_name: plan.service.restart
+          kind: method
+          line: 100
+          name: restart
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_service_gen.go
+          full_name: plan.service.running
+          kind: method
+          line: 71
+          name: running
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_service_gen.go
+          full_name: plan.service.start
+          kind: method
+          line: 92
+          name: start
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+        - doc: ""
+          file: plan_service_gen.go
+          full_name: plan.service.stop
+          kind: method
+          line: 96
+          name: stop
+          operations: []
+          output: none
+          returns: ""
+          slot_docs: {}
+          slots: []
+          usage: ""
+    shell:
+        - doc: ""
+          file: plan_shell_gen.go
+          full_name: plan.shell.exec
+          kind: method
+          line: 52
           name: exec
-        - file: bindings.go
-          full_name: shell.run
-          line: 397
-          name: run
-        - file: bindings.go
-          full_name: shell.which
-          line: 398
-          name: which
-    namespaces: {}
-source: devlore-cli/internal/starlark
-system:
-    description: Read-only system state queries
-    methods: []
-    namespaces:
-        fs:
-            description: ""
-            methods:
-                - file: system.go
-                  full_name: system.fs.exists
-                  line: 172
-                  name: exists
-                - file: system.go
-                  full_name: system.fs.is_dir
-                  line: 181
-                  name: is_dir
-                - file: system.go
-                  full_name: system.fs.which
-                  line: 193
-                  name: which
-                - file: system.go
-                  full_name: system.fs.home
-                  line: 204
-                  name: home
-        git:
-            description: ""
-            methods:
-                - file: system.go
-                  full_name: system.git.installed
-                  line: 126
-                  name: installed
-                - file: system.go
-                  full_name: system.git.version
-                  line: 130
-                  name: version
-                - file: system.go
-                  full_name: system.git.repo_root
-                  line: 142
-                  name: repo_root
-                - file: system.go
-                  full_name: system.git.current_branch
-                  line: 150
-                  name: current_branch
-                - file: system.go
-                  full_name: system.git.is_clean
-                  line: 158
-                  name: is_clean
-        package:
-            description: Package manager queries
-            methods:
-                - file: system.go
-                  full_name: system.package.installed
-                  line: 73
-                  name: installed
-                - file: system.go
-                  full_name: system.package.version
-                  line: 80
-                  name: version
-                - file: system.go
-                  full_name: system.package.manager
-                  line: 87
-                  name: manager
-        service:
-            description: Service/daemon queries
-            methods:
-                - file: system.go
-                  full_name: system.service.exists
-                  line: 97
-                  name: exists
-                - file: system.go
-                  full_name: system.service.running
-                  line: 104
-                  name: running
-                - file: system.go
-                  full_name: system.service.enabled
-                  line: 111
-                  name: enabled
-version: "1.0"
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - command
+          usage: ""
+    template:
+        - doc: ""
+          file: plan_template_gen.go
+          full_name: plan.template.render
+          kind: method
+          line: 52
+          name: render
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs: {}
+          slots:
+            - source
+          usage: ""
+valid: true
+violations: []

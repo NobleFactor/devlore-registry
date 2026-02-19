@@ -64,8 +64,3 @@ def _prepare_windows():
     """Prepare Windows for AWS CLI installation."""
     # winget or MSI installer handles everything
     pass
-
-def rollback():
-    """Rollback preparation changes on failure."""
-    # Preparation is minimal; nothing to rollback
-    pass

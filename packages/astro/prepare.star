@@ -76,7 +76,3 @@ def _version_supported(version_str):
 
     # v22+ supported
     return major >= 22
-
-def rollback():
-    """Nothing to rollback in prepare phase."""
-    pass

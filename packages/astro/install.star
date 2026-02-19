@@ -64,18 +64,3 @@ def _handle_npm_error(result):
         )
     else:
         error("npm install failed: " + stderr)
-
-def rollback():
-    """Rollback installation."""
-
-    note("Rolling back Astro installation...")
-    npm.uninstall("astro", "create-astro", global=True)
-
-    if package.feature("tailwind"):
-        npm.uninstall("@astrojs/tailwind", "tailwindcss", global=True)
-    if package.feature("react"):
-        npm.uninstall("@astrojs/react", "react", "react-dom", global=True)
-    if package.feature("svelte"):
-        npm.uninstall("@astrojs/svelte", "svelte", global=True)
-    if package.feature("vue"):
-        npm.uninstall("@astrojs/vue", "vue", global=True)

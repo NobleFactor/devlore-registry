@@ -208,16 +208,3 @@ def _configure_git_credential_helper():
         note("git credential helper configured")
     else:
         warn("Failed to configure git credential helper: " + result.stderr)
-
-
-def rollback():
-    """Rollback provisioning changes on failure.
-
-    Most provisioning changes are configuration rather than files,
-    so there's limited rollback capability.
-    """
-
-    # There's no way to "un-accept" the license, and that's fine
-    # Git config changes are minor and don't need rollback
-
-    note("Provisioning rollback complete (no changes to undo)")
