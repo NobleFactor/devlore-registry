@@ -6,13 +6,12 @@
 # Docker Desktop upgrade is the same as fresh install - download new
 # installer and run it. It overwrites the existing installation.
 
-def install(package, system, plan):
+def install(package, phase):
     """Upgrade Docker Desktop on Windows.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # TODO: plan.download() not yet implemented
@@ -21,7 +20,7 @@ def install(package, system, plan):
     #     dest="%TEMP%\\DockerDesktopInstaller.exe",
     # )
 
-    plan.shell(
+    plan.shell.exec(
         "%TEMP%\\DockerDesktopInstaller.exe install --quiet --accept-license"
     )
 

@@ -14,13 +14,12 @@
 # This phase removes configuration but preserves data by default.
 # Use --with purge-data to remove everything including images/volumes.
 
-def cleanup(package, system, plan):
+def cleanup(package, phase):
     """Clean up Docker configuration and optionally data.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Remove apt repository configuration

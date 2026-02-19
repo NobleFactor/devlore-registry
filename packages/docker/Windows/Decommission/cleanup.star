@@ -10,13 +10,12 @@
 # - %USERPROFILE%\.docker\
 # - WSL 2 distros: docker-desktop and docker-desktop-data
 
-def cleanup(package, system, plan):
+def cleanup(package, phase):
     """Clean up Docker Desktop data on Windows.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # TODO: plan.file.rmdir() not yet implemented
@@ -31,5 +30,5 @@ def cleanup(package, system, plan):
     # Optionally purge all Docker data (images, containers, volumes)
     if package.has_feature("purge-data"):
         # Remove WSL 2 Docker distros
-        plan.shell("wsl --unregister docker-desktop 2>nul || echo Not found")
-        plan.shell("wsl --unregister docker-desktop-data 2>nul || echo Not found")
+        plan.shell.exec("wsl --unregister docker-desktop 2>nul || echo Not found")
+        plan.shell.exec("wsl --unregister docker-desktop-data 2>nul || echo Not found")

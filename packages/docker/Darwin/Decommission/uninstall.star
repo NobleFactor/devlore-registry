@@ -8,13 +8,12 @@
 # CLI symlinks are placed in /usr/local/bin.
 # Reference: https://docs.docker.com/desktop/uninstall/
 
-def uninstall(package, system, plan):
+def uninstall(package, phase):
     """Remove Docker Desktop from macOS.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # TODO: plan.file.rmdir() and plan.file.remove() not yet implemented

@@ -5,13 +5,12 @@
 #
 # Same verification as Debian.
 
-def verify(package, system, plan):
+def verify(package, phase):
     """Verify Docker installation on Fedora/RHEL.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     plan.verify("docker-command", check="which docker")

@@ -3,21 +3,22 @@
 #
 # docker/Darwin/Upgrade/prepare.star — Prepare phase for upgrade
 
-def prepare(package, system, plan):
+def prepare(package, phase):
     """Prepare for Docker Desktop upgrade on macOS.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
-    # TODO: system.path_exists() needs implementation
-    # if not system.path_exists("/Applications/Docker.app"):
-    #     plan.fail("Docker Desktop is not installed - use 'lore deploy docker' instead")
+    # TODO: path predicates need implementation
+    # plan.choose(
+    #     when=plan.file.not_exists("/Applications/Docker.app"),
+    #     then=lambda: plan.fail("Docker Desktop is not installed - use 'lore deploy docker' instead"),
+    # )
 
     # Quit Docker Desktop before upgrade
-    plan.shell("osascript -e 'quit app \"Docker\"' 2>/dev/null || true")
+    plan.shell.exec("osascript -e 'quit app \"Docker\"' 2>/dev/null || true")
 
     # Wait for Docker to fully stop
-    plan.shell("while pgrep -x Docker >/dev/null; do sleep 1; done")
+    plan.shell.exec("while pgrep -x Docker >/dev/null; do sleep 1; done")

@@ -3,13 +3,12 @@
 #
 # docker/Linux.Debian/Decommission/uninstall.star — Uninstall phase
 
-def uninstall(package, system, plan):
+def uninstall(package, phase):
     """Remove Docker CE packages.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Remove all Docker packages

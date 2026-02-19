@@ -8,13 +8,12 @@
 # The Docker repo file can be downloaded directly (includes GPG key reference).
 # Reference: https://docs.docker.com/engine/install/rhel/
 
-def prepare(package, system, plan):
+def prepare(package, phase):
     """Prepare the system for Docker CE installation on Fedora/RHEL.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Remove conflicting packages
@@ -33,8 +32,10 @@ def prepare(package, system, plan):
     ]
 
     for pkg in conflicts:
-        if system.package.installed(pkg):
-            plan.package.remove(pkg)
+        plan.choose(
+            when=plan.package.installed(pkg),
+            then=lambda p=pkg: plan.package.remove(p),
+        )
 
     # Install dnf plugins for repo management
     plan.package.install("dnf-plugins-core")

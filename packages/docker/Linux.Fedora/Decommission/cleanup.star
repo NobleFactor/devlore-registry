@@ -3,13 +3,12 @@
 #
 # docker/Linux.Fedora/Decommission/cleanup.star — Cleanup phase
 
-def cleanup(package, system, plan):
+def cleanup(package, phase):
     """Clean up Docker configuration on Fedora/RHEL.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # TODO: plan.file.remove() not yet implemented

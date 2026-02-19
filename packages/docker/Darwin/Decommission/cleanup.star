@@ -10,17 +10,16 @@
 # - ~/Library/Application Support/Docker Desktop/
 # - ~/.docker/
 
-def cleanup(package, system, plan):
+def cleanup(package, phase):
     """Clean up Docker Desktop data on macOS.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
-    # TODO: system.env() and plan.file.rmdir() need implementation
-    # user_home = system.env("HOME")
+    # TODO: phase.env() and plan.file.rmdir() need implementation
+    # user_home = phase.env("HOME")
 
     # Remove Docker Desktop preferences and state
     # plan.file.rmdir("%s/Library/Application Support/Docker Desktop" % user_home)

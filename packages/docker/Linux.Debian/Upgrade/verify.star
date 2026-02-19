@@ -3,17 +3,16 @@
 #
 # docker/Linux.Debian/Upgrade/verify.star — Verify phase for upgrade
 
-def verify(package, system, plan):
+def verify(package, phase):
     """Verify Docker upgrade completed successfully.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Restart Docker to pick up any changes
-    plan.service(name="docker", action="restart")
+    plan.service.restart("docker")
 
     # Verify docker daemon is running
     plan.verify("docker-daemon", check="docker info")

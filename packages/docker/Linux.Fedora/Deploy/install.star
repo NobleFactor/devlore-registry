@@ -8,13 +8,12 @@
 # The engine maps plan.package.install() to dnf on Fedora/RHEL.
 # Reference: https://docs.docker.com/engine/install/rhel/
 
-def install(package, system, plan):
+def install(package, phase):
     """Install Docker CE packages on Fedora/RHEL.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Core Docker packages (same as Debian)

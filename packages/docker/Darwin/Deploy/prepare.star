@@ -12,13 +12,12 @@
 # Apple Silicon Macs benefit from Rosetta 2 for some CLI tools.
 # Reference: https://docs.docker.com/desktop/setup/install/mac-install/
 
-def prepare(package, system, plan):
+def prepare(package, phase):
     """Prepare for Docker Desktop installation on macOS.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Check macOS version (Docker Desktop requires current or 2 previous major versions)
@@ -30,11 +29,10 @@ def prepare(package, system, plan):
     )
 
     # Install Rosetta 2 on Apple Silicon (recommended but not required)
-    # TODO: system.arch() and system.path_exists() need implementation
-    # arch = system.arch()
+    # TODO: platform.arch and path predicates need implementation
+    # arch = platform.arch
     # if arch == "arm64":
-    #     if not system.path_exists("/Library/Apple/usr/share/rosetta"):
-    #         plan.shell("softwareupdate --install-rosetta --agree-to-license")
+    #     plan.shell.exec("softwareupdate --install-rosetta --agree-to-license")
 
     # TODO: plan.notify() not yet implemented
     # Quit applications that might interfere with Docker installation

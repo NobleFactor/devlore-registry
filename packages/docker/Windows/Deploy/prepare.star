@@ -10,27 +10,26 @@
 # - Hardware virtualization enabled in BIOS
 # Reference: https://docs.docker.com/desktop/install/windows-install/
 
-def prepare(package, system, plan):
+def prepare(package, phase):
     """Prepare Windows for Docker Desktop installation.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Enable WSL feature if not already enabled
-    plan.shell(
+    plan.shell.exec(
         "dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart"
     )
 
     # Enable Virtual Machine Platform feature
-    plan.shell(
+    plan.shell.exec(
         "dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart"
     )
 
     # Set WSL 2 as default
-    plan.shell("wsl --set-default-version 2")
+    plan.shell.exec("wsl --set-default-version 2")
 
     # Install WSL 2 kernel update if needed
-    plan.shell("wsl --update")
+    plan.shell.exec("wsl --update")

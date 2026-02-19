@@ -9,17 +9,16 @@
 # - Control Panel > Programs > Uninstall
 # Reference: https://docs.docker.com/desktop/uninstall/
 
-def uninstall(package, system, plan):
+def uninstall(package, phase):
     """Remove Docker Desktop from Windows.
 
     Args:
         package: Package metadata and features (read-only, immediate)
-        system: Query target environment (read-only, immediate)
-        plan: Build execution graph (write, deferred execution)
+        phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
     # Use the uninstaller if it exists
-    plan.shell(
+    plan.shell.exec(
         "\"%ProgramFiles%\\Docker\\Docker\\Docker Desktop Installer.exe\" uninstall --quiet 2>nul || echo Using fallback"
     )
 
