@@ -109,29 +109,3 @@ def _install_windows_interactive():
     # Clean up
     fs.remove(installer_path)
 
-def rollback():
-    """Rollback installation on failure."""
-
-    if platform.os == "darwin":
-        if shell.which("brew"):
-            shell.run("brew uninstall --cask google-cloud-sdk 2>/dev/null", shell = True)
-        else:
-            sdk_dir = fs.home() + "/google-cloud-sdk"
-            if fs.exists(sdk_dir):
-                fs.remove(sdk_dir, recursive = True)
-
-    elif platform.os == "linux":
-        if platform.distro in ["debian", "ubuntu"]:
-            package.remove("google-cloud-cli", manager = "apt")
-        elif platform.distro in ["fedora", "rhel", "centos"]:
-            package.remove("google-cloud-cli", manager = "dnf")
-        else:
-            sdk_dir = fs.home() + "/google-cloud-sdk"
-            if fs.exists(sdk_dir):
-                fs.remove(sdk_dir, recursive = True)
-
-    elif platform.os == "windows":
-        if shell.which("winget"):
-            shell.run("winget uninstall Google.CloudSDK")
-        elif shell.which("choco"):
-            shell.run("choco uninstall gcloudsdk -y")

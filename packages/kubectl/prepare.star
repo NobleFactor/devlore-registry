@@ -101,22 +101,3 @@ def _prepare_windows():
     # winget or chocolatey handles everything
     pass
 
-def rollback():
-    """Rollback preparation changes on failure."""
-
-    if platform.os == "linux":
-        if platform.distro in ["debian", "ubuntu"]:
-            sources_list = "/etc/apt/sources.list.d/kubernetes.list"
-            keyring_path = "/etc/apt/keyrings/kubernetes-apt-keyring.gpg"
-
-            if fs.exists(sources_list):
-                fs.remove(sources_list, sudo = True)
-            if fs.exists(keyring_path):
-                fs.remove(keyring_path, sudo = True)
-
-            package.update()
-
-        elif platform.distro in ["fedora", "rhel", "centos"]:
-            repo_file = "/etc/yum.repos.d/kubernetes.repo"
-            if fs.exists(repo_file):
-                fs.remove(repo_file, sudo = True)

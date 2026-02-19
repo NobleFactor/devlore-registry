@@ -239,16 +239,3 @@ def _install_aws_iam_authenticator():
     else:
         log.warn("Failed to install aws-iam-authenticator: " + result.stderr)
 
-def rollback():
-    """Rollback provisioning changes on failure."""
-
-    # Remove completions
-    completions_files = [
-        fs.home() + "/.local/share/bash-completion/completions/kubectl",
-        fs.home() + "/.local/share/zsh/site-functions/_kubectl",
-        fs.home() + "/.config/fish/completions/kubectl.fish",
-    ]
-
-    for f in completions_files:
-        if fs.exists(f):
-            fs.remove(f)

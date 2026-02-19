@@ -38,7 +38,3 @@ def _check_latex_conflicts():
         if texlive_full:
             log.info("Existing LaTeX installation found: " + texlive_full)
 
-def rollback():
-    """Rollback preparation changes on failure."""
-    # Nothing to rollback in prepare phase
-    pass

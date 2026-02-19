@@ -112,24 +112,3 @@ def _install_direct():
         fs.remove("/tmp/" + zip_name)
         fs.remove("/tmp/terraform")
 
-def rollback():
-    """Rollback installation on failure."""
-
-    if platform.os == "darwin":
-        if shell.which("brew"):
-            shell.run("brew uninstall hashicorp/tap/terraform 2>/dev/null", shell = True)
-
-    elif platform.os == "linux":
-        if platform.distro in ["debian", "ubuntu"]:
-            package.remove("terraform", manager = "apt")
-        elif platform.distro in ["fedora", "rhel", "centos"]:
-            package.remove("terraform", manager = "dnf")
-        else:
-            if fs.exists("/usr/local/bin/terraform"):
-                shell.run("sudo rm /usr/local/bin/terraform")
-
-    elif platform.os == "windows":
-        if shell.which("winget"):
-            shell.run("winget uninstall Hashicorp.Terraform")
-        elif shell.which("choco"):
-            shell.run("choco uninstall terraform -y")

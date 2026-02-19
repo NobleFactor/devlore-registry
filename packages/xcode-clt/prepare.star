@@ -323,11 +323,3 @@ def _version_at_least(version, minimum):
             return False
 
     return True  # Equal
-
-
-def rollback():
-    """Rollback preparation changes on failure.
-
-    The prepare phase doesn't make changes, so nothing to rollback.
-    """
-    pass

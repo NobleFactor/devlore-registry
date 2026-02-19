@@ -175,9 +175,3 @@ def _verify_developer_tools(results):
     else:
         warn("swift not functional")
         results["swift"] = False
-
-
-def rollback():
-    """Rollback verification on failure."""
-    # Verification is read-only, nothing to rollback
-    pass

@@ -235,8 +235,3 @@ def _version_at_least(version, minimum):
             return False
 
     return True
-
-
-def rollback():
-    """Rollback preparation changes on failure."""
-    pass

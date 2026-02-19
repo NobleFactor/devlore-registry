@@ -208,18 +208,3 @@ def _install_completions():
             fs.write(completions_dir + "/pandoc.fish", result.stdout)
             log.info("Installed fish completions for pandoc")
 
-def rollback():
-    """Rollback provisioning changes on failure."""
-
-    # Remove completions
-    completions_files = [
-        fs.home() + "/.local/share/bash-completion/completions/pandoc",
-        fs.home() + "/.local/share/zsh/site-functions/_pandoc",
-        fs.home() + "/.config/fish/completions/pandoc.fish",
-    ]
-
-    for f in completions_files:
-        if fs.exists(f):
-            fs.remove(f)
-
-    # Note: We don't remove tlmgr packages as they may be used by other tools

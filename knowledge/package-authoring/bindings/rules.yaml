@@ -125,7 +125,7 @@ binding_coverage:
             replaces: []
             status: implemented
     download:
-        binding: plan.download
+        binding: plan.net.download
         replaces:
             - curl -o
             - curl -O
@@ -531,7 +531,7 @@ binding_coverage:
             status: implemented
     plan:
         download:
-            binding: plan.download
+            binding: plan.net.download
             replaces: []
             status: implemented
         pull:
@@ -539,13 +539,13 @@ binding_coverage:
             replaces: []
             status: implemented
     service:
-        actions:
-            - start
-            - stop
-            - restart
-            - enable
-            - disable
-        binding: plan.service
+        binding: plan.service.*
+        methods:
+            - plan.service.start
+            - plan.service.stop
+            - plan.service.restart
+            - plan.service.enable
+            - plan.service.disable
         disable:
             binding: service.disable
             replaces: []
@@ -573,7 +573,7 @@ binding_coverage:
             replaces: []
             status: implemented
     shell:
-        binding: plan.shell
+        binding: plan.shell.exec
         exec:
             binding: shell.exec
             replaces: []
@@ -589,91 +589,42 @@ binding_coverage:
             binding: shell.which
             replaces: []
             status: implemented
-    system:
-        current_branch:
-            binding: system.git.current_branch
-            replaces: []
-            status: implemented
-        enabled:
-            binding: system.service.enabled
-            replaces: []
-            status: implemented
-        exists:
-            binding: system.fs.exists
-            replaces: []
-            status: implemented
-        home:
-            binding: system.fs.home
-            replaces: []
-            status: implemented
-        installed:
-            binding: system.git.installed
-            replaces: []
-            status: implemented
-        is_clean:
-            binding: system.git.is_clean
-            replaces: []
-            status: implemented
-        is_dir:
-            binding: system.fs.is_dir
-            replaces: []
-            status: implemented
-        manager:
-            binding: system.package.manager
-            replaces: []
-            status: implemented
-        repo_root:
-            binding: system.git.repo_root
-            replaces: []
-            status: implemented
-        running:
-            binding: system.service.running
-            replaces: []
-            status: implemented
-        version:
-            binding: system.git.version
-            replaces: []
-            status: implemented
-        which:
-            binding: system.fs.which
-            replaces: []
-            status: implemented
 generator_rules:
-    - action: Use plan.download(url, target) instead
+    - action: Use plan.net.download(url) instead
       id: no-curl-wget
-      rule: NEVER generate plan.shell() with curl or wget
+      rule: NEVER generate plan.shell.exec() with curl or wget
     - action: Use plan.archive.extract(archive, target) instead
       id: no-tar-unzip
-      rule: NEVER generate plan.shell() with tar, unzip, gunzip
+      rule: NEVER generate plan.shell.exec() with tar, unzip, gunzip
     - action: Use plan.file.* methods instead
       id: no-file-ops
-      rule: NEVER generate plan.shell() with rm, mkdir, cp, ln, cat, echo
+      rule: NEVER generate plan.shell.exec() with rm, mkdir, cp, ln, cat, echo
     - action: Use plan.package.* methods instead
       id: no-pkg-managers
-      rule: NEVER generate plan.shell() with apt, yum, dnf, brew, port, pacman
+      rule: NEVER generate plan.shell.exec() with apt, yum, dnf, brew, port, pacman
     - action: Use plan.git.* methods instead
       id: no-git
-      rule: NEVER generate plan.shell() with git clone, git checkout, git pull
-    - action: Use plan.service(name, action) instead
+      rule: NEVER generate plan.shell.exec() with git clone, git checkout, git pull
+    - action: Use plan.service.start/stop/restart/enable/disable(name) instead
       id: no-service
-      rule: NEVER generate plan.shell() with systemctl, service, launchctl
+      rule: NEVER generate plan.shell.exec() with systemctl, service, launchctl
     - action: Include shell_audit section with all shell commands and their status
       id: audit-all-shell
-      rule: For every plan.shell() in output, add to binding_proposals if pattern matches
+      rule: For every plan.shell.exec() in output, add to binding_proposals if pattern matches
     - action: Comment should state what binding would be needed
       id: document-necessary-shell
-      rule: When plan.shell() is truly necessary, add comment explaining why
+      rule: When plan.shell.exec() is truly necessary, add comment explaining why
 principles:
     - explanation: |
         A Darwin/Deploy/install.star and Linux/Deploy/install.star may have
         different implementations, but both should use the same API:
-        - plan.download() not plan.shell("curl ...")
-        - plan.package.install() not plan.shell("apt install ...")
-        - plan.file.chmod() not plan.shell("chmod ...")
+        - plan.net.download() not plan.shell.exec("curl ...")
+        - plan.package.install() not plan.shell.exec("apt install ...")
+        - plan.file.chmod() not plan.shell.exec("chmod ...")
       id: one-api-many-platforms
       rule: Binding APIs are cross-platform. Steps may vary by platform, but API calls do not.
     - explanation: |
-        Every plan.shell() call should be scrutinized:
+        Every plan.shell.exec() call should be scrutinized:
         1. Is there an existing binding for this operation?
         2. If not, should there be?
         3. If shell is truly necessary, document why in a comment.
@@ -683,13 +634,13 @@ principles:
         - Developer oversight (should use existing binding)
         - Binding gap (we need a new binding)
       id: shell-is-escape-hatch
-      rule: plan.shell() is a last resort. Its use signals a potential binding gap.
+      rule: plan.shell.exec() is a last resort. Its use signals a potential binding gap.
     - explanation: |
         In the binding_proposals output, include an entry for each shell
         command that represents a common pattern. This creates a feedback
         loop where package generation identifies binding gaps.
       id: warn-on-shell
-      rule: When plan.shell() is necessary, warn about it and propose a binding.
+      rule: When plan.shell.exec() is necessary, warn about it and propose a binding.
     - explanation: |
         Declarative methods:
         - Are type-safe and validated
@@ -705,16 +656,16 @@ principles:
       id: prefer-declarative
       rule: Prefer declarative plan.* methods over imperative shell commands.
 shell_antipatterns:
-    - correct_binding: plan.download
-      message: Use plan.download() instead of curl
+    - correct_binding: plan.net.download
+      message: Use plan.net.download() instead of curl
       pattern: curl -.*-o
       severity: error
-    - correct_binding: plan.download
-      message: Use plan.download() instead of wget
+    - correct_binding: plan.net.download
+      message: Use plan.net.download() instead of wget
       pattern: wget -O
       severity: error
-    - correct_binding: plan.download
-      message: Use plan.download() and plan.archive.extract() separately
+    - correct_binding: plan.net.download
+      message: Use plan.net.download() and plan.archive.extract() separately
       pattern: curl.*|.*tar
       severity: error
     - correct_binding: plan.file.remove
@@ -840,16 +791,16 @@ shell_antipatterns:
         name: plan.user.remove
         signature: 'remove(name: string) -> node'
       severity: warning
-    - correct_binding: plan.service
-      message: Use plan.service() - it works across init systems
+    - correct_binding: plan.service.*
+      message: Use plan.service.start/stop/restart/enable/disable() - works across init systems
       pattern: systemctl\s+(start|stop|restart|enable|disable)
       severity: error
-    - correct_binding: plan.service
-      message: Use plan.service() - it works across init systems
+    - correct_binding: plan.service.*
+      message: Use plan.service.start/stop/restart() - works across init systems
       pattern: service\s+\w+\s+(start|stop|restart)
       severity: error
-    - correct_binding: plan.service
-      message: Use plan.service() - it works across init systems
+    - correct_binding: plan.service.*
+      message: Use plan.service.start/stop() - works across init systems
       pattern: launchctl\s+(load|unload|start|stop)
       severity: error
     - correct_binding: plan.env.set
@@ -876,18 +827,18 @@ shell_antipatterns:
 valid_shell_uses:
     - category: One-off commands
       description: Commands unique to a specific package with no general utility
-      example: plan.shell('sudo /opt/local/bin/port selfupdate')
+      example: plan.shell.exec('sudo /opt/local/bin/port selfupdate')
       note: Package-specific commands that don't generalize
     - category: Version checking
       description: Checking command output for version verification
-      example: plan.shell('port version | grep -q {version}')
+      example: plan.shell.exec('port version | grep -q {version}')
       note: Could be abstracted to plan.verify.command_output()
     - category: Complex pipelines
       description: Shell pipelines that combine multiple operations
-      example: plan.shell('command | filter | transform')
+      example: plan.shell.exec('command | filter | transform')
       note: Break into discrete steps when possible
     - category: Interactive installers
       description: Installers that require specific flags or environment
-      example: plan.shell('DEBIAN_FRONTEND=noninteractive apt-get install -y pkg')
+      example: plan.shell.exec('DEBIAN_FRONTEND=noninteractive apt-get install -y pkg')
       note: Package manager bindings should support these flags
 version: "1.0"

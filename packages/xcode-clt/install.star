@@ -313,30 +313,6 @@ def _configure_xcode_select():
             warn("Failed to configure xcode-select: " + result.stderr)
 
 
-def rollback():
-    """Rollback installation on failure."""
-
-    note("Rolling back CLT installation...")
-
-    # Remove marker file if it exists
-    _cleanup_marker()
-
-    # Remove partially installed CLT
-    if fs.exists(_CLT_PATH):
-        shell.exec(
-            command = "rm -rf " + _CLT_PATH,
-            allowed_commands = ["rm"],
-        )
-
-    # Reset xcode-select
-    shell.exec(
-        command = "xcode-select --reset",
-        allowed_commands = ["xcode-select"],
-    )
-
-    note("Rollback complete")
-
-
 def decommission():
     """Decommission (uninstall) Xcode Command Line Tools.
 

@@ -108,24 +108,3 @@ def _install_direct():
         shell.run("sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl")
         fs.remove("kubectl")
 
-def rollback():
-    """Rollback installation on failure."""
-
-    if platform.os == "darwin":
-        if shell.which("brew"):
-            shell.run("brew uninstall kubectl 2>/dev/null", shell = True)
-
-    elif platform.os == "linux":
-        if platform.distro in ["debian", "ubuntu"]:
-            package.remove("kubectl", manager = "apt")
-        elif platform.distro in ["fedora", "rhel", "centos"]:
-            package.remove("kubectl", manager = "dnf")
-        else:
-            if fs.exists("/usr/local/bin/kubectl"):
-                shell.run("sudo rm /usr/local/bin/kubectl")
-
-    elif platform.os == "windows":
-        if shell.which("winget"):
-            shell.run("winget uninstall Kubernetes.kubectl")
-        elif shell.which("choco"):
-            shell.run("choco uninstall kubernetes-cli -y")

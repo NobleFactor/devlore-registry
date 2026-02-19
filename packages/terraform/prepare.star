@@ -98,17 +98,3 @@ def _prepare_windows():
     # winget or chocolatey handles everything
     pass
 
-def rollback():
-    """Rollback preparation changes on failure."""
-
-    if platform.os == "linux":
-        if platform.distro in ["debian", "ubuntu"]:
-            sources_list = "/etc/apt/sources.list.d/hashicorp.list"
-            keyring_path = "/usr/share/keyrings/hashicorp-archive-keyring.gpg"
-
-            if fs.exists(sources_list):
-                fs.remove(sources_list, sudo = True)
-            if fs.exists(keyring_path):
-                fs.remove(keyring_path, sudo = True)
-
-            package.update()

@@ -171,16 +171,3 @@ def _install_session_manager_linux():
 def _install_session_manager_windows():
     """Install Session Manager plugin on Windows."""
     log.info("Session Manager plugin: download from https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html")
-
-def rollback():
-    """Rollback provisioning changes on failure."""
-
-    # Remove completions
-    completions_files = [
-        fs.home() + "/.local/share/bash-completion/completions/aws",
-        fs.home() + "/.local/share/zsh/site-functions/_aws",
-    ]
-
-    for f in completions_files:
-        if fs.exists(f):
-            fs.remove(f)

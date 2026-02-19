@@ -170,11 +170,3 @@ def _install_typst():
         if shell.which("winget"):
             package.install("Typst.Typst", manager = "winget")
 
-def rollback():
-    """Rollback installation on failure."""
-
-    # Remove pandoc if we installed from GitHub
-    if fs.exists("/usr/local/bin/pandoc"):
-        fs.remove("/usr/local/bin/pandoc")
-
-    # Note: Package manager installations are rolled back by the package manager

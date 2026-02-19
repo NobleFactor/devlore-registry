@@ -105,19 +105,3 @@ def _install_extensions():
         else:
             # Non-fatal: some extensions may not be available
             log.warn("Failed to install extension " + ext + ": " + result.stderr)
-
-def rollback():
-    """Rollback provisioning changes on failure."""
-
-    # Remove completions files
-    completions_files = [
-        fs.home() + "/.local/share/bash-completion/completions/az",
-        fs.home() + "/.local/share/zsh/site-functions/_az",
-        fs.home() + "/.config/fish/completions/az.fish",
-    ]
-
-    for f in completions_files:
-        if fs.exists(f):
-            fs.remove(f)
-
-    # Extensions are harder to rollback cleanly; leave them

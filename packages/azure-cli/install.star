@@ -45,18 +45,3 @@ def _install_linux():
 def _install_windows():
     """Install Azure CLI on Windows using winget."""
     package.install("Microsoft.AzureCLI", manager = "winget")
-
-def rollback():
-    """Rollback installation on failure."""
-
-    if platform.os == "darwin":
-        package.remove("azure-cli", manager = "brew")
-
-    elif platform.os == "linux":
-        if platform.distro in ["debian", "ubuntu"]:
-            package.remove("azure-cli", manager = "apt")
-        elif platform.distro in ["fedora", "rhel", "centos"]:
-            package.remove("azure-cli", manager = "dnf")
-
-    elif platform.os == "windows":
-        package.remove("Microsoft.AzureCLI", manager = "winget")

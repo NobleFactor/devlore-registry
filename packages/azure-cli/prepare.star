@@ -103,24 +103,3 @@ def _prepare_windows():
     """Prepare Windows for Azure CLI installation."""
     # winget handles everything; no preparation needed
     pass
-
-def rollback():
-    """Rollback preparation changes on failure."""
-
-    if platform.os == "linux":
-        if platform.distro in ["debian", "ubuntu"]:
-            # Remove repository and key if we added them
-            sources_list = "/etc/apt/sources.list.d/azure-cli.list"
-            keyring_path = "/etc/apt/keyrings/microsoft.gpg"
-
-            if fs.exists(sources_list):
-                fs.remove(sources_list, sudo = True)
-            if fs.exists(keyring_path):
-                fs.remove(keyring_path, sudo = True)
-
-            package.update()
-
-        elif platform.distro in ["fedora", "rhel", "centos"]:
-            repo_file = "/etc/yum.repos.d/azure-cli.repo"
-            if fs.exists(repo_file):
-                fs.remove(repo_file, sudo = True)
