@@ -96,6 +96,18 @@ be committed by CI via the `update-indexes.yaml` workflow, but that workflow has
 worked. These files should be committed to the repo, not gitignored. Remove them from
 `.gitignore` and commit them.
 
+### Path-filtered CI allows bypass
+
+The `validate.yaml` workflow only triggers on changes to `packages/**`,
+`knowledge/**`, `schemas/**`, and `signatures.yaml`. If a PR's latest commit
+touches only other paths (e.g., `docs/`), the workflow doesn't run and GitHub
+shows all checks passing. This means bad changes can be merged by pushing a
+cosmetic commit outside the trigger paths.
+
+Fix: Remove the `paths` filter from the `pull_request` trigger. Validate on
+every PR. Keep the `paths` filter on `push` (only regenerate indexes on actual
+content changes).
+
 ### No smoke testing of Starlark scripts
 
 The validate workflow only checks lifecycle YAML against JSON schemas. It does NOT
@@ -143,18 +155,37 @@ noblefactor-ops but recoverable from git history of PR #17 and earlier).
 #### Step 3: Fix validate.yaml
 
 ```yaml
+on:
+  pull_request:
+    branches: [develop, main]
+    # No paths filter — validate on every PR
+  push:
+    branches: [develop]
+    paths:
+      - 'packages/**'
+      - 'knowledge/**'
+      - 'schemas/**'
+```
+
+```yaml
 - name: Build star
   working-directory: noblefactor-ops
   run: go build -o ../star ./cmd/star
 
 - name: Validate all schemas
   run: ./star devlore-registry validate
+
+- name: Smoke test Starlark scripts
+  run: ./star devlore-registry smoke-test
 ```
 
 Changes:
+- Remove `paths` filter from `pull_request` trigger (prevent bypass)
+- Keep `paths` filter on `push` (only run on actual content changes)
 - Update Go version to 1.24
 - Add `cache-dependency-path: noblefactor-ops/go.sum`
 - Fix command: `./star devlore-registry validate`
+- Add smoke test step
 
 #### Step 4: Fix update-indexes.yaml
 
