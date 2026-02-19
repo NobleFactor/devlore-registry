@@ -235,6 +235,86 @@ Add to `validate.yaml`:
 | `packages/cross-reference.yaml` | Commit (generated) |
 | `knowledge/*/index.yaml` | Commit (generated) |
 
+### Phase 2: Add registry validation to devlore-cli CI
+
+The `knowledge-extract.yaml` workflow in devlore-cli already checks out all three
+repos (devlore-cli, noblefactor-ops, devlore-registry). It extracts knowledge but
+does not validate the registry. Add validation and smoke testing after the extract
+step so registry correctness is checked on every devlore-cli PR too.
+
+#### Step 1: Add validation to knowledge-extract.yaml
+
+After the "Build knowledge base" step, add:
+
+```yaml
+- name: Validate registry schemas
+  working-directory: devlore-cli
+  run: |
+    ${{ github.workspace }}/noblefactor-ops/bin/star devlore package validate \
+      --target ${{ github.workspace }}/devlore-registry
+    ${{ github.workspace }}/noblefactor-ops/bin/star devlore knowledge validate \
+      --target ${{ github.workspace }}/devlore-registry
+
+- name: Smoke test Starlark scripts
+  working-directory: devlore-cli
+  run: |
+    ${{ github.workspace }}/noblefactor-ops/bin/star devlore package smoke-test \
+      --target ${{ github.workspace }}/devlore-registry
+```
+
+This runs from the devlore-cli workspace, so star discovers devlore-cli's extensions.
+The `--target` flag points at the devlore-registry checkout.
+
+#### Step 2: Add smoke test command to devlore-cli Package extension
+
+Create `star/extensions/com.noblefactor.devlore.Package/commands/smoke-test.star`:
+- Discovers all packages under `--target`
+- For each package, loads lifecycle.yaml
+- For each platform/lifecycle/phase, loads the `.star` script through the Starlark
+  runtime — verifying syntax, imports, and function signatures
+- Reports pass/fail per script
+- Fails if any script cannot be loaded
+
+Add to `com.noblefactor.devlore.Package/extension.yaml`:
+```yaml
+- name: devlore.package.smoke-test
+  help: Smoke test all Starlark lifecycle scripts in the registry
+  implementation: commands/smoke-test.star
+  flags:
+    - name: target
+      type: string
+      default: ""
+      help: "Registry root to test (default: ../devlore-registry)"
+```
+
+### Why both repos
+
+| Check | devlore-registry CI | devlore-cli CI |
+|-------|--------------------|--------------------|
+| Schema validation | Catches invalid YAML in registry PRs | Catches knowledge extract producing invalid output |
+| Starlark smoke test | Catches broken scripts in registry PRs | Catches API changes in devlore-cli that break scripts |
+| Index generation | Keeps indexes current on registry push | N/A |
+
+Registry CI catches registry-side breakage. devlore-cli CI catches CLI-side changes
+that break the registry (e.g., renaming plan bindings, changing function signatures).
+Both must run the same validation and smoke tests.
+
+### Files (Phase 2)
+
+| Repo | File | Action |
+|------|------|--------|
+| devlore-cli | `.github/workflows/knowledge-extract.yaml` | Modify |
+| devlore-cli | `star/extensions/com.noblefactor.devlore.Package/commands/smoke-test.star` | Create |
+| devlore-cli | `star/extensions/com.noblefactor.devlore.Package/extension.yaml` | Modify |
+
+### Verification (Phase 2)
+
+1. `star devlore package validate --target=../devlore-registry` passes locally
+2. `star devlore knowledge validate --target=../devlore-registry` passes locally
+3. `star devlore package smoke-test --target=../devlore-registry` loads all scripts
+4. Push devlore-cli PR and verify knowledge-extract workflow runs validation
+5. Break a `.star` script intentionally, confirm CI catches it
+
 ## Dependencies
 
 - noblefactor-ops `star` binary (built in CI from checkout)
@@ -246,3 +326,6 @@ Add to `validate.yaml`:
   the extension restructuring. Recover from git history and test locally.
 - The `schema.validate()` builtin must be available in the noblefactor-ops runtime.
   Verify before implementing.
+- The smoke test command needs to load `.star` scripts through the same runtime
+  that `lore deploy` uses. If the test uses a different loader, it may miss errors
+  or produce false positives.
