@@ -36,48 +36,12 @@
           "description": "Layer is the repository layer (base, team, personal).",
           "type": "string"
         },
-        "operations": {
-          "description": "Pipeline of operations to execute",
-          "items": {
-            "enum": [
-              "backup",
-              "copy",
-              "decrypt",
-              "launchd-disable",
-              "launchd-enable",
-              "launchd-restart",
-              "launchd-start",
-              "launchd-stop",
-              "link",
-              "move",
-              "package-install",
-              "package-remove",
-              "package-update",
-              "package-upgrade",
-              "powershell",
-              "remove",
-              "render",
-              "shell",
-              "systemd-disable",
-              "systemd-enable",
-              "systemd-restart",
-              "systemd-start",
-              "systemd-stop",
-              "unlink",
-              "validate",
-              "winservice-disable",
-              "winservice-enable",
-              "winservice-restart",
-              "winservice-start",
-              "winservice-stop",
-              "write"
-            ],
-            "type": "string"
-          },
-          "type": "array"
-        },
         "project": {
           "description": "Project this node belongs to.",
+          "type": "string"
+        },
+        "retry": {
+          "description": "Retry is the retry policy for this node (nil = no retry).",
           "type": "string"
         },
         "slots": {
@@ -87,12 +51,8 @@
           "description": "Input slots for this node (name -\u003e value)",
           "type": "object"
         },
-        "source_checksum": {
-          "description": "SourceChecksum is the SHA256 of the source file at deploy time.",
-          "type": "string"
-        },
         "status": {
-          "description": "Status of this node: pending, completed, skipped, failed.",
+          "description": "Execution status of this node",
           "enum": [
             "pending",
             "completed",
@@ -101,26 +61,29 @@
           ],
           "type": "string"
         },
-        "target_checksum": {
-          "description": "TargetChecksum is the SHA256 of the target file after deployment.",
-          "type": "string"
-        },
         "timestamp": {
-          "description": "Timestamp is when this operation completed.",
+          "description": "Timestamp is when this action completed.",
           "type": "string"
         }
       },
       "required": [
-        "id",
-        "operations"
+        "id"
       ],
       "type": "object"
     },
     "slot_value": {
       "description": "A slot value - either immediate or a promise (reference to another node)",
       "properties": {
+        "field": {
+          "description": "Field is the field name to access on the proxy item.",
+          "type": "string"
+        },
+        "gather_ref": {
+          "description": "GatherRef is the gather node ID for proxy resolution.",
+          "type": "string"
+        },
         "immediate": {
-          "description": "Immediate is the direct value (string, used when known at analysis time).",
+          "description": "Immediate is the direct value (any type, known at analysis time).",
           "type": "string"
         },
         "node_ref": {

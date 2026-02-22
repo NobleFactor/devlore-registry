@@ -2,11 +2,10 @@ name: Update indexes
 
 on:
   push:
-    branches: [develop]
-    paths:
-      - 'packages/**/lifecycle.yaml'
-      - 'knowledge/**/*.md'
-      - 'knowledge/**/*.yaml'
+    branches:
+      - develop
+      - main
+      - 'release/*'
 
 jobs:
   update-indexes:
@@ -19,7 +18,7 @@ jobs:
           app-id: ${{ secrets.NOBLEFACTOR_AUTOMATION_APP_ID }}
           private-key: ${{ secrets.NOBLEFACTOR_AUTOMATION_APP_PRIVATE_KEY }}
           owner: NobleFactor
-          repositories: devlore-registry,noblefactor-ops
+          repositories: devlore-registry,noblefactor-ops,devlore-cli
 
       - name: Checkout devlore-registry
         uses: actions/checkout@v4
@@ -33,6 +32,13 @@ jobs:
           path: noblefactor-ops
           token: ${{ steps.app-token.outputs.token }}
 
+      - name: Checkout devlore-cli
+        uses: actions/checkout@v4
+        with:
+          repository: NobleFactor/devlore-cli
+          path: devlore-cli
+          token: ${{ steps.app-token.outputs.token }}
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -41,13 +47,15 @@ jobs:
 
       - name: Build star
         working-directory: noblefactor-ops
-        run: go build -o star ./cmd/star
+        run: go build -o ../star ./cmd/star
 
       - name: Update package index
-        run: ./noblefactor-ops/star devlore-registry index packages --path .
+        working-directory: devlore-cli
+        run: ../star devlore package index --target=..
 
       - name: Update knowledge indexes
-        run: ./noblefactor-ops/star devlore-registry index knowledge --path .
+        working-directory: devlore-cli
+        run: ../star devlore knowledge index --target=..
 
       - name: Commit changes
         run: |

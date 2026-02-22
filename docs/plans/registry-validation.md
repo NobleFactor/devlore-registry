@@ -1,6 +1,6 @@
 # Registry Validation: Fix CI Workflows
 
-## Status: Draft
+## Status: In Progress
 
 ## Problem
 
