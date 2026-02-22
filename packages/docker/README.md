@@ -160,23 +160,24 @@ docker/
 
 ## Phase Script API
 
-Phase scripts receive three inputs:
+Phase scripts receive two inputs. `plan` is a global.
 
 ```python
-def install(package, system, plan):
+def install(package, phase):
     """
     Args:
         package: Package metadata and features (read-only, immediate)
-        system:  Query target environment (read-only, immediate)
-        plan:    Build execution graph (write, deferred execution)
+        phase:   Phase context (name, action, retry)
     """
-    if system.package.installed("conflicting-pkg"):
-        plan.package.remove("conflicting-pkg")
+    plan.choose(
+        when=plan.pkg.installed("conflicting-pkg"),
+        then=lambda: plan.pkg.remove("conflicting-pkg"),
+    )
 
-    plan.package.install("docker-ce")
+    plan.pkg.install("docker-ce")
 
     if package.has_feature("rootless"):
-        plan.package.install("uidmap")
+        plan.pkg.install("uidmap")
 ```
 
 **Scripts express intent, not commands.** Never shell out to package managers:

@@ -1,3 +1,15 @@
+ns_descriptions:
+    (root): Top-level graph construction primitives
+    archive: Archive extraction actions
+    encryption: Encryption and decryption actions
+    file: File system actions
+    git: Git actions
+    net: Network actions
+    pkg: Platform-independent package management
+    service: Platform-agnostic service management
+    shell: Shell command execution
+    template: Template expansion actions
+    ui: User-facing terminal messaging
 package:
     (root):
         - doc: True if this is a preview run
@@ -38,18 +50,6 @@ package:
           slot_docs: {}
           slots: []
           usage: ""
-        - doc: ""
-          file: plan_package_gen.go
-          full_name: package.install
-          kind: method
-          line: 95
-          name: install
-          operations: []
-          output: promise
-          returns: ""
-          slot_docs: {}
-          slots: []
-          usage: ""
         - doc: Package name being deployed
           file: ""
           full_name: package.name
@@ -63,18 +63,6 @@ package:
           slots: []
           usage: ""
           value_type: string
-        - doc: ""
-          file: receiver_package_gen.go
-          full_name: package.remove
-          kind: method
-          line: 59
-          name: remove
-          operations: []
-          output: none
-          returns: ""
-          slot_docs: {}
-          slots: []
-          usage: ""
         - doc: ""
           file: package.go
           full_name: package.setting
@@ -126,30 +114,6 @@ package:
           slots: []
           usage: ""
           value_type: string
-        - doc: ""
-          file: plan_package_gen.go
-          full_name: package.update
-          kind: method
-          line: 176
-          name: update
-          operations: []
-          output: promise
-          returns: ""
-          slot_docs: {}
-          slots: []
-          usage: ""
-        - doc: ""
-          file: plan_package_gen.go
-          full_name: package.upgrade
-          kind: method
-          line: 122
-          name: upgrade
-          operations: []
-          output: promise
-          returns: ""
-          slot_docs: {}
-          slots: []
-          usage: ""
         - doc: Version being deployed
           file: ""
           full_name: package.version
@@ -191,7 +155,7 @@ phase:
           slots: []
           usage: ""
           value_type: string
-        - doc: retry configures the retry policy for the phase. phase.retry(max_attempts=3, backoff="exponential", initial_delay="1s", max_delay="30s")
+        - doc: Configures the retry policy for the phase. phase.retry(max_attempts=3, backoff="exponential", initial_delay="1s", max_delay="30s")
           file: phase_context.go
           full_name: phase.retry
           kind: method
@@ -205,23 +169,24 @@ phase:
           usage: ""
 plan:
     (root):
-        - doc: choose creates a conditional branch in the execution graph.
+        - doc: Creates a conditional branch in the execution graph.
           file: plan_root.go
           full_name: plan.choose
           kind: method
-          line: 119
+          line: 94
           name: choose
           operations: []
           output: promise
           returns: Output of the choose node
           slot_docs: {}
-          slots: []
-          usage: plan.choose(when=predicate, then=callback)
-        - doc: gather creates a handle for parallel execution of multiple nodes.
+          slots:
+            - when
+          usage: plan.choose(when=predicate_output, then=callback)
+        - doc: Creates a handle for parallel execution of multiple nodes.
           file: plan_root.go
           full_name: plan.gather
           kind: method
-          line: 209
+          line: 188
           name: gather
           operations: []
           output: none
@@ -229,11 +194,11 @@ plan:
           slot_docs: {}
           slots: []
           usage: plan.gather(promise1, promise2, ...)
-        - doc: source creates a source file artifact.
+        - doc: Creates a source file artifact.
           file: plan_root.go
           full_name: plan.source
           kind: method
-          line: 178
+          line: 157
           name: source
           operations: []
           output: promise
@@ -244,406 +209,551 @@ plan:
             - path
           usage: plan.source(path)
     archive:
-        - doc: ""
+        - doc: Extracts an archive (tar.gz or zip) from source into the prefix directory. The archive format is detected from the file extension. Returns compensation state with the list of created files.
           file: plan_archive_gen.go
           full_name: plan.archive.extract
           kind: method
-          line: 52
+          line: 58
           name: extract
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            prefix: Directory to extract into
+            source: Path to the archive file (tar.gz, tgz, or zip)
           slots:
-            - archive
+            - source
             - prefix
           usage: ""
-    content:
-        - doc: ""
-          file: plan_content_gen.go
-          full_name: plan.content.literal
-          kind: method
-          line: 52
-          name: literal
-          operations: []
-          output: promise
-          returns: ""
-          slot_docs: {}
-          slots:
-            - content
-          usage: ""
     encryption:
-        - doc: ""
+        - doc: Decrypts content using the provided decryptor function. The source path enables format detection (e.g., .sops.yaml vs .sops.json). Returns the decrypted bytes.
           file: plan_encryption_gen.go
           full_name: plan.encryption.decrypt
           kind: method
-          line: 52
+          line: 57
           name: decrypt
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            source: Path to the encrypted file (enables format detection)
           slots:
             - source
           usage: ""
     file:
-        - doc: ""
+        - doc: Moves the file at path to a timestamped backup location. Returns the backup path and compensation state.
+          file: plan_file_gen.go
+          full_name: plan.file.backup
+          kind: method
+          line: 133
+          name: backup
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs:
+            backup_suffix: 'Suffix appended before the timestamp (default: .writ-backup)'
+            path: Absolute path to the file to back up
+          slots:
+            - path
+            - backup_suffix
+          usage: ""
+        - doc: Writes content to path with the given mode. Returns the SHA256 checksum of the written content and compensation state.
           file: plan_file_gen.go
           full_name: plan.file.copy
           kind: method
-          line: 103
+          line: 105
           name: copy
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            mode: File permission bits (e.g., 0o644)
+            path: Absolute path where the file will be written
           slots:
-            - source
             - path
+            - mode
           usage: ""
-        - doc: ""
+        - doc: Returns true if path exists on the filesystem.
           file: plan_file_gen.go
           full_name: plan.file.exists
           kind: method
-          line: 59
+          line: 336
           name: exists
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            path: Absolute path to check
+          slots:
+            - path
           usage: ""
-        - doc: ""
+        - doc: Returns true if path exists and is a directory.
           file: plan_file_gen.go
           full_name: plan.file.is_dir
           kind: method
-          line: 67
+          line: 359
           name: is_dir
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            path: Absolute path to check
+          slots:
+            - path
           usage: ""
-        - doc: ""
+        - doc: 'Creates a symlink at path pointing to source. Idempotent: if the symlink already points correctly, it''s a no-op (returns nil state).'
           file: plan_file_gen.go
           full_name: plan.file.link
           kind: method
-          line: 80
+          line: 77
           name: link
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            path: Absolute path where the symlink will be created
+            source: Absolute path to the symlink target
           slots:
             - source
             - path
           usage: ""
-        - doc: ""
+        - doc: Creates a directory (and parents) with the given mode.
+          file: plan_file_gen.go
+          full_name: plan.file.mkdir
+          kind: method
+          line: 310
+          name: mkdir
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs:
+            mode: Directory permission bits (e.g., 0o755)
+            path: Absolute path of the directory to create
+          slots:
+            - path
+            - mode
+          usage: ""
+        - doc: Moves a file from source to path. Uses gitMv if provided (preserves git history), falling back to os.Rename. Returns compensation state with paths for reverse move.
+          file: plan_file_gen.go
+          full_name: plan.file.move
+          kind: method
+          line: 260
+          name: move
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs:
+            path: Absolute destination path
+            source: Absolute path to the file to move
+          slots:
+            - source
+            - path
+          usage: ""
+        - doc: Deletes the file at path. If prune is true and pruneBoundary is set, empty parent directories are removed up to the boundary. Returns compensation state with file content for re-creation.
           file: plan_file_gen.go
           full_name: plan.file.remove
           kind: method
-          line: 149
+          line: 196
           name: remove
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            path: Absolute path to the file to delete
+            prune: If true, remove empty parent directories after deletion
+            prune_boundary: Stop pruning at this directory (prevents removing too much)
+          slots:
+            - path
+            - prune
+            - prune_boundary
+          usage: ""
+        - doc: Reads a file and returns its contents.
+          file: plan_file_gen.go
+          full_name: plan.file.source
+          kind: method
+          line: 286
+          name: source
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs:
+            path: Absolute path to the file to read
           slots:
             - path
           usage: ""
-        - doc: ""
+        - doc: Removes a symlink at path. If prune is true and pruneBoundary is set, empty parent directories are removed up to the boundary. Returns compensation state with the symlink target for re-creation.
+          file: plan_file_gen.go
+          full_name: plan.file.unlink
+          kind: method
+          line: 163
+          name: unlink
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs:
+            path: Absolute path to the symlink to remove
+            prune: If true, remove empty parent directories after unlinking
+            prune_boundary: Stop pruning at this directory (prevents removing too much)
+          slots:
+            - path
+            - prune
+            - prune_boundary
+          usage: ""
+        - doc: Writes inline content to path with the given mode. Returns compensation state for undo.
           file: plan_file_gen.go
           full_name: plan.file.write
           kind: method
-          line: 126
+          line: 228
           name: write
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            content: String content to write to the file
+            mode: File permission bits (e.g., 0o644)
+            path: Absolute path where the file will be written
           slots:
             - content
             - path
+            - mode
           usage: ""
     git:
-        - doc: ""
+        - doc: Checks out a ref in the given repository directory.
           file: plan_git_gen.go
           full_name: plan.git.checkout
           kind: method
-          line: 63
+          line: 88
           name: checkout
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            ref: Branch, tag, or commit to check out
+            repo: Local path to the git repository
           slots:
             - repo
             - ref
           usage: ""
-        - doc: ""
+        - doc: Clones a repository from url into path. Returns compensation state with the cloned path.
           file: plan_git_gen.go
           full_name: plan.git.clone
           kind: method
-          line: 86
+          line: 61
           name: clone
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            path: Local directory path for the clone
+            url: Git repository URL to clone
           slots:
             - url
             - path
           usage: ""
-        - doc: ""
-          file: plan_git_gen.go
-          full_name: plan.git.installed
-          kind: method
-          line: 54
-          name: installed
-          operations: []
-          output: none
-          returns: ""
-          slot_docs: {}
-          slots: []
-          usage: ""
-        - doc: ""
+        - doc: Pulls the latest changes in the given repository directory.
           file: plan_git_gen.go
           full_name: plan.git.pull
           kind: method
-          line: 109
+          line: 114
           name: pull
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            repo: Local path to the git repository
           slots:
             - repo
           usage: ""
     net:
-        - doc: ""
+        - doc: Fetches the content at the given URL and returns the response body.
           file: plan_net_gen.go
           full_name: plan.net.download
           kind: method
-          line: 52
+          line: 55
           name: download
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            url: HTTP(S) URL to fetch
           slots:
             - url
           usage: ""
-    package:
-        - doc: ""
-          file: plan_package_gen.go
-          full_name: plan.package.install
+    pkg:
+        - doc: Installs packages using the platform's package manager. Returns compensation state with pre-install status per package.
+          file: plan_pkg_gen.go
+          full_name: plan.pkg.install
           kind: method
-          line: 95
+          line: 70
           name: install
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            cask: If true, use Homebrew cask for macOS GUI apps
+            manager: Package manager override (empty for auto-detect)
+            packages: List of package names to install
+          slots:
+            - packages
+            - manager
+            - cask
           usage: ""
-        - doc: ""
-          file: plan_git_gen.go
-          full_name: plan.package.installed
+        - doc: Returns true if the named package is installed.
+          file: plan_pkg_gen.go
+          full_name: plan.pkg.installed
           kind: method
-          line: 54
+          line: 186
           name: installed
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Package name to check
+          slots:
+            - name
           usage: ""
-        - doc: ""
-          file: plan_package_gen.go
-          full_name: plan.package.not_installed
+        - doc: Returns true if the named package is not installed.
+          file: plan_pkg_gen.go
+          full_name: plan.pkg.not_installed
           kind: method
-          line: 74
+          line: 209
           name: not_installed
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Package name to check
+          slots:
+            - name
           usage: ""
-        - doc: ""
-          file: plan_file_gen.go
-          full_name: plan.package.remove
+        - doc: Removes packages using the platform's package manager. Returns compensation state for reinstallation.
+          file: plan_pkg_gen.go
+          full_name: plan.pkg.remove
           kind: method
-          line: 149
+          line: 134
           name: remove
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            cask: If true, use Homebrew cask for macOS GUI apps
+            manager: Package manager override (empty for auto-detect)
+            packages: List of package names to remove
           slots:
-            - path
+            - packages
+            - manager
+            - cask
           usage: ""
-        - doc: ""
-          file: plan_package_gen.go
-          full_name: plan.package.update
+        - doc: Refreshes the package manager index.
+          file: plan_pkg_gen.go
+          full_name: plan.pkg.update
           kind: method
-          line: 176
+          line: 163
           name: update
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            manager: Package manager override (empty for auto-detect)
+          slots:
+            - manager
           usage: ""
-        - doc: ""
-          file: plan_package_gen.go
-          full_name: plan.package.upgrade
+        - doc: Upgrades packages using the platform's package manager. Returns compensation state with pre-upgrade versions per package.
+          file: plan_pkg_gen.go
+          full_name: plan.pkg.upgrade
           kind: method
-          line: 122
+          line: 102
           name: upgrade
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            cask: If true, use Homebrew cask for macOS GUI apps
+            manager: Package manager override (empty for auto-detect)
+            packages: List of package names to upgrade
+          slots:
+            - packages
+            - manager
+            - cask
           usage: ""
-        - doc: ""
-          file: plan_package_gen.go
-          full_name: plan.package.version_gte
+        - doc: Returns true if the installed version of name is >= version.
+          file: plan_pkg_gen.go
+          full_name: plan.pkg.version_gte
           kind: method
-          line: 82
+          line: 233
           name: version_gte
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Package name to check
+            version: Minimum version string to compare against
+          slots:
+            - name
+            - version
           usage: ""
     service:
-        - doc: ""
+        - doc: Disables a service from starting at boot. Returns compensation state with pre-action enabled status.
           file: plan_service_gen.go
           full_name: plan.service.disable
           kind: method
-          line: 108
+          line: 166
           name: disable
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Service name (e.g., launchd label, systemd unit, Windows service)
+          slots:
+            - name
           usage: ""
-        - doc: ""
+        - doc: Enables a service to start at boot. Returns compensation state with pre-action enabled status.
           file: plan_service_gen.go
           full_name: plan.service.enable
           kind: method
-          line: 104
+          line: 142
           name: enable
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Service name (e.g., launchd label, systemd unit, Windows service)
+          slots:
+            - name
           usage: ""
-        - doc: ""
+        - doc: Returns true if the named service is enabled to start at boot.
           file: plan_service_gen.go
           full_name: plan.service.enabled
           kind: method
-          line: 79
+          line: 235
           name: enabled
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Service name to check
+          slots:
+            - name
           usage: ""
-        - doc: ""
-          file: plan_file_gen.go
+        - doc: Returns true if the named service exists on the system.
+          file: plan_service_gen.go
           full_name: plan.service.exists
           kind: method
-          line: 59
+          line: 189
           name: exists
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Service name to check
+          slots:
+            - name
           usage: ""
-        - doc: ""
+        - doc: Restarts a service. Returns compensation state. Compensation is a no-op — if the service was restarted, it was already running.
           file: plan_service_gen.go
           full_name: plan.service.restart
           kind: method
-          line: 100
+          line: 118
           name: restart
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Service name (e.g., launchd label, systemd unit, Windows service)
+          slots:
+            - name
           usage: ""
-        - doc: ""
+        - doc: Returns true if the named service is currently running.
           file: plan_service_gen.go
           full_name: plan.service.running
           kind: method
-          line: 71
+          line: 212
           name: running
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Service name to check
+          slots:
+            - name
           usage: ""
-        - doc: ""
+        - doc: Starts a service. Returns compensation state with pre-action running status.
           file: plan_service_gen.go
           full_name: plan.service.start
           kind: method
-          line: 92
+          line: 70
           name: start
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Service name (e.g., launchd label, systemd unit, Windows service)
+          slots:
+            - name
           usage: ""
-        - doc: ""
+        - doc: Stops a service. Returns compensation state with pre-action running status.
           file: plan_service_gen.go
           full_name: plan.service.stop
           kind: method
-          line: 96
+          line: 94
           name: stop
           operations: []
-          output: none
+          output: promise
           returns: ""
-          slot_docs: {}
-          slots: []
+          slot_docs:
+            name: Service name (e.g., launchd label, systemd unit, Windows service)
+          slots:
+            - name
           usage: ""
     shell:
-        - doc: ""
+        - doc: Executes a POSIX shell command.
           file: plan_shell_gen.go
           full_name: plan.shell.exec
           kind: method
-          line: 52
+          line: 57
           name: exec
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            command: Shell command string to execute via sh -c
+          slots:
+            - command
+          usage: ""
+        - doc: Executes a PowerShell command (Windows).
+          file: plan_shell_gen.go
+          full_name: plan.shell.power_shell
+          kind: method
+          line: 80
+          name: power_shell
+          operations: []
+          output: promise
+          returns: ""
+          slot_docs:
+            command: PowerShell command string to execute
           slots:
             - command
           usage: ""
     template:
-        - doc: ""
+        - doc: Processes content as a Go text/template. Returns the rendered bytes.
           file: plan_template_gen.go
           full_name: plan.template.render
           kind: method
-          line: 52
+          line: 58
           name: render
           operations: []
           output: promise
           returns: ""
-          slot_docs: {}
+          slot_docs:
+            path: Target file path (available as .Target in the template)
+            project: Project name (available as .Project in the template)
+            source: Source file path (available as .Source in the template)
+            template_data: Key-value pairs available as template variables
           slots:
+            - template_data
             - source
+            - path
+            - project
           usage: ""
 valid: true
 violations: []

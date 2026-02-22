@@ -33,14 +33,7 @@ encryption_systems:
       name: EncryptNone
       value: none
 generated: true
-platforms:
-    - Darwin
-    - Linux
-    - Linux.Debian
-    - Linux.Fedora
-    - Linux.Arch
-    - Windows
-    - Unix
+platforms: []
 repo_layers:
     - file: analysis.go
       line: 132
