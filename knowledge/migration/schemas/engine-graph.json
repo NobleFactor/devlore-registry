@@ -1,100 +1,25 @@
 {
   "$defs": {
     "edge": {
-      "properties": {
-        "from": {
-          "type": "string"
-        },
-        "to": {
-          "type": "string"
-        }
-      },
+      "properties": {},
       "required": [
         "from",
-        "to"
+        "to",
+        "relation"
       ],
       "type": "object"
     },
     "node": {
-      "properties": {
-        "annotations": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Annotations holds extensible metadata (serialized to receipts).",
-          "type": "object"
-        },
-        "error": {
-          "description": "Error message if status is failed.",
-          "type": "string"
-        },
-        "id": {
-          "description": "ID is the unique identifier (typically relative target path or package name).",
-          "type": "string"
-        },
-        "layer": {
-          "description": "Layer is the repository layer (base, team, personal).",
-          "type": "string"
-        },
-        "project": {
-          "description": "Project this node belongs to.",
-          "type": "string"
-        },
-        "retry": {
-          "description": "Retry is the retry policy for this node (nil = no retry).",
-          "type": "string"
-        },
-        "slots": {
-          "additionalProperties": {
-            "$ref": "#/$defs/slot_value"
-          },
-          "description": "Input slots for this node (name -\u003e value)",
-          "type": "object"
-        },
-        "status": {
-          "description": "Execution status of this node",
-          "enum": [
-            "pending",
-            "completed",
-            "skipped",
-            "failed"
-          ],
-          "type": "string"
-        },
-        "timestamp": {
-          "description": "Timestamp is when this action completed.",
-          "type": "string"
-        }
-      },
+      "properties": {},
       "required": [
-        "id"
+        "id",
+        "operations"
       ],
       "type": "object"
     },
     "slot_value": {
       "description": "A slot value - either immediate or a promise (reference to another node)",
-      "properties": {
-        "field": {
-          "description": "Field is the field name to access on the proxy item.",
-          "type": "string"
-        },
-        "gather_ref": {
-          "description": "GatherRef is the gather node ID for proxy resolution.",
-          "type": "string"
-        },
-        "immediate": {
-          "description": "Immediate is the direct value (any type, known at analysis time).",
-          "type": "string"
-        },
-        "node_ref": {
-          "description": "NodeRef is the ID of the node that produces this value (promise).",
-          "type": "string"
-        },
-        "slot": {
-          "description": "Slot is which output slot of the referenced node (empty = default output).",
-          "type": "string"
-        }
-      },
+      "properties": {},
       "type": "object"
     }
   },
