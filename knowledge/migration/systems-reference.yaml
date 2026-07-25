@@ -1,84 +1,84 @@
 description: Auto-generated reference of migrate constants from Go source
 encryption_systems:
     - file: analysis.go
-      line: 24
+      line: 27
       name: EncryptGitCrypt
       value: git-crypt
     - file: analysis.go
-      line: 25
+      line: 28
       name: EncryptBlackbox
       value: blackbox
     - file: analysis.go
-      line: 26
+      line: 29
       name: EncryptTranscrypt
       value: transcrypt
     - file: analysis.go
-      line: 27
+      line: 30
       name: EncryptGPG
       value: gpg
     - file: analysis.go
-      line: 28
+      line: 31
       name: EncryptAge
       value: age
     - file: analysis.go
-      line: 29
+      line: 32
       name: EncryptAnsibleVault
       value: ansible-vault
     - file: analysis.go
-      line: 30
+      line: 33
       name: EncryptSOPS
       value: sops
     - file: analysis.go
-      line: 31
+      line: 34
       name: EncryptNone
       value: none
 generated: true
 platforms: []
 repo_layers:
     - file: analysis.go
-      line: 132
+      line: 136
       name: LayerBase
       value: base
     - file: analysis.go
-      line: 133
+      line: 137
       name: LayerTeam
       value: team
     - file: analysis.go
-      line: 134
+      line: 138
       name: LayerPersonal
       value: personal
-source: devlore-cli/internal/writ/migrate
+source: devlore-cli/cmd/writ/writ/migrate
 source_systems:
     - file: analysis.go
-      line: 10
+      line: 12
       name: SystemNative
       value: native
     - file: analysis.go
-      line: 11
+      line: 13
       name: SystemTuckr
       value: tuckr
     - file: analysis.go
-      line: 12
+      line: 14
       name: SystemStow
       value: stow
     - file: analysis.go
-      line: 13
+      line: 15
       name: SystemChezmoi
       value: chezmoi
     - file: analysis.go
-      line: 14
+      line: 16
       name: SystemYadm
       value: yadm
     - file: analysis.go
-      line: 15
+      line: 17
       name: SystemBareGit
       value: bare-git
     - file: analysis.go
-      line: 16
+      line: 18
       name: SystemScriptBased
       value: script-based
     - file: analysis.go
-      line: 17
+      line: 19
       name: SystemUnknown
       value: unknown
 version: "1.0"
