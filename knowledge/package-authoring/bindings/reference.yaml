@@ -13,7 +13,7 @@ ns_descriptions:
     plan: Provider creates graph nodes for plan-time graph construction
     platform: Provider exposes host platform metadata to Starlark scripts and graph actions
     powershell: PowerShell 7+ command execution
-    regexp: Regular expression operations with compiled pattern caching
+    regex: Regular expression operations with compiled pattern caching
     service: Platform-agnostic service management
     shell: Shell command execution
     template: Template expansion actions
