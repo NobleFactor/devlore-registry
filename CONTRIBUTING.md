@@ -22,19 +22,29 @@ You represent that you are legally entitled to grant the above licenses. If your
 
 You represent that each of your contributions is your original creation. You represent that your contribution submissions include complete details of any third-party license or other restriction of which you are aware and which are associated with any part of your contributions.
 
-### 5. No Withdrawal
+### 5. AI-Assisted Contributions
+
+AI-assisted authoring is a normal part of this registry — [AUTHORING.md](AUTHORING.md) exists to steer it. **But the use of AI must be disclosed.** AI is acknowledged, never credited: no AI tool appears as an author or co-author of a contribution.
+
+- Mark every commit in which AI assistance was used with a trailer: `Assisted-by: <tool name>`, and note the assistance in your pull request description.
+- You represent that you have identified, to the best of your knowledge, which parts of your contribution were generated with AI assistance.
+- You acknowledge that purely AI-generated material may not be protected by copyright, and that the licenses granted in Sections 1 and 2 apply to all rights you hold in your contribution.
+
+**Undisclosed AI use is a bannable offence.** If a contribution is found to contain AI-generated material that was not announced, the contributor is permanently banned from the registry. Disclosure costs one line; concealment costs the maintainers the ability to trust every past and future submission from that contributor.
+
+### 6. No Withdrawal
 
 **You understand and agree that your contributions cannot be withdrawn once accepted into the registry.** This ensures that users who depend on packages in the registry can continue to do so. The licenses granted above are irrevocable.
 
-### 6. Commercial Use
+### 7. Commercial Use
 
 You acknowledge that Noble Factor may use your contributions in commercial products and services, including but not limited to hosted registry services, enterprise offerings, and federated search services.
 
-### 7. No Expectation of Support
+### 8. No Expectation of Support
 
 You are not expected to provide support for your contributions, except to the extent you desire to provide support. You may provide support for free, for a fee, or not at all.
 
-### 8. Notification of Inaccuracy
+### 9. Notification of Inaccuracy
 
 You agree to notify Noble Factor of any facts or circumstances of which you become aware that would make the above representations inaccurate in any respect.
 
@@ -52,6 +62,7 @@ You agree to notify Noble Factor of any facts or circumstances of which you beco
 - Each package must include `lifecycle.yaml`, phase scripts, and `README.md`
 - Document tribal knowledge thoroughly
 - Test on target platforms before submitting
+- Disclose AI assistance with an `Assisted-by: <tool name>` commit trailer (see Section 5 of the Contributor License Agreement)
 
 ### Review Process
 
