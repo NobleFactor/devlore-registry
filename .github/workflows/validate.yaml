@@ -14,7 +14,10 @@ on:
 
 jobs:
   validate:
-    name: Validate YAML schemas
+    # The job name is the check context a ruleset must match, so it is written as an identifier
+    # rather than a sentence: lowercase, hyphenated, no spaces. Matches `quality-gate` and the
+    # `test (…)`/`scenario (…)` contexts in devlore-cli.
+    name: validate-yaml-schemas
     runs-on: ubuntu-latest
     steps:
       - name: Generate app token
