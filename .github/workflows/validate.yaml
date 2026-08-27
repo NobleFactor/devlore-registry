@@ -29,15 +29,23 @@ jobs:
           owner: NobleFactor
           repositories: devlore-cli
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      # Order and nesting are both load-bearing. star resolves its extensions relative to the
+      # working directory, so the commands must run from devlore-cli -- and fsroot confinement
+      # refuses a target outside that directory, which is why a parent-relative target failed.
+      # Checking this repository out INSIDE devlore-cli satisfies both at once: cwd finds the
+      # extensions, and the target is in-tree. devlore-cli must be checked out first, or its
+      # checkout would clean away the nested one.
       - name: Checkout devlore-cli
         uses: actions/checkout@v4
         with:
           repository: NobleFactor/devlore-cli
           path: devlore-cli
           token: ${{ steps.app-token.outputs.token }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: devlore-cli/devlore-registry
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -51,8 +59,8 @@ jobs:
 
       - name: Validate package schemas
         working-directory: devlore-cli
-        run: ../star devlore package validate --target=..
+        run: ../star devlore package validate --target=devlore-registry
 
       - name: Validate knowledge schemas
         working-directory: devlore-cli
-        run: ../star devlore knowledge validate --target=..
+        run: ../star devlore knowledge validate --target=devlore-registry
