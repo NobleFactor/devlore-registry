@@ -1,28 +1,5 @@
-# Package knowledge domain
-# Contains concepts, patterns, and slots for lore package generation
-
 domain: packages
-
-concepts:
-  - name: install-types.yaml
-    purpose: install-patterns
-    description: Patterns for software installation across platforms (script, pkg, dmg, exe, source)
-
 slots:
-  - name: ollama.yaml
-    package: ollama
-    description: Local LLM runner with platform-specific installers
-    platforms: [darwin, linux, windows]
-    install_types: [dmg, script, exe]
-
-  - name: homebrew.yaml
-    package: homebrew
-    description: Package manager for macOS and Linux
-    platforms: [darwin, linux]
-    install_types: [script, pkg]
-
-  - name: macports.yaml
-    package: macports
-    description: Package manager for macOS with complex OS upgrade handling
-    platforms: [darwin]
-    install_types: [pkg, source]
+    - name: homebrew.yaml
+    - name: macports.yaml
+    - name: ollama.yaml

@@ -7,12 +7,3 @@ schemas:
     - name: clarification.json
 slots:
     - name: definitions.yaml
-      purpose: slot-definitions
-      description: Standard slot definitions for template variables
-providers:
-    - name: providers.yaml
-      purpose: provider-config
-      description: AI model provider configuration and default input limits
-    - name: litellm-cache.json
-      purpose: model-limits
-      description: Model context limits cached from LiteLLM (auto-synced)

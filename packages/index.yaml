@@ -1,0 +1,268 @@
+count: 10
+generated: star devlore knowledge index packages
+packages:
+    - aliases:
+        - astro.build
+        - astrojs
+        - astro framework
+      description: The web framework for content-driven websites
+      dir: astro
+      has_readme: true
+      homepage: https://astro.build
+      license: MIT
+      maintainer: Noble Factor
+      name: astro
+      platforms:
+        - Darwin
+        - Linux
+        - Windows
+      provides: []
+      tags:
+        - web
+        - framework
+        - javascript
+        - typescript
+        - frontend
+      variants: []
+      version: 5.1.3
+    - aliases:
+        - aws
+        - awscli
+        - amazon cli
+      description: AWS Command Line Interface for managing AWS services
+      dir: aws-cli
+      has_readme: false
+      homepage: https://aws.amazon.com/cli/
+      license: Apache-2.0
+      maintainer: Noble Factor
+      name: aws-cli
+      platforms:
+        - Darwin
+        - Linux
+        - Windows
+      provides: []
+      tags:
+        - cloud
+        - aws
+        - amazon
+        - cli
+        - devops
+      variants: []
+      version: 2.22.0
+    - aliases:
+        - az
+        - az cli
+        - azure
+      description: Azure Command Line Interface for managing Azure resources
+      dir: azure-cli
+      has_readme: false
+      homepage: https://learn.microsoft.com/en-us/cli/azure/
+      license: MIT
+      maintainer: Noble Factor
+      name: azure-cli
+      platforms:
+        - Darwin
+        - Linux
+        - Windows
+      provides: []
+      tags:
+        - cloud
+        - azure
+        - microsoft
+        - cli
+        - devops
+      variants: []
+      version: 2.81.0
+    - aliases:
+        - docker ce
+        - docker engine
+        - docker cli
+        - containerd
+        - docker-compose
+        - docker compose
+        - container runtime
+      description: Docker CE, CLI, containerd, buildx, and compose plugin
+      dir: docker
+      has_readme: true
+      homepage: https://docs.docker.com/engine/install/
+      license: Apache-2.0
+      maintainer: Noble Factor
+      name: docker
+      platforms:
+        - Darwin
+        - Linux
+        - Windows
+      provides:
+        - docker
+        - docker-compose
+        - containerd
+      tags:
+        - container
+        - docker
+        - devops
+      variants:
+        - Darwin
+        - Linux.Debian
+        - Linux.Fedora
+        - Windows
+      version: 28.0.1
+    - aliases:
+        - google cloud cli
+        - google cloud sdk
+        - gcp cli
+        - gcp
+        - gsutil
+        - bq
+      description: Google Cloud CLI for managing GCP resources
+      dir: gcloud
+      has_readme: false
+      homepage: https://cloud.google.com/sdk
+      license: Apache-2.0
+      maintainer: Noble Factor
+      name: gcloud
+      platforms:
+        - Darwin
+        - Linux
+        - Windows
+      provides: []
+      tags:
+        - cloud
+        - gcp
+        - google
+        - cli
+        - devops
+      variants: []
+      version: 503.0.0
+    - aliases:
+        - kubernetes cli
+        - k8s cli
+        - k8s
+        - kube
+      description: Kubernetes command-line tool for cluster management
+      dir: kubectl
+      has_readme: false
+      homepage: https://kubernetes.io/docs/reference/kubectl/
+      license: Apache-2.0
+      maintainer: Noble Factor
+      name: kubectl
+      platforms:
+        - Darwin
+        - Linux
+        - Windows
+      provides: []
+      tags:
+        - kubernetes
+        - k8s
+        - cloud
+        - containers
+        - devops
+        - cli
+      variants: []
+      version: 1.32.0
+    - aliases:
+        - document converter
+        - markdown to pdf
+        - markdown converter
+      description: Universal document converter with PDF support
+      dir: pandoc
+      has_readme: false
+      homepage: https://pandoc.org
+      license: GPL-2.0-or-later
+      maintainer: Noble Factor
+      name: pandoc
+      platforms:
+        - Darwin
+        - Linux
+        - Windows
+      provides: []
+      tags:
+        - document
+        - converter
+        - markdown
+        - latex
+        - pdf
+        - writing
+      variants: []
+      version: "3.6"
+    - aliases:
+        - tf
+        - hashicorp terraform
+        - infrastructure as code
+        - iac
+      description: Infrastructure as Code tool for building, changing, and versioning infrastructure
+      dir: terraform
+      has_readme: false
+      homepage: https://www.terraform.io/
+      license: BUSL-1.1
+      maintainer: Noble Factor
+      name: terraform
+      platforms:
+        - Darwin
+        - Linux
+        - Windows
+      provides: []
+      tags:
+        - terraform
+        - hashicorp
+        - infrastructure
+        - iac
+        - cloud
+        - devops
+      variants: []
+      version: 1.10.0
+    - aliases:
+        - xcode ide
+        - apple xcode
+        - ios development
+        - macos development
+        - swift ide
+      description: Apple's integrated development environment for building apps
+      dir: xcode
+      has_readme: false
+      homepage: https://developer.apple.com/xcode/
+      license: Apple EULA
+      maintainer: Noble Factor
+      name: xcode
+      platforms:
+        - Darwin
+      provides: []
+      tags:
+        - ide
+        - apple
+        - xcode
+        - ios
+        - macos
+        - swift
+        - development
+        - darwin
+      variants: []
+      version: "16.2"
+    - aliases:
+        - xcode command line tools
+        - xcode cli
+        - apple developer tools
+        - clang
+        - macos sdk
+        - apple clang
+      description: Xcode Command Line Tools - compilers and build tools for macOS
+      dir: xcode-clt
+      has_readme: true
+      homepage: https://developer.apple.com/xcode/
+      license: Apple EULA
+      maintainer: Noble Factor
+      name: xcode-clt
+      platforms:
+        - Darwin
+      provides: []
+      tags:
+        - compiler
+        - build-tools
+        - xcode
+        - clang
+        - llvm
+        - development
+        - foundation
+        - darwin
+      variants: []
+      version: "16.0"
+version: "1"
