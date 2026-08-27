@@ -27,17 +27,10 @@ jobs:
           app-id: ${{ secrets.NOBLEFACTOR_AUTOMATION_APP_ID }}
           private-key: ${{ secrets.NOBLEFACTOR_AUTOMATION_APP_PRIVATE_KEY }}
           owner: NobleFactor
-          repositories: noblefactor-ops,devlore-cli
+          repositories: devlore-cli
 
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Checkout noblefactor-ops
-        uses: actions/checkout@v4
-        with:
-          repository: NobleFactor/noblefactor-ops
-          path: noblefactor-ops
-          token: ${{ steps.app-token.outputs.token }}
 
       - name: Checkout devlore-cli
         uses: actions/checkout@v4
@@ -49,11 +42,11 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
-          cache-dependency-path: noblefactor-ops/go.sum
+          go-version: "1.27"
+          cache-dependency-path: devlore-cli/go.sum
 
       - name: Build star
-        working-directory: noblefactor-ops
+        working-directory: devlore-cli
         run: go build -o ../star ./cmd/star
 
       - name: Validate package schemas
