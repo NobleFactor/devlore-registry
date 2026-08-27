@@ -54,19 +54,66 @@ jobs:
         working-directory: devlore-cli
         run: ../star devlore knowledge index --target=devlore-registry
 
-      - name: Commit changes
+      # Open a pull request rather than pushing. The push went straight into the protected branch
+      # that triggered this run, which organization ruleset 12426847 now refuses for everyone --
+      # there are no bypass actors for a direct push. That was #75.
+      #
+      # The branch name has to satisfy the branch-name ruleset (12515090), which became actively
+      # enforced on 2026-08-27: ^(chore|doc|feature|fix|hotfix|refactor|release)/.+$. A bare
+      # `update-indexes-<sha>` would be refused at push, so the prefix is not cosmetic.
+      #
+      # The merge carries no --admin. The NobleFactor Automation app is a bypass actor on the org
+      # ruleset but NOT on this repository's 21604093, so a red quality-gate or
+      # validate-yaml-schemas refuses this merge server-side. That is deliberate: regenerated
+      # indexes should not land over a failing gate.
+      - name: Open index-update PR
         working-directory: devlore-cli/devlore-registry
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Force-add ignored generated files
+          # Generated files are gitignored, hence -f.
           git add -f packages/index.yaml packages/cross-reference.yaml knowledge/*/index.yaml 2>/dev/null || true
 
-          # Commit if there are changes
           if git diff --staged --quiet; then
             echo "No index changes to commit"
-          else
-            git commit -m "chore: update indexes"
-            git push
+            exit 0
+          fi
+
+          BRANCH="chore/update-indexes-${GITHUB_SHA::7}"
+          git checkout -b "$BRANCH"
+          git commit -m "chore: update indexes from ${GITHUB_SHA::7}"
+          git push origin "$BRANCH"
+
+          PR_URL=$(gh pr create \
+            --title "chore: update indexes from ${GITHUB_SHA::7}" \
+            --body "Regenerated package and knowledge indexes for [\`${GITHUB_SHA::7}\`](https://github.com/NobleFactor/devlore-registry/commit/${GITHUB_SHA})." \
+            --base "${{ github.ref_name }}")
+          echo "Created PR: $PR_URL"
+
+          # Bounded retry: a transient 5xx must not strand a green PR, and a failed attempt may still
+          # have merged server-side, so the PR state is consulted before retrying.
+          merged=false
+          for attempt in 1 2 3 4 5; do
+            if gh pr merge "$PR_URL" --squash --delete-branch; then
+              merged=true
+              break
+            fi
+            state=$(gh pr view "$PR_URL" --json state --jq .state || echo UNKNOWN)
+            if [ "$state" = "MERGED" ]; then
+              echo "merge attempt $attempt reported failure but the PR is merged"
+              merged=true
+              break
+            fi
+            if [ "$attempt" -lt 5 ]; then
+              echo "merge attempt $attempt failed (state: $state); retrying in $((attempt * 10))s"
+              sleep $((attempt * 10))
+            fi
+          done
+
+          if [ "$merged" != true ]; then
+            echo "Could not merge $PR_URL. It is open with the indexes on it; the checks explain why."
+            exit 1
           fi
