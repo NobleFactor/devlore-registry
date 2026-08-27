@@ -20,16 +20,20 @@ jobs:
           owner: NobleFactor
           repositories: devlore-registry,devlore-cli
 
-      - name: Checkout devlore-registry
-        uses: actions/checkout@v4
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-
+      # See validate.yaml: this repository is checked out inside devlore-cli so that star finds its
+      # extensions via the working directory while the target stays inside the confinement root.
+      # devlore-cli first, or its checkout cleans away the nested one.
       - name: Checkout devlore-cli
         uses: actions/checkout@v4
         with:
           repository: NobleFactor/devlore-cli
           path: devlore-cli
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Checkout devlore-registry
+        uses: actions/checkout@v4
+        with:
+          path: devlore-cli/devlore-registry
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup Go
@@ -44,13 +48,14 @@ jobs:
 
       - name: Update package index
         working-directory: devlore-cli
-        run: ../star devlore package index --target=..
+        run: ../star devlore package index --target=devlore-registry
 
       - name: Update knowledge indexes
         working-directory: devlore-cli
-        run: ../star devlore knowledge index --target=..
+        run: ../star devlore knowledge index --target=devlore-registry
 
       - name: Commit changes
+        working-directory: devlore-cli/devlore-registry
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
