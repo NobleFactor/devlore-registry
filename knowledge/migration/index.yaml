@@ -10,7 +10,6 @@ schemas:
 signatures:
     - name: bare-git.yaml
     - name: chezmoi.yaml
-    - name: dotfile-systems.yaml
     - name: git-crypt.yaml
     - name: script-based.yaml
     - name: stow.yaml
@@ -22,10 +21,3 @@ transforms:
     - name: from-stow.yaml
     - name: from-tuckr.yaml
     - name: from-yadm.yaml
-concepts:
-    - name: writ-structure.yaml
-      purpose: directory-structure
-      description: Writ directory structure and Home/System mapping
-    - name: lifecycle-patterns.yaml
-      purpose: lifecycle-detection
-      description: Patterns for detecting package installs in scripts
