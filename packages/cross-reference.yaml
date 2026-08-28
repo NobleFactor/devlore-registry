@@ -1,12 +1,13 @@
 apt:
     azure-cli: azure-cli
     docker-ce: docker
-    docker.io: docker
+    docker-ce-cli: docker
     kubectl: kubectl
     pandoc: pandoc
 brew:
     awscli: aws-cli
     azure-cli: azure-cli
+    colima: docker
     docker: docker
     google-cloud-sdk: gcloud
     kubectl: kubectl
@@ -16,14 +17,12 @@ brew:
 choco:
     awscli: aws-cli
     azure-cli: azure-cli
-    docker-desktop: docker
     gcloudsdk: gcloud
     kubernetes-cli: kubectl
     pandoc: pandoc
     terraform: terraform
 dnf:
     azure-cli: azure-cli
-    docker-ce: docker
     kubectl: kubectl
     pandoc: pandoc
 mas:
@@ -33,9 +32,11 @@ npm:
 pacman:
     kubectl: kubectl
     pandoc: pandoc
+port:
+    colima: docker
+    docker: docker
 winget:
     Amazon.AWSCLI: aws-cli
-    Docker.DockerDesktop: docker
     Hashicorp.Terraform: terraform
     JohnMacFarlane.Pandoc: pandoc
     Kubernetes.kubectl: kubectl

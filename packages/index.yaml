@@ -74,14 +74,13 @@ packages:
       variants: []
       version: 2.81.0
     - aliases:
-        - docker ce
-        - docker engine
-        - docker cli
-        - containerd
-        - docker-compose
-        - docker compose
+        - colima
         - container runtime
-      description: Docker CE, CLI, containerd, buildx, and compose plugin
+        - docker
+        - docker ce
+        - docker cli
+        - docker engine
+      description: A container runtime — Docker CE on Linux, Colima on macOS
       dir: docker
       has_readme: true
       homepage: https://docs.docker.com/engine/install/
@@ -90,21 +89,15 @@ packages:
       name: docker
       platforms:
         - Darwin
-        - Linux
-        - Windows
       provides:
         - docker
         - docker-compose
-        - containerd
       tags:
         - container
-        - docker
         - devops
+        - docker
       variants:
         - Darwin
-        - Linux.Debian
-        - Linux.Fedora
-        - Windows
       version: 28.0.1
     - aliases:
         - google cloud cli
