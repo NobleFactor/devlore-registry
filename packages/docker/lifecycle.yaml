@@ -1,90 +1,70 @@
 # SPDX-License-Identifier: MIT
-# Copyright (c) 2025 Noble Factor. All rights reserved.
+# Copyright (c) 2026 Noble Factor. All rights reserved.
 
 name: docker
 version: "28.0.1"
-description: Docker CE, CLI, containerd, buildx, and compose plugin
+description: A container runtime — Docker CE on Linux, Colima on macOS
 homepage: https://docs.docker.com/engine/install/
 repository: https://github.com/moby/moby
 license: Apache-2.0
 maintainer: Noble Factor
 
 aliases:
-  - docker ce
-  - docker engine
-  - docker cli
-  - containerd
-  - docker-compose
-  - docker compose
+  - colima
   - container runtime
+  - docker
+  - docker ce
+  - docker cli
+  - docker engine
 
+# Darwin resolves through whichever manager the platform router selects. MacPorts and Homebrew both
+# carry colima and the docker CLI, and the package deliberately names neither: manager preference is
+# machine policy, not a property of this package.
 signatures:
-  brew: [docker]
-  apt: [docker-ce, docker.io]
-  dnf: [docker-ce]
-  choco: [docker-desktop]
-  winget: [Docker.DockerDesktop]
+  brew: [colima, docker]
+  port: [colima, docker]
+  apt: [docker-ce, docker-ce-cli]
 
+# Linux.Debian returns once its phases are rewritten. Linux.Fedora is absent because the platform
+# router wires no dnf leaf, and Windows because no source script covers it.
 platforms:
   - Darwin
-  - Linux
-  - Windows
 
 provides:
   - docker
   - docker-compose
-  - containerd
-
-conflicts:
-  - docker.io
-  - docker-doc
-  - docker-compose
-  - docker-compose-v2
-  - podman-docker
-  - containerd
-  - runc
 
 features:
-  rootless:
-    description: Run Docker daemon without root privileges
-    default: false
   purge-data:
     description: Remove all Docker data (images, containers, volumes) during decommission
     default: false
-
-settings:
-  storage-driver:
-    description: Storage driver for Docker
-    type: string
-    default: overlay2
-    values: [overlay2, btrfs, zfs, vfs]
-
-  log-driver:
-    description: Default logging driver
-    type: string
-    default: json-file
-    values: [json-file, syslog, journald, none]
 
 verification:
   command: docker --version
   pattern: "Docker version \\d+\\.\\d+"
 
-hardware_provisions:
-  ODROID-C4:
-    description: Requires cgroup v1 compatibility mode
-    reference: https://sipfront.com/blog/2024/01/running-docker-on-odroid-c4/
-    boot_arg: systemd.unified_cgroup_hierarchy=0
-  ODROID-C5:
-    description: Requires cgroup v1 compatibility mode
-    boot_arg: systemd.unified_cgroup_hierarchy=0
-
 notes: |
-  PLATFORM DIFFERENCES:
-  - Linux: Docker CE (open source, Apache 2.0 license)
-  - Darwin/Windows: Docker Desktop (proprietary, requires paid subscription for
-    enterprises with >250 employees or >$10M annual revenue)
+  WHY COLIMA ON macOS
+
+  Licensing, and only licensing. Docker Desktop requires a paid subscription for organizations
+  above 250 employees or $10M revenue, and OrbStack has a paid commercial tier. Colima is
+  Apache-2.0 with no threshold, which matters doubly for a package shipped to customers: a Darwin
+  package built on Docker Desktop hands every customer a licence obligation that scales with their
+  headcount.
+
+  Colima is also far easier to automate — a scriptable `colima start` against a DMG, an installer
+  needing --accept-license, and a GUI launch. That is a consequence of the choice, not the reason
+  for it.
+
+  THIS PACKAGE ENSURES A RUNTIME EXISTS; IT DOES NOT INSTALL COLIMA
+
+  Deploy installs Colima only when no container runtime is already present. An existing OrbStack or
+  Docker Desktop is left exactly as found — the goal is to avoid putting a licensed product on a
+  machine, not to displace one someone chose. Decommission is asymmetric for the same reason: it
+  removes what deploy installed and nothing else, which falls out of the receipt boundary rather
+  than needing a feature flag.
 
 tags:
   - container
-  - docker
   - devops
+  - docker

@@ -1,51 +1,48 @@
 # SPDX-License-Identifier: MIT
-# Copyright (c) 2025 Noble Factor. All rights reserved.
+# Copyright (c) 2026 Noble Factor. All rights reserved.
 #
 # docker/Darwin/Deploy/install.star — Install phase
 #
 # TRIBAL KNOWLEDGE:
-# Docker Desktop for Mac is distributed as a DMG containing Docker.app.
-# Installation is: mount DMG, run installer CLI, detach DMG.
-# Different DMGs for Apple Silicon (arm64) vs Intel (amd64).
-# Reference: https://docs.docker.com/desktop/setup/install/mac-install/
+#
+# This phase ensures a container runtime exists. It does not install Colima on a machine that
+# already has one. Colima is chosen for licensing — Docker Desktop is a paid subscription above 250
+# employees or $10M revenue, and OrbStack has a paid commercial tier — so installing Colima
+# alongside an existing runtime would add a second VM for no benefit, and displacing a runtime
+# somebody deliberately licensed would be worse.
+#
+# The guard is a decision tree rather than a Starlark conditional because a phase script's runtime
+# is hermetic: it cannot interrogate the host at plan time. Every branch is an invocation, never a
+# lambda — a lambda is archived as a content-addressed function.Resource, and a graph carrying one
+# currently fails receipt writing. Receipts are what decommission compensates from, so a package
+# that loses its receipt cannot be removed.
+#
+# OrbStack and Docker Desktop are applications, so they are detected by path. Colima is a package,
+# so it is detected through the package manager, which keeps the check independent of whether the
+# router chose MacPorts (/opt/local) or Homebrew (/opt/homebrew).
+#
+# Reference: https://github.com/abiosoft/colima
 
 def install(package, phase):
-    """Install Docker Desktop on macOS.
+    """Ensure a container runtime is present, installing Colima only when none is.
 
     Args:
         package: Package metadata and features (read-only, immediate)
         phase: Lifecycle phase context (controls plan, provides metadata)
     """
 
-    # TODO: platform.arch needs implementation
-    # Select correct DMG for architecture
-    # arch = platform.arch
-    # if arch == "arm64":
-    #     dmg_url = "https://desktop.docker.com/mac/main/arm64/Docker.dmg"
-    # else:
-    #     dmg_url = "https://desktop.docker.com/mac/main/amd64/Docker.dmg"
-
-    # TODO: plan.download() not yet implemented
-    # Download Docker Desktop DMG
-    # plan.download(
-    #     url=dmg_url,
-    #     dest="/tmp/Docker.dmg",
-    # )
-
-    # Mount the DMG
-    plan.shell.exec("hdiutil attach /tmp/Docker.dmg -nobrowse -quiet")
-
-    # TODO: phase.env() needs implementation
-    # Run the installer with license acceptance
-    # --user flag performs privileged setup during install
-    # user = phase.env("USER")
-    # plan.shell.exec(
-    #     "/Volumes/Docker/Docker.app/Contents/MacOS/install --accept-license --user=%s" % user
-    # )
-
-    # Detach the DMG
-    plan.shell.exec("hdiutil detach /Volumes/Docker -quiet")
-
-    # TODO: plan.file.remove() not yet implemented
-    # Clean up downloaded DMG
-    # plan.file.remove("/tmp/Docker.dmg")
+    plan.choose(
+        plan.case(
+            when=plan.file.is_dir(path="/Applications/OrbStack.app"),
+            then=plan.ui.note(msg="OrbStack is present; leaving the container runtime as found."),
+        ),
+        plan.case(
+            when=plan.file.is_dir(path="/Applications/Docker.app"),
+            then=plan.ui.note(msg="Docker Desktop is present; leaving the container runtime as found."),
+        ),
+        plan.case(
+            when=plan.pkg.installed(name="colima"),
+            then=plan.ui.note(msg="Colima is already installed; nothing to install."),
+        ),
+        default=plan.pkg.install(packages=["colima", "docker"]),
+    )
