@@ -50,18 +50,18 @@ jobs:
         working-directory: devlore-cli
         run: ../star devlore package index --target=devlore-registry
 
-      # DISABLED. This step rebuilt each domain's index.yaml from a directory listing and wrote
-      # {"name": filename} per entry, discarding everything else. #80 was its first successful run
-      # after the unfreeze, and it deleted curated metadata from three domains: the concepts section
-      # from migration and packages, providers from shared, and every slot's package, description,
-      # platforms, and install_types -- an entire ollama slot with them.
+      # Re-enabled. It was disabled after devlore-registry#80, when this step rebuilt each domain's
+      # index.yaml from a directory listing and deleted the curated metadata it found. devlore-cli#719
+      # replaced that behaviour: entries are merged rather than rebuilt, and anything the indexer
+      # cannot classify is an error rather than an omission -- an unknown section, a section without
+      # a directory, a directory with assets and no section, an indexed file that is absent, or an
+      # entry that does not declare whether it is generated.
       #
-      # It stays disabled until the indexer preserves what it did not write. The package indexer
-      # below is not lossy and keeps running.
-      #
-      # - name: Update knowledge indexes
-      #   working-directory: devlore-cli
-      #   run: ../star devlore knowledge index --target=devlore-registry
+      # So a failure here now means the tree and its indexes disagree, and someone has to say which
+      # is right. That is the intended behaviour; it is not a reason to disable the step again.
+      - name: Update knowledge indexes
+        working-directory: devlore-cli
+        run: ../star devlore knowledge index --target=devlore-registry
 
       # Open a pull request rather than pushing. The push went straight into the protected branch
       # that triggered this run, which organization ruleset 12426847 now refuses for everyone --
