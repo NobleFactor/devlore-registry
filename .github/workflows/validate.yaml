@@ -14,11 +14,24 @@ on:
 
 jobs:
   validate:
-    # The job name is the check context a ruleset must match, so it is written as an identifier
-    # rather than a sentence: lowercase, hyphenated, no spaces. Matches `quality-gate` and the
-    # `test (…)`/`scenario (…)` contexts in devlore-cli.
-    name: validate-yaml-schemas
+    # One job per corpus, because they are different bodies of material with different schemas and
+    # different owners: packages/ holds lore packages the devlore engine deploys, knowledge/ holds
+    # the assets devlore-cli's knowledge-extract writes here for an LLM to consume. A single check
+    # covering both said only that "something failed".
+    #
+    # The name is the check context a ruleset must match exactly, so it is an identifier rather than
+    # a sentence. It also states the mechanism rather than the subject: the previous name,
+    # validate-yaml-schemas, parses most naturally as "validate the YAML schemas" -- checking the
+    # schemas themselves -- which is the opposite of what happens. JSON Schema is a proper noun, so
+    # json-schema-validate cannot be re-parsed that way.
+    name: json-schema-validate.${{ matrix.corpus }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { corpus: packages, command: package }
+          - { corpus: knowledge, command: knowledge }
     steps:
       - name: Generate app token
         id: app-token
@@ -57,10 +70,6 @@ jobs:
         working-directory: devlore-cli
         run: go build -o ../star ./cmd/star
 
-      - name: Validate package schemas
+      - name: Validate
         working-directory: devlore-cli
-        run: ../star devlore package validate --target=devlore-registry
-
-      - name: Validate knowledge schemas
-        working-directory: devlore-cli
-        run: ../star devlore knowledge validate --target=devlore-registry
+        run: ../star devlore ${{ matrix.command }} validate --target=devlore-registry
