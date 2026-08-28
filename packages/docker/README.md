@@ -1,199 +1,83 @@
-# Docker — lore Package
+# docker — a lore package
 
-Docker container runtime across all platforms:
-- **Linux:** Docker CE (Community Edition) — daemon, CLI, containerd, buildx, and compose plugin
-- **macOS/Windows:** Docker Desktop — proprietary graphical application with integrated VM
-
-## Usage
+A container runtime. **Docker CE** on Linux, **Colima** on macOS.
 
 ```bash
-# Deploy Docker
 lore deploy docker
-
-# Deploy with rootless mode (Linux only)
-lore deploy docker --with rootless
-
-# Upgrade to latest version
 lore upgrade docker
-
-# Remove Docker (preserves data)
 lore decommission docker
-
-# Remove Docker and all data (images, containers, volumes)
-lore decommission docker --with purge-data
+lore decommission docker --with purge-data   # also removes images, containers, volumes
 ```
 
-## Platform Notes
+## Why Colima on macOS
 
-### Linux.Debian (Ubuntu, Debian)
+**Licensing, and only licensing.** Docker Desktop requires a paid subscription for organizations
+above 250 employees or $10M revenue, and OrbStack has a paid commercial tier. Colima is Apache-2.0
+with no threshold. That matters twice over for a package shipped to customers: a Darwin package
+built on Docker Desktop hands every customer a licence obligation that scales with their headcount.
 
-Uses official Docker CE apt repository. Key considerations:
-- Removes conflicting packages (`docker.io`, `podman-docker`, etc.)
-- Requires adding user to `docker` group for non-root access
-- ODROID-C4/C5 require cgroup v1 boot argument
+Colima is also much easier to automate — a scriptable `colima start` against a DMG mount, an
+installer needing `--accept-license`, and a GUI launch. That is a consequence of the choice, not the
+reason for it.
 
-### Linux.Fedora (Fedora, RHEL, CentOS, Rocky, AlmaLinux)
+## This package ensures a runtime exists; it does not install Colima
 
-Uses official Docker CE dnf repository. Same package set as Debian, different package manager and conflict list (`podman`, `buildah`, etc.).
+Deploy installs Colima **only when no container runtime is present**. An existing OrbStack or Docker
+Desktop is left exactly as found — the goal is to avoid putting a licensed product on a machine, not
+to displace one somebody chose.
 
-### Darwin (macOS)
+Decommission is asymmetric for the same reason: it removes what deploy installed and nothing else.
+That falls out of the receipt boundary rather than needing a feature flag.
 
-Docker Desktop installed via DMG. Key considerations:
-- Apple Silicon (arm64) and Intel (amd64) use different installers
-- On Apple Silicon, installs Rosetta 2 for x86 container compatibility
-- Data stored in `~/Library/Containers/` and `~/Library/Group Containers/`
+## Tribal knowledge
 
-### Windows
+### 1. Binary presence is the wrong check
 
-Docker Desktop installed via exe installer. Key considerations:
-- Requires WSL 2 (Windows Subsystem for Linux) — enabled automatically
-- User added to `docker-users` group for non-admin access
-- Data stored in WSL 2 distros (`docker-desktop`, `docker-desktop-data`)
+`command -v docker` is satisfied by a symlink into an application bundle. On a machine with OrbStack
+installed, `/usr/local/bin/docker` points into `OrbStack.app`, and a dormant `/Applications/Docker.app`
+can sit beside it serving nothing at all.
 
-## Tribal Knowledge
+The question that matters is whether a **daemon answers**, which is what `docker info` asks. Verify
+uses it, and it is manager-agnostic and installer-agnostic — it works the same whether the runtime
+arrived via MacPorts, Homebrew, the OrbStack installer, or Docker's own `.dmg`.
 
-### 1. Conflicting Packages (Linux)
+### 2. The Colima flags are the substance of provisioning
 
-Distribution-provided Docker packages conflict with Docker CE:
+The source script passes only `--cpu 2 --memory 4`, which leaves the VM and mount types at their
+defaults:
 
-| Distribution | Conflicts |
-|-------------|-----------|
-| Debian/Ubuntu | `docker.io`, `docker-compose`, `podman-docker`, `containerd`, `runc` |
-| Fedora/RHEL | `podman`, `podman-docker`, `buildah`, `containers-common` |
+| Flag | Why |
+| --- | --- |
+| `--vm-type vz` | Apple's Virtualization.framework rather than QEMU |
+| `--mount-type virtiofs` | Closes most of the bind-mount performance gap with Docker Desktop |
+| `--vz-rosetta` | Makes x86_64 images tolerable on Apple Silicon |
 
-The prepare phase removes these automatically.
+Without `vz` and `virtiofs`, file sharing falls back to a slower transport — which is the complaint
+usually attributed to Colima itself. 4GB is also thin for anything past `hello-world`.
 
-### 2. ODROID-C4/C5 Require cgroup v1 Mode (Linux.Debian)
+### 3. Colima is not a service
 
-Docker containers fail to start on ODROID-C4/C5 due to cgroup v2 incompatibility. Add boot argument:
-```
-systemd.unified_cgroup_hierarchy=0
-```
-to `/media/boot/boot.ini`. The verify phase detects ODROID hardware and warns if needed.
+There is no `plan.service.*` on the Darwin path. Colima is a VM manager started in the foreground,
+not a launchd service registered under the name `docker`, so the service provider has nothing to
+enable.
 
-**Reference:** https://sipfront.com/blog/2024/01/running-docker-on-odroid-c4/
+### 4. The package names no package manager
 
-### 3. Rosetta 2 for x86 Containers (Darwin)
+Both MacPorts and Homebrew carry `colima` and the docker CLI. The package names neither: manager
+preference is machine policy, not a property of this package, and the platform router decides.
 
-Apple Silicon Macs need Rosetta 2 to run x86_64 Linux containers. The prepare phase installs it automatically.
+## Platforms
 
-### 4. WSL 2 Backend (Windows)
+| Platform | State |
+| --- | --- |
+| `Darwin` | Deploy implemented |
+| `Linux.Debian` | Rewrite pending — Docker CE via apt, with conflict removal and hardware-gated verification |
+| `Linux.Fedora` | **Not supported.** The platform router wires no dnf leaf. Driving it through `plan.shell.exec` would work but forfeits receipts, which would defeat decommission-by-compensation |
+| `Windows` | Not attempted. `winget` is wired, so it is viable later; no source script covers it |
 
-Docker Desktop on Windows uses WSL 2 by default. The prepare phase enables the required Windows features and installs the WSL 2 kernel update.
+## Known limitation
 
-## Features
-
-| Feature | Default | Description |
-|---------|---------|-------------|
-| `rootless` | false | Run Docker daemon without root privileges (Linux only) |
-| `purge-data` | false | Remove all data (images, containers, volumes) during decommission |
-
-## Settings
-
-| Setting | Default | Values | Description |
-|---------|---------|--------|-------------|
-| `storage-driver` | overlay2 | overlay2, btrfs, zfs, vfs | Docker storage driver (Linux) |
-| `log-driver` | json-file | json-file, syslog, journald, none | Default logging driver |
-
-## Directory Structure
-
-```
-docker/
-├── lifecycle.yaml
-├── README.md
-├── Linux.Debian/
-│   ├── Deploy/
-│   │   ├── prepare.star
-│   │   ├── install.star
-│   │   ├── provision.star
-│   │   └── verify.star
-│   ├── Upgrade/
-│   │   ├── prepare.star
-│   │   ├── install.star
-│   │   └── verify.star
-│   └── Decommission/
-│       ├── unprovision.star
-│       ├── uninstall.star
-│       └── cleanup.star
-├── Linux.Fedora/
-│   ├── Deploy/
-│   │   ├── prepare.star
-│   │   ├── install.star
-│   │   ├── provision.star
-│   │   └── verify.star
-│   ├── Upgrade/
-│   │   ├── prepare.star
-│   │   ├── install.star
-│   │   └── verify.star
-│   └── Decommission/
-│       ├── unprovision.star
-│       ├── uninstall.star
-│       └── cleanup.star
-├── Darwin/
-│   ├── Deploy/
-│   │   ├── prepare.star
-│   │   ├── install.star
-│   │   ├── provision.star
-│   │   └── verify.star
-│   ├── Upgrade/
-│   │   └── install.star
-│   │   └── verify.star
-│   └── Decommission/
-│       ├── unprovision.star
-│       ├── uninstall.star
-│       └── cleanup.star
-└── Windows/
-    ├── Deploy/
-    │   ├── prepare.star
-    │   ├── install.star
-    │   ├── provision.star
-    │   └── verify.star
-    ├── Upgrade/
-    │   ├── prepare.star
-    │   ├── install.star
-    │   └── verify.star
-    └── Decommission/
-        ├── unprovision.star
-        ├── uninstall.star
-        └── cleanup.star
-```
-
-## Phase Script API
-
-Phase scripts receive two inputs. `plan` is a global.
-
-```python
-def install(package, phase):
-    """
-    Args:
-        package: Package metadata and features (read-only, immediate)
-        phase:   Phase context (name, action, retry)
-    """
-    plan.choose(
-        when=plan.pkg.installed("conflicting-pkg"),
-        then=lambda: plan.pkg.remove("conflicting-pkg"),
-    )
-
-    plan.pkg.install("docker-ce")
-
-    if package.has_feature("rootless"):
-        plan.pkg.install("uidmap")
-```
-
-**Scripts express intent, not commands.** Never shell out to package managers:
-
-```python
-# CORRECT
-plan.package.install("docker-ce")
-
-# WRONG
-plan.shell("apt install docker-ce")
-```
-
-## Sources
-
-- [Docker Engine Install — Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
-- [Docker Engine Install — RHEL](https://docs.docker.com/engine/install/rhel/)
-- [Docker Desktop — macOS](https://docs.docker.com/desktop/install/mac-install/)
-- [Docker Desktop — Windows](https://docs.docker.com/desktop/install/windows-install/)
-- [ODROID-C4 Docker Fix](https://sipfront.com/blog/2024/01/running-docker-on-odroid-c4/)
+`Darwin/Deploy/install.star` detects existing runtimes by path — `/Applications/OrbStack.app` and
+`/Applications/Docker.app`. The executing graph is fsroot-confined to its own directory, so those
+absolute paths are not reachable and the guard does not yet work as written. The replacement is
+`docker info` answering, which is the correct predicate regardless.
