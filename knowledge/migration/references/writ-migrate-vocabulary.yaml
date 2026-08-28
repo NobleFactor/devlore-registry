@@ -33,7 +33,6 @@ encryption_systems:
       name: EncryptNone
       value: none
 generated: true
-platforms: []
 repo_layers:
     - file: analysis.go
       line: 136
