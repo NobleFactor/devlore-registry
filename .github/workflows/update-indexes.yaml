@@ -102,11 +102,28 @@ jobs:
             --base "${{ github.ref_name }}")
           echo "Created PR: $PR_URL"
 
+          # --admin is entitlement the app actually holds, not a way around a failing gate. Two
+          # rulesets apply and only one of them is bypassable here:
+          #
+          #   org 12426847   requires an approving review; the NobleFactor Automation app IS a
+          #                  bypass actor, in pull_request mode
+          #   repo 21604093  requires quality-gate and validate-yaml-schemas; the app is NOT a
+          #                  bypass actor, so a red check refuses this merge server-side
+          #
+          # Without the flag, gh's client-side veto refuses on REVIEW_REQUIRED before the server is
+          # ever asked -- and no human is going to review a machine-generated index update, so every
+          # PR this workflow opened was left green and stranded. Four accumulated in two days
+          # (#83, #85, #87, and the branch behind #80).
+          #
+          # --auto is not the alternative: allow_auto_merge is false on this repository, and even
+          # enabled it would queue behind a review that will never arrive. require_last_push_approval
+          # is true, so the app cannot approve its own push either.
+          #
           # Bounded retry: a transient 5xx must not strand a green PR, and a failed attempt may still
           # have merged server-side, so the PR state is consulted before retrying.
           merged=false
           for attempt in 1 2 3 4 5; do
-            if gh pr merge "$PR_URL" --squash --delete-branch; then
+            if gh pr merge "$PR_URL" --squash --admin --delete-branch; then
               merged=true
               break
             fi
