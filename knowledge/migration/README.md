@@ -8,11 +8,11 @@ dotfile management systems to writ. The `migrate-to-writ.txt` prompt in
 
 | System | Guide | Key Concepts |
 |--------|-------|--------------|
-| GNU Stow | [from-stow.yaml](from-stow.yaml) | Packages → projects, symlink farm |
-| chezmoi | [from-chezmoi.yaml](from-chezmoi.yaml) | `dot_` prefix, `.tmpl`, scripts |
-| yadm | [from-yadm.yaml](from-yadm.yaml) | Alt files (`##`), Jinja2, bare git |
-| Tuckr | [from-tuckr.yaml](from-tuckr.yaml) | Groups, Hooks.toml |
-| Bare git | [from-bare-git.yaml](from-bare-git.yaml) | `$HOME` worktree, branches |
+| GNU Stow | [from-stow.yaml](transforms/from-stow.yaml) | Packages → projects, symlink farm |
+| chezmoi | [from-chezmoi.yaml](transforms/from-chezmoi.yaml) | `dot_` prefix, `.tmpl`, scripts |
+| yadm | [from-yadm.yaml](transforms/from-yadm.yaml) | Alt files (`##`), Jinja2, bare git |
+| Tuckr | [from-tuckr.yaml](transforms/from-tuckr.yaml) | Groups, Hooks.toml |
+| Bare git | [from-bare-git.yaml](transforms/from-bare-git.yaml) | `$HOME` worktree, branches |
 
 ## How These Are Used
 

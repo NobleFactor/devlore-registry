@@ -4,7 +4,9 @@
   "title": "Knowledge Domain Index",
   "description": "Index of assets within a knowledge domain",
   "type": "object",
-  "required": ["domain"],
+  "required": [
+    "domain"
+  ],
   "properties": {
     "domain": {
       "type": "string",
@@ -45,62 +47,265 @@
       "items": {
         "$ref": "#/$defs/slotEntry"
       }
+    },
+    "concepts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/conceptEntry"
+      }
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/providerEntry"
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/bindingEntry"
+      }
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/referenceEntry"
+      }
     }
   },
   "$defs": {
     "promptEntry": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name",
+        "generated"
+      ],
       "properties": {
-        "name": { "type": "string" },
-        "purpose": { "type": "string" },
-        "description": { "type": "string" }
+        "name": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it."
+        }
       }
     },
     "schemaEntry": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name",
+        "generated"
+      ],
       "properties": {
-        "name": { "type": "string" },
-        "purpose": { "type": "string" },
-        "description": { "type": "string" }
+        "name": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it."
+        }
       }
     },
     "exampleEntry": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name",
+        "generated"
+      ],
       "properties": {
-        "name": { "type": "string" },
-        "purpose": { "type": "string" },
-        "description": { "type": "string" }
+        "name": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it."
+        }
       }
     },
     "transformEntry": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name",
+        "generated"
+      ],
       "properties": {
-        "name": { "type": "string" },
-        "source_system": { "type": "string" },
-        "description": { "type": "string" }
+        "name": {
+          "type": "string"
+        },
+        "source_system": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it."
+        }
       }
     },
     "signatureEntry": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name",
+        "generated"
+      ],
       "properties": {
-        "name": { "type": "string" },
-        "system": { "type": "string" },
-        "description": { "type": "string" }
+        "name": {
+          "type": "string"
+        },
+        "system": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it."
+        }
       }
     },
     "slotEntry": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name",
+        "generated"
+      ],
       "properties": {
-        "name": { "type": "string" },
-        "purpose": { "type": "string" },
-        "description": { "type": "string" }
+        "name": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it."
+        }
+      }
+    },
+    "conceptEntry": {
+      "description": "A definition or invariant. Authored.",
+      "type": "object",
+      "required": [
+        "name",
+        "generated"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it. Declared, never inferred from the path."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "Semantic key for discovery"
+        },
+        "description": {
+          "type": "string",
+          "description": "When to read this asset, not merely what it is"
+        }
+      }
+    },
+    "providerEntry": {
+      "description": "Runtime configuration. See the CAG epic: this is not knowledge and is expected to move.",
+      "type": "object",
+      "required": [
+        "name",
+        "generated"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it. Declared, never inferred from the path."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "Semantic key for discovery"
+        },
+        "description": {
+          "type": "string",
+          "description": "When to read this asset, not merely what it is"
+        }
+      }
+    },
+    "bindingEntry": {
+      "description": "Provider bindings a package may call. Generated from devlore-cli source.",
+      "type": "object",
+      "required": [
+        "name",
+        "generated"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it. Declared, never inferred from the path."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "Semantic key for discovery"
+        },
+        "description": {
+          "type": "string",
+          "description": "When to read this asset, not merely what it is"
+        }
+      }
+    },
+    "referenceEntry": {
+      "description": "Generated reference material, derived from source rather than authored.",
+      "type": "object",
+      "required": [
+        "name",
+        "generated"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "True when a pipeline emits this file and may overwrite it; false when a person authored it. Declared, never inferred from the path."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "Semantic key for discovery"
+        },
+        "description": {
+          "type": "string",
+          "description": "When to read this asset, not merely what it is"
+        }
       }
     }
-  }
+  },
+  "additionalProperties": false
 }
