@@ -50,9 +50,18 @@ jobs:
         working-directory: devlore-cli
         run: ../star devlore package index --target=devlore-registry
 
-      - name: Update knowledge indexes
-        working-directory: devlore-cli
-        run: ../star devlore knowledge index --target=devlore-registry
+      # DISABLED. This step rebuilt each domain's index.yaml from a directory listing and wrote
+      # {"name": filename} per entry, discarding everything else. #80 was its first successful run
+      # after the unfreeze, and it deleted curated metadata from three domains: the concepts section
+      # from migration and packages, providers from shared, and every slot's package, description,
+      # platforms, and install_types -- an entire ollama slot with them.
+      #
+      # It stays disabled until the indexer preserves what it did not write. The package indexer
+      # below is not lossy and keeps running.
+      #
+      # - name: Update knowledge indexes
+      #   working-directory: devlore-cli
+      #   run: ../star devlore knowledge index --target=devlore-registry
 
       # Open a pull request rather than pushing. The push went straight into the protected branch
       # that triggered this run, which organization ruleset 12426847 now refuses for everyone --
