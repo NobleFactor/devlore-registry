@@ -1,5 +1,5 @@
 count: 10
-generated: star devlore knowledge index packages
+generated: star devlore package index
 packages:
     - aliases:
         - astro.build
