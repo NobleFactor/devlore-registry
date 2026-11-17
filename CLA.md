@@ -1,8 +1,7 @@
-# Contributing to devlore-registry
+# Contributor License Agreement
 
-Thank you for your interest in contributing to the DevLore community registry.
-
-## Contributor License Agreement
+Contributions to the DevLore community registry are made under this agreement, in addition to
+NobleFactor's [contributing terms](https://github.com/NobleFactor/.github/blob/main/CONTRIBUTING.md).
 
 By submitting a contribution (pull request, issue, or other submission) to this repository, you agree to the following terms:
 
@@ -26,7 +25,7 @@ You represent that each of your contributions is your original creation. You rep
 
 AI-assisted authoring is a normal part of this registry — [AUTHORING.md](AUTHORING.md) exists to steer it. **But the use of AI must be disclosed.** AI is acknowledged, never credited: no AI tool appears as an author or co-author of a contribution.
 
-- Mark every commit in which AI assistance was used with a trailer: `Assisted-by: <tool name>`, and note the assistance in your pull request description.
+- Say in your pull request's description that AI assisted, and end it with a line naming the tool, `Assisted-by: <tool name>`, after your sign-off, as NobleFactor's [contributing terms](https://github.com/NobleFactor/.github/blob/main/CONTRIBUTING.md) ask. The squash merge writes both into the commit that lands; the commits on your branch carry neither.
 - You represent that you have identified, to the best of your knowledge, which parts of your contribution were generated with AI assistance.
 - You acknowledge that purely AI-generated material may not be protected by copyright, and that the licenses granted in Sections 1 and 2 apply to all rights you hold in your contribution.
 
@@ -47,41 +46,6 @@ You are not expected to provide support for your contributions, except to the ex
 ### 9. Notification of Inaccuracy
 
 You agree to notify Noble Factor of any facts or circumstances of which you become aware that would make the above representations inaccurate in any respect.
-
-## How to Contribute
-
-### Package Contributions
-
-1. Fork this repository
-2. Create your package in `packages/<package-name>/`
-3. Follow the structure in [AUTHORING.md](AUTHORING.md)
-4. Submit a pull request
-
-### Requirements
-
-- Each package must include `lifecycle.yaml`, phase scripts, and `README.md`
-- Document tribal knowledge thoroughly
-- Test on target platforms before submitting
-- Disclose AI assistance with an `Assisted-by: <tool name>` commit trailer (see Section 5 of the Contributor License Agreement)
-
-### Review Process
-
-1. Automated validation checks package structure
-2. Maintainers review for quality and completeness
-3. Community feedback period for significant packages
-4. Merge upon approval
-
-## Code of Conduct
-
-Contributors are expected to:
-- Be respectful and constructive
-- Focus on tribal knowledge that helps others
-- Maintain package quality over time
-- Respond to issues and feedback when possible
-
-## Questions
-
-For questions about contributing, open an issue or contact the maintainers.
 
 ---
 

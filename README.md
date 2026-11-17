@@ -123,7 +123,24 @@ See [astro](packages/astro/) for a cross-platform example, [xcode-clt](packages/
 
 Packages in this registry are licensed under the [MIT License](LICENSE).
 
-**By contributing, you agree to the [Contributor License Agreement](CONTRIBUTING.md)**, which grants Noble Factor a perpetual, irrevocable license to your contributions. Contributions cannot be withdrawn once accepted—this ensures users who depend on packages can continue to do so.
+**By contributing, you agree to the [Contributor License Agreement](CLA.md)**, which grants Noble Factor a perpetual, irrevocable license to your contributions. Contributions cannot be withdrawn once accepted—this ensures users who depend on packages can continue to do so.
+
+### How to contribute
+
+NobleFactor's [contributing terms](https://github.com/NobleFactor/.github/blob/main/CONTRIBUTING.md) apply: every pull request ends its
+description with a Developer Certificate of Origin sign-off and, where AI assisted, says so.
+
+1. Fork this repository.
+2. Create your package in `packages/<package-name>/`.
+3. Follow the structure in [AUTHORING.md](AUTHORING.md).
+4. Submit a pull request.
+
+Each package includes `lifecycle.yaml`, phase scripts and `README.md`, documents its tribal knowledge
+thoroughly, and is tested on its target platforms before it is submitted. Automated validation checks
+a package's structure; maintainers review it for quality and completeness, a significant package has
+a period for community feedback, and it merges on approval. Contributors are respectful and
+constructive, focus on knowledge that helps others, keep their packages in good order, and answer
+issues and feedback when they can. For questions, open an issue.
 
 ## Related Documentation
 
