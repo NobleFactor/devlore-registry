@@ -1,7 +1,6 @@
 # Contributor License Agreement
 
-Contributions to the DevLore community registry are made under this agreement, in addition to
-NobleFactor's [contributing terms](https://github.com/NobleFactor/.github/blob/main/CONTRIBUTING.md).
+Contributions to the DevLore community registry are made under this agreement, in addition to NobleFactor's [contributing terms](https://github.com/NobleFactor/.github/blob/main/CONTRIBUTING.md).
 
 By submitting a contribution (pull request, issue, or other submission) to this repository, you agree to the following terms:
 
